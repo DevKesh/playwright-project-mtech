@@ -1,13 +1,11 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
+import os from 'node:os';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * Read environment variables from .env file.
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import 'dotenv/config';
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -22,8 +20,47 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* Reporters: Allure (primary) + HTML (backup) + AI reporter (conditional) */
+  reporter: [
+    ['html'],
+    ['allure-playwright', {
+      resultsDir: 'allure-results',
+      detail: true,
+      suiteTitle: true,
+      environmentInfo: {
+        os_platform: os.platform(),
+        os_release: os.release(),
+        node_version: process.version,
+        framework: 'Playwright',
+        app_url: 'https://rahulshettyacademy.com/client',
+      },
+      categories: [
+        {
+          name: 'Assertion failures',
+          messageRegex: '.*expect.*|.*assert.*',
+          matchedStatuses: ['failed'],
+        },
+        {
+          name: 'Element not found',
+          messageRegex: '.*waiting for locator.*|.*TimeoutError.*',
+          matchedStatuses: ['broken'],
+        },
+        {
+          name: 'Network / API errors',
+          messageRegex: '.*net::ERR.*|.*ECONNREFUSED.*|.*fetch failed.*',
+          matchedStatuses: ['broken'],
+        },
+        {
+          name: 'Test logic errors',
+          messageRegex: '.*Error.*',
+          matchedStatuses: ['failed'],
+        },
+      ],
+    }],
+    ...(process.env.AI_HEALING_ENABLED === 'true'
+      ? [['./framework/ai/reporters/ai-healing-reporter.js']]
+      : []),
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -33,8 +70,8 @@ export default defineConfig({
     /* Run tests in headed mode locally. */
     headless: false,
 
-    /* Capture screenshots automatically for failed tests. */
-    screenshot: 'only-on-failure',
+    /* Capture screenshot on every test (Allure attaches them automatically). */
+    screenshot: 'on',
 
     /* Keep video artifacts for failed tests. */
     video: 'retain-on-failure',

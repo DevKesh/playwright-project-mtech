@@ -1,4 +1,5 @@
 const { test, expect } = require('../../../framework/fixtures/app.fixture');
+const allure = require('allure-js-commons');
 
 test.describe('Register and login flow', () => {
   test('user can register (or reuse existing account) and login successfully', async ({
@@ -7,6 +8,12 @@ test.describe('Register and login flow', () => {
     productsPage,
     scenarioData,
   }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration + Login');
+    await allure.severity('blocker');
+    await allure.tags('auth', 'registration', 'login', 'e2e', 'smoke');
+
     await authFlow.registerWithRetryThenLogin(scenarioData);
 
     // Basic business-level assertion for successful authentication.

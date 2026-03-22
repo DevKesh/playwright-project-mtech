@@ -1,6 +1,7 @@
 const { test, expect } = require('../../../framework/fixtures/app.fixture');
 const { logStep } = require('../../../framework/utils/steps');
 const { buildCartItemRequest } = require('../../../framework/utils/runtimeInput');
+const allure = require('allure-js-commons');
 
 test.describe('Cart flow - add specific item', () => {
   test('P1 - login and add target item to cart with cart validations', async ({
@@ -9,6 +10,12 @@ test.describe('Cart flow - add specific item', () => {
     cartFlow,
     scenarioData,
   }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Shopping Cart');
+    await allure.story('Add to Cart');
+    await allure.severity('critical');
+    await allure.tags('cart', 'products', 'positive', 'e2e');
+
     let selectedProductName;
     const cartItemRequest = buildCartItemRequest(scenarioData);
 

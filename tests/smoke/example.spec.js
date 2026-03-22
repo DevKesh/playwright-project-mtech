@@ -1,7 +1,14 @@
 // @ts-check
 import { test, expect } from '@playwright/test';
+import * as allure from 'allure-js-commons';
 
 test('has title', async ({ page }) => {
+  await allure.epic('Playwright Docs');
+  await allure.feature('Smoke Tests');
+  await allure.story('Page Title');
+  await allure.severity('blocker');
+  await allure.tags('smoke', 'docs');
+
   await page.goto('https://playwright.dev/');
 
   // Expect a title "to contain" a substring.
@@ -9,6 +16,12 @@ test('has title', async ({ page }) => {
 });
 
 test('get started link', async ({ page }) => {
+  await allure.epic('Playwright Docs');
+  await allure.feature('Smoke Tests');
+  await allure.story('Navigation');
+  await allure.severity('normal');
+  await allure.tags('smoke', 'docs', 'navigation');
+
   await page.goto('https://playwright.dev/');
 
   // Click the get started link.

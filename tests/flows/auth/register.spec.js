@@ -1,6 +1,7 @@
 const { test, expect } = require('../../../framework/fixtures/app.fixture');
 const { createUniqueUser } = require('../../../framework/utils/userFactory');
 const { logStep } = require('../../../framework/utils/steps');
+const allure = require('allure-js-commons');
 
 async function fillRegistrationForm(page, userData) {
   await page.locator('#firstName').fill(userData.firstName);
@@ -23,6 +24,11 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   test.describe.configure({ mode: 'serial' });
 
   test('P1 - successful login with existing valid user', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Login');
+    await allure.severity('critical');
+    await allure.tags('auth', 'login', 'positive');
 
     await test.step('Open login page', async () => {
       logStep('Open login page');
@@ -42,6 +48,12 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('P2 - successful registration with unique user data', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration');
+    await allure.severity('critical');
+    await allure.tags('auth', 'registration', 'positive');
+
     const uniqueUser = createUniqueUser(scenarioData.registerData);
 
     await test.step('Open register page', async () => {
@@ -69,6 +81,12 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('P3 - successful register then login using same created credentials', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration + Login');
+    await allure.severity('critical');
+    await allure.tags('auth', 'registration', 'login', 'positive', 'e2e');
+
     const uniqueUser = createUniqueUser(scenarioData.registerData);
     const createdCredentials = { email: uniqueUser.email, password: uniqueUser.password };
 
@@ -88,6 +106,12 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('P4 - all registration fields accept and retain valid data before submit', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration');
+    await allure.severity('normal');
+    await allure.tags('auth', 'registration', 'positive', 'form-validation');
+
     const uniqueUser = createUniqueUser(scenarioData.registerData);
 
     await test.step('Open register page and fill all mandatory fields', async () => {
@@ -111,6 +135,11 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('P5 - after login user can open cart section', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Login');
+    await allure.severity('normal');
+    await allure.tags('auth', 'login', 'cart', 'positive');
 
     await test.step('Login with valid credentials', async () => {
       logStep('Login with valid credentials');
@@ -127,6 +156,11 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('N1 - login fails for valid email with wrong password', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Login');
+    await allure.severity('critical');
+    await allure.tags('auth', 'login', 'negative', 'security');
 
     await test.step('Open login and submit wrong password', async () => {
       logStep('Open login and submit wrong password');
@@ -144,6 +178,12 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('N2 - login fails for non-registered email', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Login');
+    await allure.severity('critical');
+    await allure.tags('auth', 'login', 'negative', 'security');
+
     const fakeEmail = `nouser${Date.now()}@example.com`;
 
     await test.step('Open login and submit non-registered email', async () => {
@@ -162,6 +202,11 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('N3 - registration shows account already exists for duplicate email', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration');
+    await allure.severity('normal');
+    await allure.tags('auth', 'registration', 'negative', 'duplicate');
 
     await test.step('Open register and submit with existing email', async () => {
       logStep('Open register and submit with existing email');
@@ -178,6 +223,11 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('N4 - mandatory registration fields are invalid when left empty', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration');
+    await allure.severity('normal');
+    await allure.tags('auth', 'registration', 'negative', 'form-validation');
 
     await test.step('Open register and attempt submit without filling fields', async () => {
       logStep('Open register and attempt submit without filling fields');
@@ -199,6 +249,12 @@ test.describe('Register and login validations (5 positive + 5 negative)', () => 
   });
 
   test('N5 - registration fails when password and confirm password do not match', async ({ page, authPage, scenarioData }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Authentication');
+    await allure.story('Registration');
+    await allure.severity('normal');
+    await allure.tags('auth', 'registration', 'negative', 'password-mismatch');
+
     const uniqueUser = createUniqueUser(scenarioData.registerData);
 
     await test.step('Open register and fill mismatched passwords', async () => {

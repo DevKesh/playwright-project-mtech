@@ -1,6 +1,7 @@
 const { test, expect } = require('../../../framework/fixtures/app.fixture');
 const { logStep } = require('../../../framework/utils/steps');
 const { buildCartItemRequest } = require('../../../framework/utils/runtimeInput');
+const allure = require('allure-js-commons');
 
 const checkoutScenario = {
   shippingCountry: 'India',
@@ -16,6 +17,12 @@ test.describe('Checkout + Orders flow', () => {
     ordersFlow,
     scenarioData,
   }) => {
+    await allure.epic('E-Commerce App');
+    await allure.feature('Checkout');
+    await allure.story('Complete Purchase Journey');
+    await allure.severity('blocker');
+    await allure.tags('checkout', 'orders', 'coupon', 'shipping', 'e2e', 'positive', 'negative');
+
     let selectedProductName;
     let placedOrderId;
     const cartItemRequest = buildCartItemRequest(scenarioData);
