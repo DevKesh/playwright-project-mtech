@@ -23,7 +23,8 @@
     "ai:index": "node framework/ai/scripts/index-knowledge-base.js",
     "ai:lifecycle:pre": "node framework/ai/scripts/run-lifecycle.js --phase pre",
     "ai:lifecycle:post": "node framework/ai/scripts/run-lifecycle.js --phase post",
-    "ai:lifecycle:full": "node framework/ai/scripts/run-lifecycle.js --phase pre && cross-env AI_HEALING_ENABLED=true npx playwright test && node framework/ai/scripts/run-lifecycle.js --phase post"
+    "ai:lifecycle:full": "node framework/ai/scripts/run-lifecycle.js --phase pre && cross-env AI_HEALING_ENABLED=true npx playwright test && node framework/ai/scripts/run-lifecycle.js --phase post",
+    "ai:explore": "node framework/ai/scripts/explore-and-generate.js"
   },
   "keywords": [],
   "author": "",

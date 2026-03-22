@@ -58,7 +58,7 @@ export default defineConfig({
       ],
     }],
     ...(process.env.AI_HEALING_ENABLED === 'true'
-      ? [['./framework/ai/reporters/ai-healing-reporter.js']]
+      ? [/** @type {const} */ (['./framework/ai/reporters/ai-healing-reporter.js'])]
       : []),
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

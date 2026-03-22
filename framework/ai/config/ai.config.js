@@ -45,6 +45,9 @@ function loadAIConfig() {
 
     // Lifecycle orchestration
     lifecycleEnabled: enabled && process.env.AI_LIFECYCLE_ENABLED === 'true',
+
+    // Exploratory test generation
+    explorationEnabled: enabled && process.env.AI_EXPLORATION_ENABLED === 'true',
   };
 }
 
