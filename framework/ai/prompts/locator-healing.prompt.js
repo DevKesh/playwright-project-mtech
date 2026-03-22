@@ -13,7 +13,7 @@
  * @param {string} params.domSnapshot - Trimmed DOM of the page.
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
-function buildLocatorHealingPrompt({ failedSelector, errorMessage, action, domSnapshot }) {
+function buildLocatorHealingPrompt({ failedSelector, errorMessage, action, domSnapshot, strategyHint, ragContext }) {
   const systemPrompt = `You are a Playwright test automation expert specializing in element selectors. A test selector has failed to find an element on a web page. Your job is to analyze the page DOM and suggest corrected selectors.
 
 Rules:
@@ -55,6 +55,22 @@ ${domSnapshot}
 \`\`\`
 
 Analyze the DOM and suggest 3 alternative selectors that would find the intended element.`;
+
+  // Add strategy hint if provided (from runtime graph strategy cycling)
+  if (strategyHint && strategyHint !== 'css') {
+    const strategyGuide = {
+      role: 'Focus ONLY on getByRole-based selectors (e.g., getByRole("button", { name: /submit/i })). Do NOT suggest CSS selectors.',
+      text: 'Focus ONLY on text-based selectors (getByText, getByLabel, getByPlaceholder). Do NOT suggest CSS or role selectors.',
+    };
+    if (strategyGuide[strategyHint]) {
+      userPrompt += `\n\n**Strategy constraint:** ${strategyGuide[strategyHint]}`;
+    }
+  }
+
+  // Append RAG context if available (similar past healing events)
+  if (ragContext) {
+    userPrompt += ragContext;
+  }
 
   return { systemPrompt, userPrompt };
 }

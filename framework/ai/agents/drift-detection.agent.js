@@ -6,13 +6,13 @@
  */
 
 const fs = require('fs');
-const { AIClient } = require('../core/openai-client');
+const { createAIClient } = require('../core/ai-client-factory');
 const { buildDriftDetectionPrompt } = require('../prompts/drift-detection.prompt');
 
 class DriftDetectionAgent {
   constructor(config) {
     this.config = config;
-    this.aiClient = new AIClient(config);
+    this.aiClient = createAIClient(config);
   }
 
   /**

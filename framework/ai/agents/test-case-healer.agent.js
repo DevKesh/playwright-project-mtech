@@ -11,14 +11,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { AIClient } = require('../core/openai-client');
+const { createAIClient } = require('../core/ai-client-factory');
 const { buildTestCaseHealingPrompt } = require('../prompts/test-case-healing.prompt');
 const { loadHealingLog } = require('../storage/healing-history');
 
 class TestCaseHealerAgent {
   constructor(config) {
     this.config = config;
-    this.aiClient = new AIClient(config);
+    this.aiClient = createAIClient(config);
   }
 
   /**

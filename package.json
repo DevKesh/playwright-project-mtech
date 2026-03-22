@@ -17,7 +17,13 @@
     "report:allure": "npx allure generate -o ./allure-report --open",
     "ai:drift": "node framework/ai/scripts/detect-drift.js",
     "ai:flaky": "node framework/ai/scripts/analyze-flaky.js",
-    "ai:review": "node framework/ai/scripts/review-healing-log.js"
+    "ai:review": "node framework/ai/scripts/review-healing-log.js",
+    "ai:metrics": "node framework/ai/scripts/compute-metrics.js",
+    "ai:audit": "node framework/ai/scripts/generate-audit-report.js",
+    "ai:index": "node framework/ai/scripts/index-knowledge-base.js",
+    "ai:lifecycle:pre": "node framework/ai/scripts/run-lifecycle.js --phase pre",
+    "ai:lifecycle:post": "node framework/ai/scripts/run-lifecycle.js --phase post",
+    "ai:lifecycle:full": "node framework/ai/scripts/run-lifecycle.js --phase pre && cross-env AI_HEALING_ENABLED=true npx playwright test && node framework/ai/scripts/run-lifecycle.js --phase post"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +31,7 @@
   "dependencies": {
     "@langchain/core": "^1.1.34",
     "@langchain/langgraph": "^1.2.5",
+    "chromadb": "^1.9.2",
     "openai": "^4.73.0"
   },
   "devDependencies": {

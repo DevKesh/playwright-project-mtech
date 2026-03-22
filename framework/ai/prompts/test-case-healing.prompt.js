@@ -24,6 +24,7 @@ function buildTestCaseHealingPrompt({
   errorMessage,
   errorStack,
   healingAttempts,
+  ragContext,
 }) {
   const systemPrompt = `You are a senior test automation engineer. A Playwright test is failing NOT because of broken locators (those have been checked) but because the test LOGIC or ASSERTIONS no longer match the application behavior.
 
@@ -80,6 +81,11 @@ ${testSource}
   }
 
   userPrompt += '\n\nAnalyze the test failure and suggest the minimal code changes to fix this test. Focus on test logic and assertions, not locators.';
+
+  // Append RAG context if available (similar past failures and healing attempts)
+  if (ragContext) {
+    userPrompt += ragContext;
+  }
 
   return { systemPrompt, userPrompt };
 }

@@ -7,14 +7,14 @@
  * statistics to GPT for pattern classification.
  */
 
-const { AIClient } = require('../core/openai-client');
+const { createAIClient } = require('../core/ai-client-factory');
 const { buildFlakyTestPrompt } = require('../prompts/flaky-test.prompt');
 const { loadRunHistory } = require('../storage/healing-history');
 
 class FlakyTestAgent {
   constructor(config) {
     this.config = config;
-    this.aiClient = new AIClient(config);
+    this.aiClient = createAIClient(config);
   }
 
   /**

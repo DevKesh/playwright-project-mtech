@@ -40,6 +40,7 @@ function appendHealingEvent(entry) {
   const log = readJSONFile(HEALING_LOG);
   log.push({
     ...entry,
+    correlationId: entry.correlationId || null,
     timestamp: entry.timestamp || new Date().toISOString(),
   });
   writeJSONFile(HEALING_LOG, log);

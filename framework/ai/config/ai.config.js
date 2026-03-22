@@ -32,6 +32,19 @@ function loadAIConfig() {
 
     // DOM extraction limits (characters)
     maxDomLength: parseInt(process.env.AI_MAX_DOM_LENGTH || '60000', 10),
+
+    // Metrics tracking
+    metricsEnabled: process.env.AI_METRICS_ENABLED !== 'false',
+
+    // Audit trail
+    auditEnabled: enabled && process.env.AI_AUDIT_ENABLED !== 'false',
+
+    // RAG (Retrieval Augmented Generation)
+    ragEnabled: enabled && process.env.AI_RAG_ENABLED === 'true',
+    embeddingModel: process.env.AI_EMBEDDING_MODEL || 'text-embedding-3-small',
+
+    // Lifecycle orchestration
+    lifecycleEnabled: enabled && process.env.AI_LIFECYCLE_ENABLED === 'true',
   };
 }
 

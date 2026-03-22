@@ -9,14 +9,14 @@
  * 5. Logs the healing event (success or failure) to healing history
  */
 
-const { AIClient } = require('../core/openai-client');
+const { createAIClient } = require('../core/ai-client-factory');
 const { buildLocatorHealingPrompt } = require('../prompts/locator-healing.prompt');
 const { appendHealingEvent } = require('../storage/healing-history');
 
 class LocatorHealerAgent {
   constructor(config) {
     this.config = config;
-    this.aiClient = new AIClient(config);
+    this.aiClient = createAIClient(config);
   }
 
   /**
@@ -104,18 +104,19 @@ class LocatorHealerAgent {
    * @param {Array} params.actionArgs - Arguments for the action.
    * @returns {Promise<{ healed: boolean, healedSelector?: string, confidence?: number, actionResult?: any }>}
    */
-  async heal({ page, failedSelector, error, action, actionArgs }) {
+  async heal({ page, failedSelector, error, action, actionArgs, strategyHint }) {
     const startTime = Date.now();
 
     // 1. Extract DOM
     const domSnapshot = await this.extractDOMSnapshot(page);
 
-    // 2. Ask GPT for suggestions
+    // 2. Ask GPT for suggestions (pass strategyHint to focus on specific locator types)
     const { systemPrompt, userPrompt } = buildLocatorHealingPrompt({
       failedSelector,
       errorMessage: error.message,
       action,
       domSnapshot,
+      strategyHint,
     });
 
     const gptResponse = await this.aiClient.chatCompletionJSON(systemPrompt, userPrompt, {

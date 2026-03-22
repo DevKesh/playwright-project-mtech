@@ -8,6 +8,8 @@
  * - Skip healing for infra issues (network errors, timeouts)
  * - Generate structured reports
  *
+ * Also records audit trail events for full traceability (Objective 4).
+ *
  * Enable by adding to playwright.config.js:
  *   reporter: [['html'], ['./framework/ai/reporters/ai-healing-reporter.js']]
  */
@@ -15,12 +17,15 @@
 const { loadAIConfig } = require('../config/ai.config');
 const { createHealingGraph } = require('../graph/healing-graph');
 const { appendRunHistory } = require('../storage/healing-history');
+const { AuditTrail } = require('../audit/audit-trail');
 
 class AIHealingReporter {
   constructor() {
     this.config = loadAIConfig();
     this.testResults = [];
     this.healingGraph = null;
+    this.auditTrail = new AuditTrail();
+    this.runId = this.auditTrail.generateRunId();
 
     if (this.config.enabled && this.config.openaiApiKey) {
       try {
@@ -34,11 +39,28 @@ class AIHealingReporter {
   onBegin(config, suite) {
     if (this.config.enabled) {
       console.log('[AI-REPORTER] AI Healing Reporter active (LangGraph orchestration)');
+
+      // Record run start in audit trail
+      if (this.config.auditEnabled) {
+        this.auditTrail.record({
+          type: 'run_start',
+          runId: this.runId,
+          data: { totalTests: suite?.allTests?.().length || 0 },
+        });
+      }
     }
   }
 
   onTestBegin(test) {
-    // Track when each test starts for duration calculation
+    // Record test start in audit trail
+    if (this.config.auditEnabled) {
+      this.auditTrail.record({
+        type: 'test_start',
+        runId: this.runId,
+        testFile: test.location?.file || 'unknown',
+        testTitle: test.titlePath().join(' > '),
+      });
+    }
   }
 
   async onTestEnd(test, result) {
@@ -56,6 +78,25 @@ class AIHealingReporter {
 
     // Only analyze failures
     if (result.status !== 'failed') return;
+
+    // Record failure in audit trail
+    let failureAuditId = null;
+    let correlationId = null;
+    if (this.config.auditEnabled) {
+      correlationId = this.auditTrail.generateFailureId(this.runId, testTitle);
+      failureAuditId = this.auditTrail.record({
+        type: 'test_fail',
+        correlationId,
+        runId: this.runId,
+        testFile,
+        testTitle,
+        data: {
+          errorMessage: result.error?.message || 'Unknown error',
+          duration: result.duration,
+        },
+      });
+    }
+
     if (!this.healingGraph) return;
 
     // Extract screenshot path from attachments
@@ -78,6 +119,20 @@ class AIHealingReporter {
     // Run the healing graph — it handles classification, routing, and healing
     try {
       console.log(`[AI-REPORTER] Invoking healing graph for: ${testTitle}`);
+
+      // Record healing attempt in audit trail
+      let healAuditId = null;
+      if (this.config.auditEnabled) {
+        healAuditId = this.auditTrail.record({
+          type: 'healing_attempted',
+          correlationId,
+          runId: this.runId,
+          testFile,
+          testTitle,
+          parentAuditId: failureAuditId,
+        });
+      }
+
       const graphResult = await this.healingGraph.invoke({
         testFile,
         testTitle,
@@ -85,13 +140,44 @@ class AIHealingReporter {
         errorStack: result.error?.stack || '',
         steps,
         screenshotPath,
+        correlationId,
+        runId: this.runId,
       });
 
       console.log(
         `[AI-REPORTER] Graph complete: category=${graphResult.failureCategory}, decision=${graphResult.decision}`
       );
+
+      // Record healing outcome in audit trail
+      if (this.config.auditEnabled) {
+        const healed = graphResult.decision === 'healing_suggested';
+        this.auditTrail.record({
+          type: healed ? 'healing_succeeded' : 'healing_failed',
+          correlationId,
+          runId: this.runId,
+          testFile,
+          testTitle,
+          parentAuditId: healAuditId,
+          data: {
+            failureCategory: graphResult.failureCategory,
+            decision: graphResult.decision,
+            confidence: graphResult.confidence,
+          },
+        });
+      }
     } catch (err) {
       console.log(`[AI-REPORTER] Healing graph error: ${err.message}`);
+
+      if (this.config.auditEnabled) {
+        this.auditTrail.record({
+          type: 'healing_failed',
+          correlationId,
+          runId: this.runId,
+          testFile,
+          testTitle,
+          data: { error: err.message },
+        });
+      }
     }
   }
 
@@ -102,7 +188,7 @@ class AIHealingReporter {
     if (this.testResults.length > 0) {
       try {
         appendRunHistory({
-          runId: `run-${Date.now()}`,
+          runId: this.runId,
           overallStatus: result.status,
           tests: this.testResults,
         });
@@ -110,6 +196,21 @@ class AIHealingReporter {
       } catch (err) {
         console.log(`[AI-REPORTER] Failed to write run history: ${err.message}`);
       }
+    }
+
+    // Record run completion in audit trail
+    if (this.config.auditEnabled) {
+      const failures = this.testResults.filter((t) => t.status === 'failed');
+      this.auditTrail.record({
+        type: 'run_complete',
+        runId: this.runId,
+        data: {
+          overallStatus: result.status,
+          totalTests: this.testResults.length,
+          failures: failures.length,
+          passes: this.testResults.filter(t => t.status === 'passed').length,
+        },
+      });
     }
 
     // Summary

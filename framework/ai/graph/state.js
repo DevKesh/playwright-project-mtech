@@ -21,6 +21,10 @@ const HealingState = Annotation.Root({
   steps: Annotation({ reducer: (_, b) => b, default: () => [] }),
   screenshotPath: Annotation({ reducer: (_, b) => b, default: () => null }),
 
+  // -- Audit trail (correlation tracking) --
+  correlationId: Annotation({ reducer: (_, b) => b, default: () => null }),
+  runId: Annotation({ reducer: (_, b) => b, default: () => null }),
+
   // -- Classification (set by classifyFailure node) --
   failureCategory: Annotation({ reducer: (_, b) => b, default: () => '' }),
   failureAnalysis: Annotation({ reducer: (_, b) => b, default: () => null }),

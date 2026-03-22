@@ -23,6 +23,7 @@ function buildFailureAnalysisPrompt({
   testSource,
   steps,
   hasScreenshot,
+  ragContext,
 }) {
   const systemPrompt = `You are a senior QA automation engineer specializing in Playwright test failure analysis. Given the details of a failed test, you must determine the root cause and categorize the failure.
 
@@ -69,6 +70,11 @@ ${errorStack || 'N/A'}
 
   if (hasScreenshot) {
     userPrompt += '\n\n**Note:** A screenshot of the page at the moment of failure is attached in the vision message.';
+  }
+
+  // Append RAG context if available (similar past failures from knowledge base)
+  if (ragContext) {
+    userPrompt += ragContext;
   }
 
   return { systemPrompt, userPrompt };
