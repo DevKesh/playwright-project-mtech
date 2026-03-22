@@ -12,11 +12,15 @@
 function buildPageClassificationPrompt({ url, pageStructure }) {
   const systemPrompt = `You are a web application analyst. Given the URL and the structured elements of a web page, classify it and analyze its purpose.
 
+IMPORTANT: You MUST always provide a specific, meaningful classification — NEVER use "unknown" or "other" unless the page is truly blank or broken. Even complex pages like e-commerce homepages, multi-purpose dashboards, or content-heavy pages have a clear primary purpose. Use the URL path, page title, headings, and element types to determine the classification.
+
+For the "pageName" field, ALWAYS derive a specific PascalCase name from the page's purpose and the application name. Examples: "AmazonHomePage", "GoogleSearchPage", "LoginPage", "ProductCatalogPage". NEVER use "UnknownPage".
+
 You MUST respond with valid JSON matching this schema:
 {
-  "classification": "login|registration|dashboard|catalog|product_detail|cart|checkout|search|profile|settings|error|home|other",
+  "classification": "login|registration|dashboard|catalog|product_detail|cart|checkout|search|profile|settings|error|home|landing|navigation|form|list|detail|other",
   "purpose": "Brief description of what this page does",
-  "pageName": "A concise PascalCase name for this page (e.g., LoginPage, DashboardPage, ProductCatalogPage)",
+  "pageName": "A concise PascalCase name for this page (e.g., LoginPage, DashboardPage, ProductCatalogPage, AmazonHomePage)",
   "keyElements": [
     { "name": "descriptive name", "type": "button|link|input|select|form|heading", "selector": "best CSS selector or locator strategy" }
   ],

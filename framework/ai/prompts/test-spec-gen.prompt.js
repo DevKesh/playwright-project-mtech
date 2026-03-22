@@ -10,9 +10,10 @@
  * @param {Array} params.pageObjects - Generated page object metadata (className, methods, locators).
  * @param {string} params.patternExample - Source code of an existing spec file as pattern.
  * @param {string} params.appName - Name of the application.
+ * @param {object} [params.testDataConfig] - Centralized test data config.
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
-function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName }) {
+function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName, testDataConfig }) {
   const systemPrompt = `You are a Playwright test engineer. Generate a test spec file that follows the EXACT pattern shown in the example below.
 
 **Rules:**
@@ -24,18 +25,24 @@ function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName }) 
 6. Tests receive \`{ page }\` from the fixture — use \`page\` directly to create locators and perform actions
 7. Import Page Object classes and instantiate them in the test with \`new PageClass(page)\`
 8. Add meaningful assertions after key actions using \`expect\`
-9. Use realistic test data (emails, passwords, names) appropriate for the app
+9. NEVER hardcode test data (emails, passwords, URLs, search terms) inline — ALL test data MUST come from the imported testDataConfig
 10. Keep tests focused — one flow per test, with positive and optionally negative scenarios
 11. Do NOT import from fixture files that don't exist — use \`@playwright/test\` directly
+12. ALWAYS add this import at the top of the file: \`const { testDataConfig } = require('../../framework/config/test-data.config');\`
+13. Reference test data ONLY via \`testDataConfig.targetApp.credentials.email\`, \`testDataConfig.targetApp.searchData.keywords\`, \`testDataConfig.targetApp.baseUrl\`, etc. — NEVER define a local const/var with hardcoded test values
+
+CRITICAL: The "code" field in your JSON response must contain the ACTUAL, COMPLETE, RUNNABLE JavaScript source code for the test spec — NOT a description or placeholder. The code must be a real implementation that can be saved to a .spec.js file and executed by Playwright directly.
 
 You MUST respond with valid JSON:
 {
   "fileName": "kebab-case-flow-name.spec.js",
-  "code": "// The complete test spec source code as a single string",
+  "code": "const { test, expect } = require('@playwright/test');\\nconst allure = require('allure-js-commons');\\nconst { testDataConfig } = require('../../framework/config/test-data.config');\\n\\ntest.describe('Flow Name', () => {\\n  test('test title', async ({ page }) => {\\n    await allure.epic(testDataConfig.targetApp.name);\\n    // ... actual test steps using testDataConfig ...\\n  });\\n});",
   "testCases": [
     { "title": "test title", "steps": ["step 1 description", "step 2 description"] }
   ]
-}`;
+}
+
+The "code" value above is just a structural hint. You must generate real, complete, working test code with ALL steps, assertions, allure tags, and page object usage. All data must come from testDataConfig.`;
 
   // Build PO summary for the prompt
   const poSummary = pageObjects.map(po => {
@@ -43,6 +50,16 @@ You MUST respond with valid JSON:
   Locators: ${(po.locators || []).map(l => `${l.name} → ${l.strategy}(${l.selector})`).join(', ')}
   Methods: ${(po.methods || []).map(m => `${m.name}() — ${m.description}`).join(', ')}`;
   }).join('\n\n');
+
+  // Build test data reference for the prompt
+  const testDataRef = testDataConfig
+    ? `\n**Test Data Configuration (import this, do NOT hardcode data):**
+\`\`\`json
+${JSON.stringify(testDataConfig, null, 2)}
+\`\`\`
+Import path: \`const { testDataConfig } = require('../../framework/config/test-data.config');\`
+Access data via: \`testDataConfig.targetApp.credentials.email\`, \`testDataConfig.targetApp.baseUrl\`, \`testDataConfig.targetApp.searchData.keywords\`, etc.`
+    : '';
 
   const userPrompt = `Generate a test spec file for this user flow:
 
@@ -59,13 +76,14 @@ ${flow.steps.map((s, i) => `${i + 1}. [${s.pageClassification}] ${s.pageName}: $
 
 **Available Page Objects:**
 ${poSummary}
+${testDataRef}
 
 **PATTERN EXAMPLE — follow this style exactly:**
 \`\`\`javascript
 ${patternExample}
 \`\`\`
 
-Generate the test spec file matching this pattern. Use the Page Object classes listed above.`;
+Generate the test spec file matching this pattern. Use the Page Object classes listed above. Import and use testDataConfig for ALL test data.`;
 
   return { systemPrompt, userPrompt };
 }

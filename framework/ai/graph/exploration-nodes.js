@@ -15,6 +15,14 @@ const { writeReport } = require('../storage/report-writer');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 
+// Load centralized test data config for generation prompts
+let testDataConfig = {};
+try {
+  testDataConfig = require('../../config/test-data.config').testDataConfig;
+} catch {
+  // Config not yet created — GPT will use generic data
+}
+
 /**
  * Read an existing framework file to use as a pattern example in prompts.
  * @param {string} relativePath - Path relative to project root.
@@ -43,6 +51,35 @@ function normalizeUrl(urlStr) {
 }
 
 /**
+ * Derive a PascalCase page name from a URL when GPT classification fails or returns "unknown".
+ * @param {string} urlStr
+ * @returns {string}
+ */
+function derivePageNameFromUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    // Use hostname for the app name part
+    const hostParts = url.hostname.replace('www.', '').split('.');
+    const appName = hostParts[0].charAt(0).toUpperCase() + hostParts[0].slice(1);
+
+    // Use pathname for the page part
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    if (pathParts.length === 0) {
+      return `${appName}HomePage`;
+    }
+
+    const pagePart = pathParts
+      .map(p => p.replace(/[^a-zA-Z0-9]/g, ' '))
+      .map(p => p.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(''))
+      .join('');
+
+    return `${appName}${pagePart}Page`;
+  } catch {
+    return 'AppPage';
+  }
+}
+
+/**
  * Create all exploration node functions.
  * @param {object} config - AI config from ai.config.js
  * @returns {object} Node functions.
@@ -51,7 +88,7 @@ function createExplorationNodes(config) {
   const agent = new ExploratoryAgent(config);
 
   /**
-   * Phase 1: Navigate — launch browser and go to start URL.
+   * Phase 1: Navigate — launch browser, optionally auto-login, go to start URL.
    */
   async function navigate(state) {
     console.log(`[EXPLORE] Phase 1: Navigating to ${state.startUrl}`);
@@ -64,7 +101,62 @@ function createExplorationNodes(config) {
       await page.goto(state.startUrl, { waitUntil: 'networkidle', timeout: 30000 });
     } catch (err) {
       console.log(`[EXPLORE] Navigation warning: ${err.message}. Continuing with current state.`);
-      // Page may have partially loaded — continue anyway
+    }
+
+    // Auto-login if credentials are available and autoLogin flag is set
+    const creds = testDataConfig?.targetApp?.credentials;
+    const loginUrl = testDataConfig?.targetApp?.loginUrl;
+    if (state.autoLogin && creds && creds.email && creds.password) {
+      console.log('[EXPLORE] Auto-login: Logging in with configured credentials...');
+      try {
+        if (loginUrl && !page.url().includes('/login')) {
+          await page.goto(loginUrl, { waitUntil: 'networkidle', timeout: 30000 }).catch(() => {});
+        }
+
+        // Dismiss cookie consent if present
+        try {
+          await page.locator('#truste-consent-button').click({ timeout: 3000 });
+          console.log('[EXPLORE] Auto-login: Dismissed cookie consent');
+        } catch { /* no consent banner */ }
+
+        // Try common selectors for login form fields
+        const userSelectors = ['#UsernameInput', '#username', 'input[name="username"]', 'input[name="email"]', '#email', 'input[type="email"]'];
+        const passSelectors = ['#PasswordInput', '#password', 'input[name="password"]', 'input[type="password"]'];
+        const submitSelectors = ['#LoginButton', '#loginButton', 'button[type="submit"]', 'input[type="submit"]'];
+
+        let filled = false;
+        for (const sel of userSelectors) {
+          if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+            await page.locator(sel).first().fill(creds.email);
+            filled = true;
+            break;
+          }
+        }
+        if (filled) {
+          for (const sel of passSelectors) {
+            if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+              await page.locator(sel).first().fill(creds.password);
+              break;
+            }
+          }
+          for (const sel of submitSelectors) {
+            if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+              await page.locator(sel).first().click();
+              break;
+            }
+          }
+          try {
+            await page.waitForURL((url) => !url.toString().includes('/login'), { timeout: 15000 });
+            console.log(`[EXPLORE] Auto-login: Success — now at ${page.url()}`);
+          } catch {
+            console.log('[EXPLORE] Auto-login: URL did not change — login may have failed');
+          }
+        } else {
+          console.log('[EXPLORE] Auto-login: Could not find username field — skipping');
+        }
+      } catch (err) {
+        console.log(`[EXPLORE] Auto-login error: ${err.message}. Continuing without login.`);
+      }
     }
 
     const normalizedStart = normalizeUrl(state.startUrl);
@@ -117,9 +209,9 @@ function createExplorationNodes(config) {
     } catch (err) {
       console.log(`[EXPLORE] Classification error: ${err.message}`);
       classification = {
-        classification: 'unknown',
-        purpose: 'Classification failed',
-        pageName: 'UnknownPage',
+        classification: 'home',
+        purpose: 'Classification failed — defaulting to home page',
+        pageName: derivePageNameFromUrl(url),
         keyElements: [],
         formFields: pageStructure.formFields || [],
         navigationLinks: [],
@@ -128,6 +220,23 @@ function createExplorationNodes(config) {
     }
 
     console.log(`[EXPLORE]   → Classification: ${classification.classification} (${classification.pageName})`);
+
+    // Fallback: fix "unknown" or "UnknownPage" from GPT
+    if (!classification.pageName || classification.pageName === 'UnknownPage' || classification.pageName.toLowerCase().includes('unknown')) {
+      classification.pageName = derivePageNameFromUrl(url);
+      console.log(`[EXPLORE]   → Renamed to: ${classification.pageName} (derived from URL)`);
+    }
+    if (classification.classification === 'unknown' || classification.classification === 'other') {
+      // Try to infer from page structure
+      if (pageStructure.formFields && pageStructure.formFields.some(f => f.type === 'password')) {
+        classification.classification = 'login';
+      } else if (pageStructure.formFields && pageStructure.formFields.length > 3) {
+        classification.classification = 'form';
+      } else {
+        classification.classification = 'home';
+      }
+      console.log(`[EXPLORE]   → Reclassified to: ${classification.classification} (inferred from structure)`);
+    }
 
     // Build page data
     const pageData = {
@@ -272,6 +381,7 @@ function createExplorationNodes(config) {
           pageData,
           patternExample,
           pageData.domSnapshot,
+          testDataConfig,
         );
         generatedPOs.push(po);
         console.log(`[EXPLORE]     ✓ ${po.className} — ${(po.locators || []).length} locators, ${(po.methods || []).length} methods`);
@@ -305,6 +415,7 @@ function createExplorationNodes(config) {
           state.generatedPageObjects,
           patternExample,
           appName,
+          testDataConfig,
         );
         generatedSpecs.push(spec);
         console.log(`[EXPLORE]     ✓ ${spec.fileName} — ${(spec.testCases || []).length} test cases`);

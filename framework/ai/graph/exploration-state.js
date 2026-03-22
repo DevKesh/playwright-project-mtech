@@ -13,6 +13,7 @@ const ExplorationState = Annotation.Root({
   startUrl: Annotation({ reducer: (_, b) => b, default: () => '' }),
   maxPages: Annotation({ reducer: (_, b) => b, default: () => 10 }),
   maxDepth: Annotation({ reducer: (_, b) => b, default: () => 3 }),
+  autoLogin: Annotation({ reducer: (_, b) => b, default: () => false }),
 
   // -- Browser objects (passed through state) --
   browser: Annotation({ reducer: (_, b) => b, default: () => null }),

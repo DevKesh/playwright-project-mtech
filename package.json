@@ -24,7 +24,15 @@
     "ai:lifecycle:pre": "node framework/ai/scripts/run-lifecycle.js --phase pre",
     "ai:lifecycle:post": "node framework/ai/scripts/run-lifecycle.js --phase post",
     "ai:lifecycle:full": "node framework/ai/scripts/run-lifecycle.js --phase pre && cross-env AI_HEALING_ENABLED=true npx playwright test && node framework/ai/scripts/run-lifecycle.js --phase post",
-    "ai:explore": "node framework/ai/scripts/explore-and-generate.js"
+    "ai:explore": "node framework/ai/scripts/explore-and-generate.js",
+    "demo:explore": "node framework/ai/scripts/explore-and-generate.js",
+    "demo:explore:login": "node framework/ai/scripts/explore-and-generate.js --login",
+    "demo:test": "npx playwright test tests/generated/ --project chrome",
+    "demo:test:headed": "npx playwright test tests/generated/ --project chrome --headed",
+    "demo:report": "npx allure generate -o ./allure-report && npx allure open ./allure-report",
+    "demo:full": "npm run demo:explore && npm run demo:test && npm run demo:report",
+    "demo:full:headed": "npm run demo:explore && npm run demo:test:headed && npm run demo:report",
+    "demo:heal": "cross-env AI_HEALING_ENABLED=true npx playwright test tests/generated/ --project chrome --headed"
   },
   "keywords": [],
   "author": "",

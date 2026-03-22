@@ -2,8 +2,8 @@
  * CLI: Explore a web application and generate Page Objects + Test Specs.
  *
  * Usage:
- *   node framework/ai/scripts/explore-and-generate.js --url https://example.com
- *   node framework/ai/scripts/explore-and-generate.js --url https://example.com --maxPages 10 --maxDepth 3
+ *   npm run demo:explore                            (reads URL from test-data.config.js)
+ *   npm run demo:explore -- --url https://example.com --maxPages 10 --maxDepth 3
  *
  * Outputs:
  *   framework/pages/generated/   — Generated Page Object files
@@ -14,12 +14,21 @@
 const { loadAIConfig } = require('../config/ai.config');
 const { createExplorationGraph } = require('../graph/exploration-graph');
 
+// Load centralized test data config for defaults
+let testDataConfig = {};
+try {
+  testDataConfig = require('../../config/test-data.config').testDataConfig;
+} catch {
+  // Config not created yet — CLI args are required
+}
+
 async function main() {
-  // Parse CLI arguments
+  // Parse CLI arguments (override config defaults)
   const args = process.argv.slice(2);
-  let url = '';
-  let maxPages = 10;
-  let maxDepth = 3;
+  let url = testDataConfig?.targetApp?.baseUrl || '';
+  let maxPages = testDataConfig?.exploration?.maxPages || 10;
+  let maxDepth = testDataConfig?.exploration?.maxDepth || 3;
+  let autoLogin = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--url' && args[i + 1]) {
@@ -28,21 +37,19 @@ async function main() {
       maxPages = parseInt(args[++i], 10);
     } else if (args[i] === '--maxDepth' && args[i + 1]) {
       maxDepth = parseInt(args[++i], 10);
+    } else if (args[i] === '--login') {
+      autoLogin = true;
     } else if (!args[i].startsWith('--') && !url) {
       url = args[i]; // Positional URL argument
     }
   }
 
   if (!url) {
-    console.error('Usage: node framework/ai/scripts/explore-and-generate.js --url <URL> [--maxPages N] [--maxDepth N]');
+    console.error('No URL specified. Either:');
+    console.error('  1. Create framework/config/test-data.config.js with targetApp.baseUrl');
+    console.error('  2. Pass --url <URL> as a CLI argument');
     console.error('');
-    console.error('Arguments:');
-    console.error('  --url        Target URL to explore (required)');
-    console.error('  --maxPages   Maximum pages to crawl (default: 10)');
-    console.error('  --maxDepth   Maximum crawl depth from start URL (default: 3)');
-    console.error('');
-    console.error('Example:');
-    console.error('  node framework/ai/scripts/explore-and-generate.js --url https://rahulshettyacademy.com/client --maxPages 5');
+    console.error('Usage: node framework/ai/scripts/explore-and-generate.js [--url <URL>] [--maxPages N] [--maxDepth N]');
     process.exit(1);
   }
 
@@ -61,12 +68,16 @@ async function main() {
     process.exit(1);
   }
 
+  const configSource = testDataConfig?.targetApp?.baseUrl === url ? 'test-data.config.js' : 'CLI argument';
+
   console.log('╔══════════════════════════════════════════════════════╗');
   console.log('║   AI Exploratory Test Generation Agent              ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  URL:       ${url.substring(0, 42).padEnd(42)} ║`);
+  console.log(`║  Source:    ${configSource.padEnd(42)} ║`);
   console.log(`║  Max Pages: ${String(maxPages).padEnd(42)} ║`);
   console.log(`║  Max Depth: ${String(maxDepth).padEnd(42)} ║`);
+  console.log(`║  Auto-Login: ${String(autoLogin).padEnd(41)} ║`);
   console.log(`║  Model:     ${(config.analysisModel || 'gpt-4o').padEnd(42)} ║`);
   console.log('╚══════════════════════════════════════════════════════╝');
   console.log('');
@@ -78,6 +89,7 @@ async function main() {
       startUrl: url,
       maxPages,
       maxDepth,
+      autoLogin,
     });
 
     console.log('');
@@ -93,6 +105,10 @@ async function main() {
     console.log('║    Page Objects → framework/pages/generated/        ║');
     console.log('║    Test Specs  → tests/generated/                   ║');
     console.log('║    Reports     → ai-reports/exploration/            ║');
+    console.log('╠══════════════════════════════════════════════════════╣');
+    console.log('║  Next Steps:                                       ║');
+    console.log('║    npm run demo:test:headed  (run tests visually)  ║');
+    console.log('║    npm run demo:report       (generate Allure)     ║');
     console.log('╚══════════════════════════════════════════════════════╝');
 
     if (result.errors && result.errors.length > 0) {

@@ -32,7 +32,7 @@ export default defineConfig({
         os_release: os.release(),
         node_version: process.version,
         framework: 'Playwright',
-        app_url: 'https://rahulshettyacademy.com/client',
+        app_url: 'https://qa2.totalconnect2.com/',
       },
       categories: [
         {
@@ -84,6 +84,14 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+
+    /* Total Connect Smoke Tests — runs only @smoke tagged tests from generated specs */
+    {
+      name: 'tc-smoke',
+      testDir: './tests/generated',
+      grep: /@smoke/,
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 

@@ -235,13 +235,15 @@ class ExploratoryAgent {
    * @param {object} pageData - Discovered page data.
    * @param {string} patternExample - Source code of existing PO as pattern.
    * @param {string} [domSnapshot] - Optional DOM snippet for accuracy.
+   * @param {object} [testDataConfig] - Centralized test data config.
    * @returns {Promise<object>} Generated PO { className, fileName, code, locators, methods }.
    */
-  async generatePageObjectCode(pageData, patternExample, domSnapshot) {
+  async generatePageObjectCode(pageData, patternExample, domSnapshot, testDataConfig) {
     const { systemPrompt, userPrompt } = buildPageObjectGenPrompt({
       pageData,
       patternExample,
       domSnapshot,
+      testDataConfig,
     });
     return this.aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
       model: this.config.analysisModel,
@@ -255,14 +257,16 @@ class ExploratoryAgent {
    * @param {Array} pageObjects - Generated PO metadata.
    * @param {string} patternExample - Source code of existing spec as pattern.
    * @param {string} appName - Application name.
+   * @param {object} [testDataConfig] - Centralized test data config.
    * @returns {Promise<object>} Generated spec { fileName, code, testCases }.
    */
-  async generateTestSpecCode(flow, pageObjects, patternExample, appName) {
+  async generateTestSpecCode(flow, pageObjects, patternExample, appName, testDataConfig) {
     const { systemPrompt, userPrompt } = buildTestSpecGenPrompt({
       flow,
       pageObjects,
       patternExample,
       appName,
+      testDataConfig,
     });
     return this.aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
       model: this.config.analysisModel,
