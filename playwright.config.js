@@ -95,6 +95,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 
+    /* Total Connect Test Plan — runs @tc-plan tagged tests (full test plan suite) */
+    {
+      name: 'tc-plan',
+      testDir: './tests/generated',
+      grep: /@tc-plan/,
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+
     /* Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',

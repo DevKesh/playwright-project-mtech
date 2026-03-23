@@ -3,7 +3,7 @@ const allure = require('allure-js-commons');
 const { testDataConfig } = require('../../framework/config/test-data.config');
 const { TotalConnect2LoginPage } = require('../../framework/pages/generated/TotalConnect2LoginPage');
 
-test.describe('@smoke @tc Login Flow', () => {
+test.describe('@smoke @tc @tc-plan Login Flow', () => {
   test('TC01 - User should be able to log into Total Connect 2.0', async ({ page }) => {
     await allure.epic('Total Connect');
     await allure.feature('Authentication');

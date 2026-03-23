@@ -4,7 +4,7 @@ const { testDataConfig } = require('../../framework/config/test-data.config');
 const { TotalConnect2LoginPage } = require('../../framework/pages/generated/TotalConnect2LoginPage');
 const { TotalConnectForgotUsernamePage } = require('../../framework/pages/generated/TotalConnectForgotUsernamePage');
 
-test.describe('@smoke @tc Username Recovery Flow', () => {
+test.describe('@smoke @tc @tc-plan Username Recovery Flow', () => {
   test('TC03 - Navigate to forgot username page and verify form', async ({ page }) => {
     await allure.epic('Total Connect');
     await allure.feature('Account Recovery');
