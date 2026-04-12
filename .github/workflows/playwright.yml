@@ -25,7 +25,7 @@ jobs:
         AI_HEALING_LOCATOR: 'true'
         AI_HEALING_ANALYSIS: 'true'
     - name: Generate Allure Report
-      run: npx allure generate -o ./allure-report
+      run: npx allure generate ./allure-results -o ./allure-report
       if: ${{ !cancelled() }}
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
