@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2022",
+    "checkJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "framework/*": ["framework/*"]
+    }
+  },
+  "include": [
+    "framework/**/*.js",
+    "tests/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "allure-report",
+    "allure-results",
+    "test-results",
+    "playwright-report"
+  ]
+}

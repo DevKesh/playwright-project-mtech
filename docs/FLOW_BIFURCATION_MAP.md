@@ -6,10 +6,8 @@ Use this map to decide where each new scenario belongs.
 - `auth` -> `tests/flows/auth/`
 - `cart` -> `tests/flows/cart/`
 - `checkout` -> `tests/flows/checkout/`
-- `orders` -> `tests/flows/orders/`
-- `profile` -> `tests/flows/profile/`
-- `admin` -> `tests/flows/admin/`
-- `other` -> `tests/flows/other/`
+- `total-connect` -> `tests/total-connect/`
+- `generated` -> `tests/generated/` (AI-explored specs)
 
 ## Naming Convention
 - Spec file: `<flow-name>.spec.js`

@@ -22,7 +22,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporters: Allure (primary) + HTML (backup) + AI reporter (conditional) */
   reporter: [
-    ['html'],
+    ['html', {
+      open: process.env.CI
+        ? 'never'
+        : (process.env.PW_OPEN_REPORT === 'true' ? 'always' : 'never'),
+    }],
     ['allure-playwright', {
       resultsDir: 'allure-results',
       detail: true,
@@ -87,6 +91,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 
+    {
+      name: 'total-connect',
+      testDir: './tests/total-connect',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
+
     /* Total Connect Smoke Tests — runs only @smoke tagged tests from generated specs */
     {
       name: 'tc-smoke',
@@ -103,32 +113,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
 
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });
 
