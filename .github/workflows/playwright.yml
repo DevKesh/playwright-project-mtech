@@ -17,7 +17,12 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    - name: Validate test list (dry run)
+      run: npx playwright test --project total-connect --list
+      env:
+        CI: 'true'
     - name: Run Playwright tests
+      if: ${{ vars.RUN_TC_TESTS == 'true' }}
       run: npx playwright test --project total-connect
       env:
         CI: 'true'
