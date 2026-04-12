@@ -71,8 +71,8 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
     browserName: 'chromium',
 
-    /* Run tests in headed mode locally. */
-    headless: false,
+    /* Run headed locally, headless in CI. */
+    headless: !!process.env.CI,
 
     /* Capture screenshot on every test (Allure attaches them automatically). */
     screenshot: 'on',

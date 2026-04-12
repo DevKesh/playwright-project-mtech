@@ -18,14 +18,17 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test --project total-connect
       env:
+        CI: 'true'
         AI_HEALING_ENABLED: ${{ secrets.OPENAI_API_KEY && 'true' || 'false' }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         AI_HEALING_LOCATOR: 'true'
         AI_HEALING_ANALYSIS: 'true'
     - name: Generate Allure Report
-      run: npx allure generate ./allure-results -o ./allure-report
+      run: |
+        mkdir -p allure-results
+        npx allure generate ./allure-results -o ./allure-report
       if: ${{ !cancelled() }}
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
