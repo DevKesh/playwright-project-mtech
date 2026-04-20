@@ -23,7 +23,7 @@ on:
       enable_healing:
         description: 'Enable AI self-healing'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 # Cancel in-progress runs for the same branch
