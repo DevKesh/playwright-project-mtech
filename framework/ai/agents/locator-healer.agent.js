@@ -110,6 +110,13 @@ class LocatorHealerAgent {
     // 1. Extract DOM
     const domSnapshot = await this.extractDOMSnapshot(page);
 
+    // 1b. Extract targeted context — if the selector has a base CSS part, find
+    //     all matching elements so GPT can see the actual text values on the page.
+    let targetedContext = '';
+    try {
+      targetedContext = await this._extractTargetedContext(page, failedSelector);
+    } catch { /* non-critical */ }
+
     // 2. Ask GPT for suggestions (pass strategyHint to focus on specific locator types)
     const { systemPrompt, userPrompt } = buildLocatorHealingPrompt({
       failedSelector,
@@ -117,6 +124,7 @@ class LocatorHealerAgent {
       action,
       domSnapshot,
       strategyHint,
+      targetedContext,
     });
 
     const gptResponse = await this.aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
@@ -137,30 +145,38 @@ class LocatorHealerAgent {
       try {
         let healedLocator;
 
+        // Use raw (unpatched) locator methods to avoid triggering recursive healing
+        const rawLocator = page.__rawLocatorMethods?.locator || page.locator.bind(page);
+        const rawGetByRole = page.__rawLocatorMethods?.getByRole || page.getByRole.bind(page);
+        const rawGetByText = page.__rawLocatorMethods?.getByText || page.getByText.bind(page);
+        const rawGetByLabel = page.__rawLocatorMethods?.getByLabel || page.getByLabel.bind(page);
+        const rawGetByPlaceholder = page.__rawLocatorMethods?.getByPlaceholder || page.getByPlaceholder.bind(page);
+        const rawGetByTestId = page.__rawLocatorMethods?.getByTestId || page.getByTestId.bind(page);
+
         // Construct the locator based on the suggestion type
         if (suggestion.type === 'locator') {
-          healedLocator = page.locator(suggestion.selector);
+          healedLocator = rawLocator(suggestion.selector);
         } else if (suggestion.type === 'getByRole') {
           // Parse getByRole arguments from the selector string
           const parsed = this._parseGetByArgs(suggestion.selector);
           if (parsed) {
-            healedLocator = page.getByRole(parsed.role, parsed.options);
+            healedLocator = rawGetByRole(parsed.role, parsed.options);
           }
         } else if (suggestion.type === 'getByText') {
           const arg = this._extractStringArg(suggestion.selector);
-          if (arg) healedLocator = page.getByText(arg);
+          if (arg) healedLocator = rawGetByText(arg);
         } else if (suggestion.type === 'getByLabel') {
           const arg = this._extractStringArg(suggestion.selector);
-          if (arg) healedLocator = page.getByLabel(arg);
+          if (arg) healedLocator = rawGetByLabel(arg);
         } else if (suggestion.type === 'getByPlaceholder') {
           const arg = this._extractStringArg(suggestion.selector);
-          if (arg) healedLocator = page.getByPlaceholder(arg);
+          if (arg) healedLocator = rawGetByPlaceholder(arg);
         } else if (suggestion.type === 'getByTestId') {
           const arg = this._extractStringArg(suggestion.selector);
-          if (arg) healedLocator = page.getByTestId(arg);
+          if (arg) healedLocator = rawGetByTestId(arg);
         } else {
           // Fallback: treat as CSS selector
-          healedLocator = page.locator(suggestion.selector);
+          healedLocator = rawLocator(suggestion.selector);
         }
 
         if (!healedLocator) continue;
@@ -281,6 +297,36 @@ class LocatorHealerAgent {
     if (strMatch) return strMatch[1];
     // Return as-is if it's just a plain string
     return selectorStr.trim() || null;
+  }
+
+  /**
+   * Extract targeted context for text-filter locator mismatches.
+   * When the failed selector is like `page.locator("span.menuName", {"hasText":"Activities"})`,
+   * find all elements matching the base CSS selector and list their text content.
+   * This helps GPT see the actual values and pick the closest match.
+   */
+  async _extractTargetedContext(page, failedSelector) {
+    // Parse base CSS selector from the description
+    // Format: page.locator("span.menuName", {"hasText":"Activities"})
+    const locatorMatch = failedSelector.match(/page\.locator\("([^"]+)"/);
+    if (!locatorMatch) return '';
+
+    const baseCSS = locatorMatch[1];
+    const rawLocator = page.__rawLocatorMethods?.locator || page.locator.bind(page);
+
+    const elements = rawLocator(baseCSS);
+    const count = await elements.count();
+    if (count === 0 || count > 50) return ''; // Too many or none
+
+    const texts = [];
+    for (let i = 0; i < count; i++) {
+      const text = await elements.nth(i).textContent().catch(() => null);
+      if (text && text.trim()) texts.push(text.trim());
+    }
+
+    if (texts.length === 0) return '';
+
+    return `\n\n**All elements currently matching the base selector \`${baseCSS}\` on the page:**\n${texts.map((t, i) => `${i + 1}. "${t}"`).join('\n')}\n\nOne of these elements is likely the intended target. Pick the one whose text is closest to what the original selector was filtering for.`;
   }
 }
 

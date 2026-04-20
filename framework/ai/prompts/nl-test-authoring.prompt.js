@@ -50,10 +50,16 @@ You MUST respond with valid JSON:
       "value": "Value to fill/select/assert (if applicable)",
       "valueSource": "literal|testDataConfig.path.to.value",
       "urlPattern": "URL regex pattern (for navigate/assert_url actions)",
-      "expectedPage": "What page we expect to be on after this step (e.g., 'Login Page', 'Dashboard')"
+      "expectedPage": "What page we expect to be on after this step (e.g., 'Login Page', 'Home Page')"
     }
   ]
-}`;
+}
+
+IMPORTANT app-specific facts for Total Connect 2.0 (qa2.totalconnect2.com):
+- After login, the app redirects to /home — NOT /dashboard. There is NO "Dashboard" text or URL anywhere in this app.
+- Do NOT generate a "wait for dashboard" step. After clicking login, the next step should handle whatever comes after (e.g., dismiss cookie popup).
+- The login button submits the form and the page transitions to /home automatically.
+- Post-login pages are: /home (Security), /automation (Devices), /cameras, /events (Activity), /smartscenes (Scenes).`;
 
   const testDataRef = testDataConfig
     ? `\n\nAvailable test data configuration (use references to these paths instead of hardcoding values):\n${JSON.stringify(testDataConfig, null, 2)}`
@@ -112,7 +118,10 @@ IMPORTANT:
 - Do NOT add waitForLoadState() calls in the generated code — the execution engine handles page readiness automatically
 - Do NOT add waitForTimeout() or artificial delays — Playwright's auto-waiting handles element readiness
 - Playwright locators auto-wait for elements to be actionable (visible, stable, enabled) before performing actions
-- Keep the generated code minimal — just the action, no extra waits`;
+- Keep the generated code minimal — just the action, no extra waits
+- NEVER guess or fabricate URLs. Only use URLs you can see in the DOM, the current URL, or standard patterns from previous actions. For Total Connect, after login the app redirects to /home (NOT /dashboard). There is no "Dashboard" text on the page.
+- For "wait" actions after login, wait for URL pattern /home instead of /dashboard: await page.waitForURL('**/home', { timeout: 15000 });
+- For "wait" actions in general, prefer waiting for a URL pattern or a visible element from the DOM rather than inventing expected URLs`;
 
   const prevActionsStr = previousActions.length > 0
     ? `\n**Actions already performed in this session:**\n${previousActions.map((a, i) => `${i + 1}. ${a.description} → ${a.playwrightCode}`).join('\n')}`

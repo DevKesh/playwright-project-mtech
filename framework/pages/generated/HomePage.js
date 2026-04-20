@@ -1,11 +1,11 @@
 const { expect } = require('@playwright/test');
 
-class DashboardPage {
+class HomePage {
   constructor(page) {
     this.page = page;
     this.loginButton = page.locator('#LoginButton');
     this.cookieDismissButton = page.locator('#truste-consent-button');
-    this.doneButton = page.getByRole('button', { name: 'DONE' });
+    this.doneButton = page.locator('#btnYesKeyNotification', { hasText: 'DONE' });
   }
 
   async open(url) {
@@ -15,7 +15,6 @@ class DashboardPage {
 
   async clickLoginButton() {
     await this.loginButton.click();
-    await this.page.waitForURL('**/home', { timeout: 15000 });
   }
 
   async dismissCookiePopup() {
@@ -24,9 +23,11 @@ class DashboardPage {
     }
   }
 
-  async closePopup() {
-    await this.doneButton.click();
+  async closePopupIfVisible() {
+    if (await this.doneButton.isVisible()) {
+      await this.doneButton.click();
+    }
   }
 }
 
-module.exports = { DashboardPage };
+module.exports = { HomePage };

@@ -21,6 +21,9 @@ const LOCATOR_CREATORS = new Set([
   'getByTestId',
 ]);
 
+/** Symbol used to retrieve the raw (unwrapped) page from a proxied page */
+const RAW_PAGE = Symbol.for('playwright.rawPage');
+
 /**
  * Create a proxied page that wraps all locator-creating methods.
  * @param {import('@playwright/test').Page} page - The original Playwright page.
@@ -32,6 +35,9 @@ const LOCATOR_CREATORS = new Set([
 function createPageProxy(page, { healerAgent, config }) {
   return new Proxy(page, {
     get(target, prop, receiver) {
+      // Allow extracting the raw page for expect() compatibility
+      if (prop === RAW_PAGE) return target;
+
       const original = Reflect.get(target, prop, receiver);
 
       // Intercept locator-creating methods
@@ -41,6 +47,7 @@ function createPageProxy(page, { healerAgent, config }) {
 
           // Build a human-readable description of the selector
           const selectorDescription = `page.${prop}(${args.map((a) => JSON.stringify(a)).join(', ')})`;
+          console.log(`[PAGE-PROXY] Wrapping: ${selectorDescription}`);
 
           return createLocatorProxy(locator, {
             page: target, // Pass the raw page (not proxy) to avoid infinite loops
@@ -60,4 +67,4 @@ function createPageProxy(page, { healerAgent, config }) {
   });
 }
 
-module.exports = { createPageProxy };
+module.exports = { createPageProxy, RAW_PAGE };

@@ -8,7 +8,7 @@ class TotalConnectHomePage {
     this.securityNav = page.locator('span.menuName', { hasText: /^Security$/ });
     this.devicesNav = page.locator('span.menuName', { hasText: 'Devices' });
     this.camerasNav = page.locator('span.menuName', { hasText: 'Cameras' });
-    this.activityNav = page.locator('span.menuName', { hasText: 'Activity' });
+    this.activityNav = page.locator('span.menuName', { hasText: 'Activities' });
     this.scenesNav = page.locator('span.menuName', { hasText: 'Scenes' });
     this.usersNav = page.locator('span.menuName', { hasText: 'Users' });
     this.myProfileNav = page.locator('span.menuName', { hasText: 'My Profile' });

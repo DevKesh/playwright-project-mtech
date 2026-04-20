@@ -16,7 +16,7 @@
  */
 
 const base = require('@playwright/test');
-const { createPageProxy } = require('../core/page-proxy');
+const { createLocatorProxy } = require('../core/locator-proxy');
 const { LocatorHealerAgent } = require('../agents/locator-healer.agent');
 const { loadAIConfig } = require('../config/ai.config');
 
@@ -26,17 +26,22 @@ const config = loadAIConfig();
 let healerAgent = null;
 if (config.enabled && config.locatorHealing && config.openaiApiKey) {
   healerAgent = new LocatorHealerAgent(config);
+  console.log('[AI-FIXTURE] Healer agent created — locator self-healing is ACTIVE');
+} else {
+  console.log(`[AI-FIXTURE] Healer agent NOT created — enabled:${config.enabled} locator:${config.locatorHealing} key:${!!config.openaiApiKey}`);
 }
 
 const test = base.test.extend({
-  // Override page to wrap with AI healing proxy when enabled
   page: async ({ page }, use, testInfo) => {
     if (healerAgent) {
-      const proxiedPage = createPageProxy(page, { healerAgent, config });
-      await use(proxiedPage);
-    } else {
-      await use(page);
+      // Monkey-patch locator-creating methods directly on the page object
+      // (Playwright's fixture system strips JS Proxies, so we patch instead)
+      patchPageWithHealing(page, { healerAgent, config });
+      // Give the healing graph enough time (DOM extract → GPT → retry)
+      testInfo.setTimeout(120_000);
     }
+
+    await use(page);
 
     // Capture failure artifacts
     if (testInfo.status !== testInfo.expectedStatus) {
@@ -50,5 +55,29 @@ const test = base.test.extend({
     }
   },
 });
+
+/**
+ * Monkey-patch all locator-creating methods on a Page to return healing-capable locators.
+ */
+function patchPageWithHealing(page, { healerAgent, config }) {
+  const LOCATOR_CREATORS = ['locator', 'getByRole', 'getByText', 'getByLabel', 'getByPlaceholder', 'getByAltText', 'getByTitle', 'getByTestId'];
+
+  // Store unpatched originals so the healer agent can create locators
+  // without triggering recursive healing.
+  const rawMethods = {};
+  for (const method of LOCATOR_CREATORS) {
+    rawMethods[method] = page[method].bind(page);
+  }
+  page.__rawLocatorMethods = rawMethods;
+
+  for (const method of LOCATOR_CREATORS) {
+    const original = rawMethods[method];
+    page[method] = function (...args) {
+      const locator = original(...args);
+      const desc = `page.${method}(${args.map(a => JSON.stringify(a)).join(', ')})`;
+      return createLocatorProxy(locator, { page, healerAgent, config, selectorDescription: desc });
+    };
+  }
+}
 
 module.exports = { test, expect: base.expect };

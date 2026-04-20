@@ -13,7 +13,7 @@
  * @param {string} params.domSnapshot - Trimmed DOM of the page.
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
-function buildLocatorHealingPrompt({ failedSelector, errorMessage, action, domSnapshot, strategyHint, ragContext }) {
+function buildLocatorHealingPrompt({ failedSelector, errorMessage, action, domSnapshot, strategyHint, ragContext, targetedContext }) {
   const systemPrompt = `You are a Playwright test automation expert specializing in element selectors. A test selector has failed to find an element on a web page. Your job is to analyze the page DOM and suggest corrected selectors.
 
 Rules:
@@ -43,7 +43,7 @@ You MUST respond with valid JSON in this exact format:
   ]
 }`;
 
-  const userPrompt = `A Playwright locator has failed during a test execution.
+  let userPrompt = `A Playwright locator has failed during a test execution.
 
 **Failed selector:** ${failedSelector}
 **Action attempted:** ${action}
@@ -54,7 +54,19 @@ You MUST respond with valid JSON in this exact format:
 ${domSnapshot}
 \`\`\`
 
+IMPORTANT HEALING GUIDELINES:
+- The test INTENDED to interact with a specific element. Your job is to find THAT element, not a random one.
+- If the failed selector has a text filter (hasText, getByText), the element likely still exists but with SLIGHTLY DIFFERENT text (e.g., "Activities" → "Activity", "Sign In" → "Login").
+- Search the DOM for elements matching the same tag/class but with similar (not identical) text content.
+- Do NOT suggest elements that serve a completely different purpose than the original selector.
+- The best healed selector is the one that targets the SAME UI element the test intended to find.
+
 Analyze the DOM and suggest 3 alternative selectors that would find the intended element.`;
+
+  // Add targeted context (elements matching the base selector)
+  if (targetedContext) {
+    userPrompt += targetedContext;
+  }
 
   // Add strategy hint if provided (from runtime graph strategy cycling)
   if (strategyHint && strategyHint !== 'css') {
