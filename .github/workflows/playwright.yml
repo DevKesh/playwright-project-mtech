@@ -1,55 +1,265 @@
 name: Playwright Tests
+
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    # Nightly run at 2:00 AM UTC (7:30 AM IST)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'generated'
+        type: choice
+        options:
+          - generated
+          - total-connect
+          - smoke
+          - all
+      enable_healing:
+        description: 'Enable AI self-healing'
+        required: false
+        default: 'true'
+        type: boolean
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ────────────────────────────────────────────────────────
+  # Stage 1: Execute tests
+  # ────────────────────────────────────────────────────────
   test:
-    timeout-minutes: 60
+    name: Execute Tests
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    outputs:
+      test_outcome: ${{ steps.run_tests.outcome }}
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'npm'
+
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Validate test list (dry run)
-      run: npx playwright test --project total-connect --list
-      env:
-        CI: 'true'
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: Clean previous results
+      run: |
+        rm -rf allure-results allure-report playwright-report test-results
+        mkdir -p allure-results
+
+    - name: Determine test scope
+      id: scope
+      run: |
+        SUITE="${{ github.event.inputs.test_suite || 'generated' }}"
+        case "$SUITE" in
+          generated)     echo "test_args=tests/generated/ --project chrome" >> $GITHUB_OUTPUT ;;
+          total-connect) echo "test_args=tests/total-connect --project total-connect" >> $GITHUB_OUTPUT ;;
+          smoke)         echo "test_args=--project tc-smoke" >> $GITHUB_OUTPUT ;;
+          all)           echo "test_args=--project chrome" >> $GITHUB_OUTPUT ;;
+        esac
+        echo "Running suite: $SUITE"
+
     - name: Run Playwright tests
-      if: ${{ vars.RUN_TC_TESTS == 'true' }}
-      run: npx playwright test --project total-connect
+      id: run_tests
+      continue-on-error: true
+      run: npx playwright test ${{ steps.scope.outputs.test_args }}
       env:
         CI: 'true'
-        AI_HEALING_ENABLED: ${{ secrets.OPENAI_API_KEY && 'true' || 'false' }}
+
+    - name: Upload test artifacts
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          allure-results/
+          playwright-report/
+          test-results/
+        retention-days: 30
+
+  # ────────────────────────────────────────────────────────
+  # Stage 2: Self-heal broken tests (only when Stage 1 has failures)
+  # ────────────────────────────────────────────────────────
+  heal:
+    name: Self-Heal Failed Tests
+    needs: test
+    if: ${{ needs.test.outputs.test_outcome == 'failure' && (github.event.inputs.enable_healing != 'false') }}
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: Download test results from Stage 1
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: .
+
+    - name: Determine test scope
+      id: scope
+      run: |
+        SUITE="${{ github.event.inputs.test_suite || 'generated' }}"
+        case "$SUITE" in
+          generated)     echo "test_args=tests/generated/ --project chrome" >> $GITHUB_OUTPUT ;;
+          total-connect) echo "test_args=tests/total-connect --project total-connect" >> $GITHUB_OUTPUT ;;
+          smoke)         echo "test_args=--project tc-smoke" >> $GITHUB_OUTPUT ;;
+          all)           echo "test_args=--project chrome" >> $GITHUB_OUTPUT ;;
+        esac
+
+    - name: Re-run with AI healing enabled
+      id: heal_run
+      continue-on-error: true
+      run: npx playwright test ${{ steps.scope.outputs.test_args }} --retries 1
+      env:
+        CI: 'true'
+        AI_HEALING_ENABLED: 'true'
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         AI_HEALING_LOCATOR: 'true'
         AI_HEALING_ANALYSIS: 'true'
-    - name: Generate Allure Report
+
+    - name: Upload healed results
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: healed-results
+        path: |
+          allure-results/
+          ai-reports/
+          test-results/
+        retention-days: 30
+
+  # ────────────────────────────────────────────────────────
+  # Stage 3: Generate reports
+  # ────────────────────────────────────────────────────────
+  report:
+    name: Generate & Publish Reports
+    needs: [test, heal]
+    if: ${{ !cancelled() }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    # Download results from whichever stage ran last
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: ./stage1-results
+      continue-on-error: true
+
+    - name: Download healed results
+      uses: actions/download-artifact@v4
+      with:
+        name: healed-results
+        path: ./stage2-results
+      continue-on-error: true
+
+    # Merge allure results — healed results overlay the initial ones
+    - name: Merge Allure results
       run: |
         mkdir -p allure-results
-        npx allure generate ./allure-results -o ./allure-report
-      if: ${{ !cancelled() }}
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+        if [ -d "./stage1-results/allure-results" ]; then
+          cp -r ./stage1-results/allure-results/* allure-results/ 2>/dev/null || true
+        fi
+        if [ -d "./stage2-results/allure-results" ]; then
+          cp -r ./stage2-results/allure-results/* allure-results/ 2>/dev/null || true
+        fi
+        echo "Allure results count: $(ls allure-results/*.json 2>/dev/null | wc -l)"
+
+    # Download previous Allure history for trend charts
+    - name: Download previous Allure history
+      uses: actions/download-artifact@v4
       with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
+        name: allure-history
+        path: allure-history
+      continue-on-error: true
+
+    - name: Copy history to results
+      run: |
+        if [ -d "allure-history" ]; then
+          mkdir -p allure-results/history
+          cp -r allure-history/* allure-results/history/ 2>/dev/null || true
+        fi
+
+    - name: Generate Allure Report
+      run: npx allure generate allure-results -o allure-report --clean
+
+    - name: Save Allure history for next run
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-history
+        path: allure-report/history/
+        retention-days: 90
+
+    # Copy AI reports into the Allure report directory for unified viewing
+    - name: Bundle AI reports
+      run: |
+        mkdir -p allure-report/ai-reports
+        if [ -d "./stage2-results/ai-reports" ]; then
+          cp -r ./stage2-results/ai-reports/* allure-report/ai-reports/ 2>/dev/null || true
+        fi
+
+    # Publish to GitHub Pages
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: allure-report
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: Report URL
+      run: |
+        echo "┌──────────────────────────────────────────────────────────┐"
+        echo "│  Allure Report Published!                                │"
+        echo "│  URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ │"
+        echo "└──────────────────────────────────────────────────────────┘"
+
+    # Also keep as downloadable artifact
+    - name: Upload report artifact
+      uses: actions/upload-artifact@v4
       with:
         name: allure-report
         path: allure-report/
-        retention-days: 30
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: ai-healing-reports
-        path: ai-reports/
         retention-days: 30

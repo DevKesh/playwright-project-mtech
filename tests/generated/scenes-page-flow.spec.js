@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');
 const allure = require('allure-js-commons');
 const { testDataConfig } = require('../../framework/config/test-data.config');
 const { TotalConnect2LoginPage } = require('../../framework/pages/generated/TotalConnect2LoginPage');

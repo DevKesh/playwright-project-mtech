@@ -17,7 +17,7 @@ function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName, te
   const systemPrompt = `You are a Playwright test engineer. Generate a test spec file that follows the EXACT pattern shown in the example below.
 
 **Rules:**
-1. Use CommonJS: \`const { test, expect } = require('@playwright/test')\`
+1. Use CommonJS: \`const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');\` — this provides AI self-healing when enabled
 2. Import \`allure\` from \`allure-js-commons\`
 3. Every test MUST have these allure tags: \`allure.epic()\`, \`allure.feature()\`, \`allure.story()\`, \`allure.severity()\`, \`allure.tags()\`
 4. Use \`test.describe()\` to group related tests
@@ -31,12 +31,23 @@ function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName, te
 12. ALWAYS add this import at the top of the file: \`const { testDataConfig } = require('../../framework/config/test-data.config');\`
 13. Reference test data ONLY via \`testDataConfig.targetApp.credentials.email\`, \`testDataConfig.targetApp.searchData.keywords\`, \`testDataConfig.targetApp.baseUrl\`, etc. — NEVER define a local const/var with hardcoded test values
 
+**CRITICAL — Async/Await & Wait Rules (mandatory — violating these causes flaky tests):**
+- Every Playwright call MUST use \`await\` — .click(), .fill(), .goto(), .waitFor*(), expect().toBe*() are ALL async
+- After \`page.goto()\` or Page Object \`.open()\` — add \`await page.waitForLoadState('domcontentloaded');\`
+- After a click/submit that navigates to a NEW page/URL — add \`await page.waitForLoadState('networkidle');\`
+- After form login that loads a dashboard/home page — add \`await page.waitForLoadState('networkidle');\`
+- Do NOT add \`waitForLoadState\` after simple clicks (buttons, checkboxes, toggles on same page) — Playwright auto-waits
+- Do NOT add \`waitForTimeout()\` or artificial delays
+- NEVER use Promise.all() or parallel execution for sequential UI actions — each action MUST complete before the next begins
+- Inside test.step() callbacks, every action must be awaited
+- If you call a Page Object method, always \`await\` it
+
 CRITICAL: The "code" field in your JSON response must contain the ACTUAL, COMPLETE, RUNNABLE JavaScript source code for the test spec — NOT a description or placeholder. The code must be a real implementation that can be saved to a .spec.js file and executed by Playwright directly.
 
 You MUST respond with valid JSON:
 {
   "fileName": "kebab-case-flow-name.spec.js",
-  "code": "const { test, expect } = require('@playwright/test');\\nconst allure = require('allure-js-commons');\\nconst { testDataConfig } = require('../../framework/config/test-data.config');\\n\\ntest.describe('Flow Name', () => {\\n  test('test title', async ({ page }) => {\\n    await allure.epic(testDataConfig.targetApp.name);\\n    // ... actual test steps using testDataConfig ...\\n  });\\n});",
+  "code": "const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');\\nconst allure = require('allure-js-commons');\\nconst { testDataConfig } = require('../../framework/config/test-data.config');\\n\\ntest.describe('Flow Name', () => {\\n  test('test title', async ({ page }) => {\\n    await allure.epic(testDataConfig.targetApp.name);\\n    // ... actual test steps using testDataConfig ...\\n  });\\n});",
   "testCases": [
     { "title": "test title", "steps": ["step 1 description", "step 2 description"] }
   ]

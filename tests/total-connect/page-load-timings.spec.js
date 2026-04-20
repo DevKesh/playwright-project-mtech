@@ -1,160 +1,136 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../../framework/fixtures/tc.fixture');
 const allure = require('allure-js-commons');
-const { createTotalConnectFlow } = require('../../framework/flows/totalconnect/TotalConnectFlow');
-const {
-  attachLoadMetrics,
-  assertOptionalLoadThreshold,
-  measureNavigation,
-} = require('../../framework/utils/pageLoadMetrics');
 
 test.describe('@tc-only @tc-perf Full page load timing sweep across Total Connect', () => {
-  let tc;
+  test.describe.configure({ mode: 'serial' });
 
-  test.beforeEach(async ({ page }) => {
-    tc = createTotalConnectFlow({ page, expect });
-  });
-
-  test('TC-PERF-01 - login page and dashboard load timings', async ({ page }, testInfo) => {
+  test('TC-PERF-01 - login page and dashboard load timings', async ({ page, tc, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Login and Dashboard Load');
     await allure.severity('critical');
     await allure.tags('tc-only', 'tc-perf', 'login', 'dashboard');
 
-    const loginMetrics = await measureNavigation(page, async () => {
+    const loginMetrics = await perf.measureNavigation(page, async () => {
       await tc.openLoginPage();
       await tc.acceptConsentIfVisible();
     }, { label: 'login-page', readySelector: '#UsernameInput' });
 
-    await attachLoadMetrics(testInfo, 'login-page', loginMetrics);
-    assertOptionalLoadThreshold(expect, loginMetrics);
+    await perf.attachLoadMetrics(testInfo, 'login-page', loginMetrics);
+    perf.assertOptionalLoadThreshold(expect, loginMetrics);
 
     await tc.fillConfiguredCredentials();
 
-    const dashboardMetrics = await measureNavigation(page, async () => {
+    const dashboardMetrics = await perf.measureNavigation(page, async () => {
       await tc.submitLogin();
     }, { label: 'home-dashboard', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'home-dashboard', dashboardMetrics);
-    assertOptionalLoadThreshold(expect, dashboardMetrics);
+    await perf.attachLoadMetrics(testInfo, 'home-dashboard', dashboardMetrics);
+    perf.assertOptionalLoadThreshold(expect, dashboardMetrics);
   });
 
-  test('TC-PERF-02 - security page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-02 - security page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Security Page Load');
     await allure.severity('high');
     await allure.tags('tc-only', 'tc-perf', 'security');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToSecurity();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToSecurity();
     }, { label: 'security-page', readySelector: 'md-tab-item' });
 
-    await attachLoadMetrics(testInfo, 'security-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'security-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-03 - devices page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-03 - devices page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Devices Page Load');
     await allure.severity('high');
     await allure.tags('tc-only', 'tc-perf', 'devices');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToDevices();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToDevices();
     }, { label: 'devices-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'devices-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'devices-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-04 - cameras page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-04 - cameras page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Cameras Page Load');
     await allure.severity('high');
     await allure.tags('tc-only', 'tc-perf', 'cameras');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToCameras();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToCameras();
     }, { label: 'cameras-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'cameras-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'cameras-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-05 - activity page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-05 - activity page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Activity Page Load');
     await allure.severity('high');
     await allure.tags('tc-only', 'tc-perf', 'activity');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToActivity();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToActivity();
     }, { label: 'activity-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'activity-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'activity-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-06 - scenes page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-06 - scenes page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Scenes Page Load');
     await allure.severity('medium');
     await allure.tags('tc-only', 'tc-perf', 'scenes');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToScenes();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToScenes();
     }, { label: 'scenes-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'scenes-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'scenes-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-07 - my profile page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-07 - my profile page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('My Profile Page Load');
     await allure.severity('medium');
     await allure.tags('tc-only', 'tc-perf', 'profile');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToMyProfile();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToMyProfile();
     }, { label: 'my-profile-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'my-profile-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'my-profile-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 
-  test('TC-PERF-08 - locations page load timing', async ({ page }, testInfo) => {
+  test('TC-PERF-08 - locations page load timing', async ({ page, tcLoggedIn, perf }, testInfo) => {
     await allure.epic('Total Connect');
     await allure.feature('Performance');
     await allure.story('Locations Page Load');
     await allure.severity('medium');
     await allure.tags('tc-only', 'tc-perf', 'locations');
 
-    await tc.loginWithConfiguredUser();
-
-    const metrics = await measureNavigation(page, async () => {
-      await tc.navigateToLocations();
+    const metrics = await perf.measureNavigation(page, async () => {
+      await tcLoggedIn.navigateToLocations();
     }, { label: 'locations-page', readySelector: '#body-container-layout' });
 
-    await attachLoadMetrics(testInfo, 'locations-page', metrics);
-    assertOptionalLoadThreshold(expect, metrics);
+    await perf.attachLoadMetrics(testInfo, 'locations-page', metrics);
+    perf.assertOptionalLoadThreshold(expect, metrics);
   });
 });

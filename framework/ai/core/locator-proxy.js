@@ -10,6 +10,7 @@
  */
 
 const { createRuntimeHealingGraph } = require('../graph/runtime-graph');
+const { dismissPopups } = require('../../utils/popupInterceptor');
 
 // Action methods that should trigger healing on failure
 const HEALABLE_ACTIONS = new Set([
@@ -118,6 +119,30 @@ function createLocatorProxy(locator, context) {
               throw error;
             }
 
+            // ── Step 1: Try dismissing a blocking popup first ──
+            // If a popup is covering the element, dismissing it and retrying
+            // is faster and more reliable than self-healing the selector.
+            try {
+              const dismissed = await dismissPopups(
+                context.page,
+                context.healerAgent?.aiClient,
+                context.config
+              );
+              if (dismissed) {
+                console.log(
+                  `[AI-HEAL] Popup dismissed (${dismissed.method}: ${dismissed.selector}), retrying action...`
+                );
+                try {
+                  return await original.apply(target, args);
+                } catch {
+                  // Popup was dismissed but action still fails — continue to healing
+                }
+              }
+            } catch {
+              // Popup check failed — continue to healing
+            }
+
+            // ── Step 2: Invoke the LangGraph healing workflow ──
             console.log(
               `[AI-HEAL] Locator failed: ${context.selectorDescription} → invoking healing graph...`
             );

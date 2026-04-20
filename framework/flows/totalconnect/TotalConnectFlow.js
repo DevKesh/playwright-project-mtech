@@ -36,6 +36,15 @@ function createTotalConnectFlow({ page, expect }) {
     await loginPage.clickSignIn();
     await expect(page).toHaveURL(/.*\/home/, { timeout: 15000 });
     await expect(page.locator('#body-container-layout')).toBeVisible({ timeout: 15000 });
+
+    // Dismiss "Security Notifications" popup if it appears
+    try {
+      const toggle = page.locator('.md-dialog-container md-switch, .md-dialog-container [role="switch"]').first();
+      await toggle.click({ timeout: 3000 });
+      await page.locator('.md-dialog-container button:has-text("DONE")').click({ timeout: 2000 });
+    } catch {
+      // No dialog appeared — continue normally
+    }
   };
 
   const loginWithConfiguredUser = async () => {

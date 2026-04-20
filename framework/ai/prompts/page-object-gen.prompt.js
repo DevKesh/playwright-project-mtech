@@ -27,6 +27,15 @@ function buildPageObjectGenPrompt({ pageData, patternExample, domSnapshot, testD
 7. Use descriptive property names (e.g., \`this.loginButton\`, \`this.emailInput\`)
 8. Do NOT add unnecessary comments or documentation — keep it minimal like the example
 
+**CRITICAL — Async/Await & Wait Rules (mandatory in every method):**
+- Every Playwright call MUST use \`await\` — .click(), .fill(), .check(), .selectOption(), .goto(), .waitFor*(), expect().toBe*() are ALL async
+- After \`this.page.goto()\` — add \`await this.page.waitForLoadState('domcontentloaded');\`
+- After a click that triggers a full page navigation (new URL) — add \`await this.page.waitForLoadState('networkidle');\`
+- After form login / submit that loads a new page — add \`await this.page.waitForLoadState('networkidle');\`
+- Do NOT add \`waitForLoadState\` after simple clicks (buttons, tabs, toggles on the same page) — Playwright auto-waits
+- Do NOT add \`waitForTimeout()\` or artificial delays
+- NEVER fire-and-forget: every action must complete before the next line runs
+
 CRITICAL: The "code" field in your JSON response must contain the ACTUAL, COMPLETE, RUNNABLE JavaScript source code for the Page Object class — NOT a description or placeholder. The code must be a real implementation that can be saved to a .js file and imported directly.
 
 You MUST respond with valid JSON:
