@@ -7,7 +7,7 @@
  */
 
 // Failure categories that indicate locator issues
-const LOCATOR_CATEGORIES = new Set(['locator_broken', 'element_not_found']);
+const LOCATOR_CATEGORIES = new Set(['locator_broken', 'element_not_found', 'locator_timeout']);
 
 // Failure categories that indicate test logic issues
 const LOGIC_CATEGORIES = new Set(['assertion_mismatch', 'data_issue', 'app_bug']);
@@ -20,7 +20,20 @@ const INFRA_CATEGORIES = new Set(['network_error', 'timeout', 'unknown']);
  * Determines which healing path to take based on the failure category.
  */
 function routeAfterClassification(state) {
-  const category = state.failureCategory;
+  let category = state.failureCategory;
+
+  // GPT may classify locator timeouts as "timeout" — override when the error
+  // message clearly shows a locator wait was involved.
+  if (category === 'timeout') {
+    const msg = (state.errorMessage || '').toLowerCase();
+    const stack = (state.errorStack || '').toLowerCase();
+    const fullText = msg + ' ' + stack;
+    if (fullText.includes('waiting for locator') || fullText.includes('waiting for selector')
+        || fullText.includes('locator.click') || fullText.includes('locator.fill')
+        || fullText.includes('locator.hover') || /click locator\(/.test(fullText)) {
+      category = 'locator_broken';
+    }
+  }
 
   if (LOCATOR_CATEGORIES.has(category)) {
     // Locator issues already have runtime healing via the proxy.

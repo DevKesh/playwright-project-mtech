@@ -47,7 +47,9 @@
     "demo:report": "npm run clean:allure && npx allure generate -o ./allure-report && npx allure open ./allure-report",
     "demo:full": "npm run demo:explore && npm run demo:test && npm run demo:report",
     "demo:full:headed": "npm run demo:explore && npm run demo:test:headed && npm run demo:report",
-    "demo:heal": "cross-env AI_HEALING_ENABLED=true npx playwright test tests/generated/ --project chrome --headed"
+    "demo:heal": "cross-env AI_HEALING_ENABLED=true npx playwright test tests/generated/ --project chrome --headed",
+    "demo:phase1": "npm run clean:allure && cross-env AI_HEALING_ENABLED=true AI_HEALING_LOCATOR=false npx playwright test tests/generated/ --project chrome --headed && npm run report:allure",
+    "demo:phase2": "npm run clean:allure && cross-env AI_HEALING_ENABLED=true AI_HEALING_LOCATOR=true npx playwright test tests/generated/ --project chrome --headed && npm run report:allure"
   },
   "keywords": [],
   "author": "",

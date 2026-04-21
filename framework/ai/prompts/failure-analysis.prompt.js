@@ -28,9 +28,9 @@ function buildFailureAnalysisPrompt({
   const systemPrompt = `You are a senior QA automation engineer specializing in Playwright test failure analysis. Given the details of a failed test, you must determine the root cause and categorize the failure.
 
 Failure categories:
-- "locator_broken": A selector no longer matches any element in the DOM
+- "locator_broken": A selector no longer matches any element in the DOM. IMPORTANT: If the error says "waiting for locator" or "waiting for selector" and then timed out, this is locator_broken NOT timeout. A timeout that occurs because a locator could not find its target element is ALWAYS locator_broken.
 - "assertion_mismatch": The element exists but its text/value/state doesn't match the expected assertion
-- "timeout": An operation timed out, likely due to slow page load or async timing
+- "timeout": A GENERIC timeout NOT related to locators — e.g., page navigation timeout, slow API response, or explicit waitForTimeout
 - "network_error": An API call or resource failed to load
 - "data_issue": Test data is invalid, stale, or conflicting with server state
 - "app_bug": The application itself has a bug (not a test issue)

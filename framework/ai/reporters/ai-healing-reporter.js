@@ -83,8 +83,9 @@ class AIHealingReporter {
       error: result.error?.message || null,
     });
 
-    // Only analyze failures
-    if (result.status !== 'failed') return;
+    // Only analyze failures (Playwright uses 'failed' for assertion errors
+    // and 'timedOut' for timeout errors — both are failures we want to analyze)
+    if (result.status !== 'failed' && result.status !== 'timedOut') return;
 
     // Record failure in audit trail
     let failureAuditId = null;
@@ -123,12 +124,34 @@ class AIHealingReporter {
       .filter((s) => s.category === 'test.step')
       .map((s) => `${s.title} [${s.error ? 'FAILED' : 'OK'}]`);
 
+    // Build a comprehensive error message from all available sources
+    const primaryMessage = result.error?.message || 'Unknown error';
+    const primaryStack = result.error?.stack || '';
+    
+    // Collect additional error details from result.errors[] (Playwright provides multiple error objects)
+    const allErrorMessages = (result.errors || []).map(e => e.message || '').filter(Boolean);
+    
+    // Collect locator info from nested step titles (e.g. "Click locator('span.menuName').filter({ hasText: 'CCTV' })")
+    const stepLocatorInfo = [];
+    for (const s of (result.steps || [])) {
+      for (const ns of (s.steps || [])) {
+        if (ns.error && ns.title) {
+          stepLocatorInfo.push(ns.title);
+        }
+      }
+    }
+    
+    // Build combined error text for analysis
+    const combinedErrorMessage = [primaryMessage, ...allErrorMessages, ...stepLocatorInfo]
+      .filter((v, i, a) => a.indexOf(v) === i) // dedupe
+      .join('\n');
+
     // Run the healing graph asynchronously — track the promise so onEnd() can await it
     const healingPromise = this._runHealing({
       testFile,
       testTitle,
-      errorMessage: result.error?.message || 'Unknown error',
-      errorStack: result.error?.stack || '',
+      errorMessage: combinedErrorMessage,
+      errorStack: primaryStack,
       steps,
       screenshotPath,
       correlationId,
