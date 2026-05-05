@@ -1,0 +1,138 @@
+{
+  "pageName": "HomePage",
+  "url": "/home",
+  "urlPattern": "**/home",
+  "description": "Main dashboard showing security panel status, partition controls, and activity feed",
+  "elements": {
+    "cookieDismissButton": {
+      "selector": "page.getByRole('button', { name: 'Dismiss' })",
+      "type": "button",
+      "action": "click",
+      "context": "Dismisses cookie popup if visible after login",
+      "optional": true
+    },
+    "doneButton": {
+      "selector": "page.getByRole('button', { name: 'DONE' })",
+      "type": "button",
+      "action": "click",
+      "context": "Closes the Security Notifications popup that appears after first login",
+      "optional": true
+    },
+    "selectAllCheckbox": {
+      "selector": "page.getByText(/SELECT ALL|DESELECT ALL/).first()",
+      "type": "text-toggle",
+      "action": "click",
+      "context": "Selects/deselects all security partitions. Text toggles between SELECT ALL and DESELECT ALL. After clicking, arming buttons appear. MUST add waitForTimeout(1000) after click for buttons to render.",
+      "postAction": "await page.waitForTimeout(1000)"
+    },
+    "armHomeButton": {
+      "selector": "page.locator('button', { hasText: 'ARM HOME' }).first()",
+      "type": "button",
+      "action": "click",
+      "context": "Arms perimeter sensors. IMPORTANT: (1) aria-label overrides accessible name so getByRole FAILS. (2) getByText matches multiple elements (per-partition buttons). MUST USE page.locator('button', { hasText: 'ARM HOME' }).first()",
+      "visibleAfter": "selectAllCheckbox"
+    },
+    "armAwayButton": {
+      "selector": "page.locator('button', { hasText: 'ARM AWAY' }).first()",
+      "type": "button",
+      "action": "click",
+      "context": "Arms all sensors. Same issue as armHomeButton - use locator with hasText + first() to avoid strict mode violations.",
+      "visibleAfter": "selectAllCheckbox"
+    },
+    "disarmButton": {
+      "selector": "page.locator('button', { hasText: 'DISARM' }).first()",
+      "type": "button",
+      "action": "click",
+      "context": "Disarms selected partitions. Same pattern - use locator with hasText + first(). Appears after SELECT ALL when partitions are armed.",
+      "visibleAfter": "selectAllCheckbox"
+    },
+    "partitionStatusText": {
+      "selector": "page.getByText(/Armed Home|Armed Away|Disarmed/)",
+      "type": "text",
+      "action": "assert",
+      "context": "Shows current arming status of partitions. Values: 'Armed Home', 'Armed Away', 'Disarmed'"
+    },
+    "partitionSummaryText": {
+      "selector": "page.getByText(/\\d+ of \\d+ Partitions/)",
+      "type": "text",
+      "action": "assert",
+      "context": "Shows partition count summary like '2 of 2 Partitions Disarmed'"
+    },
+    "securityNav": {
+      "selector": "page.locator('#submenu-HomeMenu')",
+      "type": "button",
+      "action": "click",
+      "context": "Sidebar navigation to Security/Home page"
+    },
+    "devicesNav": {
+      "selector": "page.locator('#submenu-AutomationMenu')",
+      "type": "button",
+      "action": "click",
+      "context": "Sidebar navigation to Devices page (/automation)"
+    },
+    "camerasNav": {
+      "selector": "page.locator('#submenu-CamerasMenu')",
+      "type": "button",
+      "action": "click",
+      "context": "Sidebar navigation to Cameras page (/cameras)"
+    },
+    "activityNav": {
+      "selector": "page.locator('#submenu-EventsListMenu')",
+      "type": "button",
+      "action": "click",
+      "context": "Sidebar navigation to Activity page (/events)"
+    },
+    "scenesNav": {
+      "selector": "page.locator('#submenu-SmartScenesGripMenu')",
+      "type": "button",
+      "action": "click",
+      "context": "Sidebar navigation to Scenes page (/smartscenes)"
+    },
+    "todaysActivitiesHeading": {
+      "selector": "page.getByText('Today\\'s Activities')",
+      "type": "text",
+      "action": "assert",
+      "context": "Section heading for the activity feed on home page"
+    },
+    "viewAllActivitiesButton": {
+      "selector": "page.getByText('View all activities')",
+      "type": "button",
+      "action": "click",
+      "context": "Link to full activity log from home page"
+    }
+  },
+  "stateTransitions": {
+    "afterSelectAll": {
+      "description": "Arming buttons become visible (Arm Home All, Arm Away All)",
+      "visibleElements": ["armHomeAllButton", "armAwayAllButton"]
+    },
+    "afterArmHome": {
+      "description": "Partition status changes to 'Armed Home'. Disarm button becomes available on next SELECT ALL",
+      "waitFor": "page.getByText('Armed Home').waitFor({ timeout: 30000 })",
+      "expectedText": "Armed Home"
+    },
+    "afterArmAway": {
+      "description": "Partition status changes to 'Armed Away'. Disarm button becomes available on next SELECT ALL",
+      "waitFor": "page.getByText('Armed Away').waitFor({ timeout: 30000 })",
+      "expectedText": "Armed Away"
+    },
+    "afterDisarm": {
+      "description": "Partition status changes to 'Disarmed'",
+      "waitFor": "page.getByText('Disarmed').waitFor({ timeout: 30000 })",
+      "expectedText": "Disarmed"
+    },
+    "afterDevicesNav": {
+      "expectedUrl": "/automation",
+      "waitFor": "page.waitForURL('**/automation', { timeout: 15000 })"
+    },
+    "afterCamerasNav": {
+      "expectedUrl": "/cameras",
+      "waitFor": "page.waitForURL('**/cameras', { timeout: 15000 })"
+    },
+    "afterActivityNav": {
+      "expectedUrl": "/events",
+      "waitFor": "page.waitForURL('**/events', { timeout: 15000 })"
+    }
+  },
+  "dataBindings": {}
+}

@@ -183,7 +183,8 @@ function createLocatorProxy(locator, context) {
             if (dismissed) {
               console.log(`[AI-HEAL] Popup dismissed (${dismissed.method}: ${dismissed.selector}), retrying action...`);
               try {
-                return await original.apply(locator, args);
+                const retryArgs = injectQuickTimeout(action, args);
+                return await original.apply(locator, retryArgs);
               } catch {
                 // Popup dismissed but still fails — continue to healing
               }

@@ -402,7 +402,46 @@ function createExplorationNodes(config) {
   async function generateTests(state) {
     console.log('[EXPLORE] Phase 5: Generating Test Specs');
 
-    const patternExample = readPatternExample('tests/flows/checkout/order-and-checkout.spec.js');
+    // Use a TC-style pattern example that matches our import paths and conventions
+    const patternExample = `const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');
+const allure = require('allure-js-commons');
+const { testDataConfig } = require('../../framework/config/test-data.config');
+const { TotalConnect2LoginPage } = require('../../framework/pages/generated/TotalConnect2LoginPage');
+const { TotalConnectHomePage } = require('../../framework/pages/generated/TotalConnectHomePage');
+
+test.describe('@smoke @tc @tc-plan Login Flow', () => {
+  test('TC01 - User should be able to log into Total Connect', async ({ page }) => {
+    await allure.epic(testDataConfig.targetApp.name);
+    await allure.feature('Authentication');
+    await allure.story('User Login');
+    await allure.severity('critical');
+    await allure.tags('login', 'authentication', 'positive');
+
+    const loginPage = new TotalConnect2LoginPage(page);
+    const homePage = new TotalConnectHomePage(page);
+
+    await test.step('Navigate to login page', async () => {
+      await loginPage.open(testDataConfig.targetApp.baseUrl);
+      await page.waitForLoadState('domcontentloaded');
+    });
+
+    await test.step('Dismiss cookie consent if visible', async () => {
+      try { await loginPage.acceptConsent(); } catch {}
+    });
+
+    await test.step('Fill login form and submit', async () => {
+      await loginPage.fillLoginForm(
+        testDataConfig.targetApp.credentials.email,
+        testDataConfig.targetApp.credentials.password
+      );
+      await loginPage.clickSignIn();
+    });
+
+    await test.step('Verify successful login - dashboard loads', async () => {
+      await expect(page).toHaveURL(/.*\\/home/, { timeout: 15000 });
+    });
+  });
+});`;
     const appName = state.siteMap?.appName || 'Web Application';
 
     const generatedSpecs = [];

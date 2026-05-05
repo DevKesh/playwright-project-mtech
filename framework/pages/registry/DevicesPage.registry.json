@@ -1,0 +1,22 @@
+{
+  "pageName": "DevicesPage",
+  "url": "/automation",
+  "urlPattern": "**/automation",
+  "description": "IoT devices page showing thermostats, locks, switches in expandable categories",
+  "elements": {
+    "pageHeading": {
+      "selector": "page.getByRole('heading', { name: /Devices|Automation/ })",
+      "type": "heading",
+      "action": "assert",
+      "context": "Page heading confirming Devices page loaded"
+    },
+    "deviceCategories": {
+      "selector": "page.locator('.device-category, .automation-card, [class*=device]')",
+      "type": "container",
+      "action": "assert",
+      "context": "Device category cards/sections"
+    }
+  },
+  "stateTransitions": {},
+  "dataBindings": {}
+}

@@ -1,0 +1,44 @@
+{
+  "pageName": "LoginPage",
+  "url": "/login",
+  "urlPattern": "**/login",
+  "description": "Total Connect 2.0 login page with username/password authentication",
+  "elements": {
+    "usernameInput": {
+      "selector": "page.getByLabel('Username')",
+      "type": "input",
+      "action": "fill",
+      "context": "Username/email input field for authentication"
+    },
+    "passwordInput": {
+      "selector": "page.getByLabel('Password')",
+      "type": "input",
+      "action": "fill",
+      "context": "Password input field"
+    },
+    "signInButton": {
+      "selector": "page.getByRole('button', { name: 'Sign In' })",
+      "type": "button",
+      "action": "click",
+      "context": "Submits login form, redirects to /home on success"
+    },
+    "cookieConsentButton": {
+      "selector": "page.locator('#truste-consent-button')",
+      "type": "button",
+      "action": "click",
+      "context": "Dismisses cookie consent banner (may not appear)",
+      "optional": true
+    }
+  },
+  "stateTransitions": {
+    "afterSignIn": {
+      "expectedUrl": "/home",
+      "waitFor": "page.waitForURL('**/home', { timeout: 15000 })",
+      "description": "Redirects to home page after successful login"
+    }
+  },
+  "dataBindings": {
+    "username": "testDataConfig.targetApp.credentials.email",
+    "password": "testDataConfig.targetApp.credentials.password"
+  }
+}

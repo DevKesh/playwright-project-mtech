@@ -57,10 +57,22 @@ function _loadPersistedSnapshot(url) {
     const filePath = path.join(SNAPSHOT_CACHE_DIR, `${key}.json`);
     if (!fs.existsSync(filePath)) return null;
     const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    // Expire disk cache after 24 hours
-    if (Date.now() - new Date(data.savedAt).getTime() > 24 * 60 * 60 * 1000) return null;
+    // Expire disk cache after 1 hour (prevent stale post-login snapshots)
+    if (Date.now() - new Date(data.savedAt).getTime() > 60 * 60 * 1000) return null;
     return data.snapshot;
   } catch { return null; }
+}
+
+/**
+ * Remove a persisted disk snapshot for a given URL.
+ * Called after login/navigation to ensure fresh DOM capture.
+ */
+function _invalidateDiskSnapshot(url) {
+  try {
+    const key = Buffer.from(url).toString('base64url').substring(0, 120);
+    const filePath = path.join(SNAPSHOT_CACHE_DIR, `${key}.json`);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch { /* best-effort */ }
 }
 
 // ── IST Timestamp Helper ──────────────────────────────────────────
@@ -344,7 +356,16 @@ function createNLAuthoringNodes(config) {
             try {
               await page.waitForURL(url => !url.toString().includes('/login'), { timeout: 15000 });
               await ensurePageSettled(page);
-              console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Auto-login: Success — now at ${page.url()}`);
+              // Wait for actual page content to render (not just URL change)
+              // The app shows "Signing in..." briefly before rendering the real page
+              try {
+                await page.waitForSelector('#body-container-layout, [ui-view], .main-content, nav, [role="navigation"]', { timeout: 10000 });
+              } catch { /* proceed — page may use different layout markers */ }
+              // Invalidate any stale disk-cached DOM snapshot for this URL
+              const postLoginUrl = page.url();
+              delete _snapshotMemory[postLoginUrl];
+              _invalidateDiskSnapshot(postLoginUrl);
+              console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Auto-login: Success — now at ${postLoginUrl}`);
             } catch {
               console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Auto-login: URL did not change — login may have failed`);
             }
@@ -446,6 +467,7 @@ function createNLAuthoringNodes(config) {
           currentUrl,
           pageTitle,
           previousActions: state.recordedActions,
+          preferredLocators: state.preferredLocators,
         });
 
         const resolution = await aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
@@ -524,7 +546,12 @@ function createNLAuthoringNodes(config) {
 
         // Invalidate snapshot cache after DOM-mutating actions so next step gets fresh DOM
         if (['click', 'fill', 'select', 'press', 'navigate'].includes(step.action)) {
-          delete _snapshotMemory[page.url()];
+          // After click, the URL might change (login submit, navigation)
+          // Give the page a moment to settle so next DOM extraction is accurate
+          try { await ensurePageSettled(page, { timeout: 3000 }); } catch { /* proceed */ }
+          const currentUrl = page.url();
+          delete _snapshotMemory[currentUrl];
+          _invalidateDiskSnapshot(currentUrl);
         }
 
         const stepEndTime = istTimestamp();
@@ -657,6 +684,7 @@ function createNLAuthoringNodes(config) {
           pageName,
           pageUrl: group.url || state.baseUrl,
           patternExample: poPattern,
+          preferredLocators: state.preferredLocators,
         });
 
         const poResult = await aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
@@ -708,8 +736,13 @@ function createNLAuthoringNodes(config) {
   async function writeFiles(state) {
     console.log(`[NL-AUTHOR] [${istTimestamp()}] Phase 5: Writing generated files...`);
 
-    const poDir = path.join(PROJECT_ROOT, 'framework', 'pages', 'generated');
-    const specDir = path.join(PROJECT_ROOT, 'tests', 'generated');
+    // Use custom output dirs from suite config, or default paths
+    const poDir = state.pagesDir
+      ? path.resolve(PROJECT_ROOT, state.pagesDir)
+      : path.join(PROJECT_ROOT, 'framework', 'pages', 'generated');
+    const specDir = state.outputDir
+      ? path.resolve(PROJECT_ROOT, state.outputDir)
+      : path.join(PROJECT_ROOT, 'tests', 'generated');
     fs.mkdirSync(poDir, { recursive: true });
     fs.mkdirSync(specDir, { recursive: true });
 

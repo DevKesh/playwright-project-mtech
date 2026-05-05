@@ -14,6 +14,13 @@ const NLAuthoringState = Annotation.Root({
   autoLogin: Annotation({ reducer: (_, b) => b, default: () => false }),
   headed: Annotation({ reducer: (_, b) => b, default: () => true }),
 
+  // -- Suite-driven options --
+  preferredLocators: Annotation({ reducer: (_, b) => b, default: () => [] }),
+  outputDir: Annotation({ reducer: (_, b) => b, default: () => '' }),
+  pagesDir: Annotation({ reducer: (_, b) => b, default: () => '' }),
+  entryCriteria: Annotation({ reducer: (_, b) => b, default: () => '' }),
+  exitCriteria: Annotation({ reducer: (_, b) => b, default: () => '' }),
+
   // -- Parsed instructions --
   parsedInstructions: Annotation({ reducer: (_, b) => b, default: () => null }),
   pendingSteps: Annotation({ reducer: (_, b) => b, default: () => [] }),

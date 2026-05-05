@@ -1,0 +1,22 @@
+{
+  "pageName": "ActivityPage",
+  "url": "/events",
+  "urlPattern": "**/events",
+  "description": "Activity log page showing historical security events with timestamps",
+  "elements": {
+    "activityEntries": {
+      "selector": "page.locator('[class*=event], [class*=activity], .event-row, tr')",
+      "type": "list",
+      "action": "assert",
+      "context": "Activity log entries with timestamps"
+    },
+    "activityTimestamp": {
+      "selector": "page.getByText(/\\d{1,2}:\\d{2}:\\d{2}\\s*(AM|PM)/)",
+      "type": "text",
+      "action": "assert",
+      "context": "Timestamp format in activity entries"
+    }
+  },
+  "stateTransitions": {},
+  "dataBindings": {}
+}

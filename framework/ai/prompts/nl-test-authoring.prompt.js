@@ -87,16 +87,38 @@ Generate the structured steps. Be thorough — include navigation, actions, AND 
  * @param {Array} params.previousActions - Actions already executed (for context).
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
-function buildResolveActionPrompt({ step, domSnapshot, currentUrl, pageTitle, previousActions }) {
+function buildResolveActionPrompt({ step, domSnapshot, currentUrl, pageTitle, previousActions, preferredLocators }) {
+  // Build locator priority based on suite preferences or defaults
+  const locatorPriority = preferredLocators && preferredLocators.length > 0
+    ? preferredLocators.map((l, i) => `${i + 1}. ${l}`).join('\n')
+    : `1. getByRole() — buttons, links, headings, textboxes (BEST — semantic and resilient)
+2. getByLabel() — form fields with associated labels
+3. getByText() — unique visible text content
+4. getByPlaceholder() — inputs with placeholder text
+5. #id selectors — only when the ID is stable and meaningful
+6. CSS selectors — last resort only`;
+
   const systemPrompt = `You are a Playwright automation expert. Given a test step description and the current page DOM, determine the EXACT Playwright code to execute this step.
 
-You must choose the most robust selector strategy:
-1. Prefer #id selectors when available
-2. Use getByRole() for buttons, links, headings with accessible names
-3. Use getByPlaceholder() for inputs with placeholders
-4. Use getByLabel() for labeled form fields
-5. Use getByText() for unique visible text
-6. Use CSS selectors as a last resort
+**LOCATOR STRATEGY — STRICT PRIORITY ORDER (follow this exactly):**
+${locatorPriority}
+
+IMPORTANT: Always prefer getByRole, getByLabel, and getByText over CSS selectors or IDs. These locators are:
+- More resilient to DOM changes (self-healing friendly)
+- Accessible and semantic
+- Recommended by Playwright best practices
+
+Examples of GOOD locators:
+- page.getByRole('button', { name: 'Sign In' })
+- page.getByRole('link', { name: 'Devices' })
+- page.getByRole('textbox', { name: 'Username' })
+- page.getByLabel('Email')
+- page.getByText('Armed Home')
+
+Examples of BAD locators (avoid these):
+- page.locator('#some-random-id')
+- page.locator('.css-class-name')
+- page.locator('div > span:nth-child(2)')
 
 You MUST respond with valid JSON:
 {
@@ -157,26 +179,46 @@ Determine the exact Playwright code to execute this step.`;
  * @param {string} params.patternExample - Existing PO source code as pattern.
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
-function buildRecordedActionsToPageObjectPrompt({ recordedActions, pageName, pageUrl, patternExample }) {
+function buildRecordedActionsToPageObjectPrompt({ recordedActions, pageName, pageUrl, patternExample, preferredLocators }) {
+  const locatorNote = preferredLocators && preferredLocators.length > 0
+    ? `\n11. **PREFERRED LOCATORS (MANDATORY):** Use these strategies in order: ${preferredLocators.join(', ')}. Only fall back to CSS selectors if none of the preferred strategies can target the element.`
+    : `\n11. **PREFERRED LOCATORS (MANDATORY):** Use getByRole(), getByLabel(), getByText() as the top 3 strategies. These are more resilient and semantic than CSS selectors or IDs.`;
+
   const systemPrompt = `You are a Playwright test framework engineer. Generate a Page Object class from recorded browser actions.
 
 **Rules:**
 1. CommonJS module syntax: \`module.exports = { ClassName }\`
 2. Constructor takes \`page\` and stores locators as properties
-3. Each unique element gets a locator property in the constructor
+3. Each unique element gets a locator property in the constructor using SEMANTIC locators (getByRole, getByLabel, getByText)
 4. Each user action gets an async method (group related actions into meaningful methods)
 5. Import \`expect\` from \`@playwright/test\` if assertions are needed
 6. Add an \`async open(url)\` method if navigation was recorded
 7. Use descriptive property names matching the recorded elementName values
 8. Keep it clean and minimal — follow the pattern example exactly
 9. Do NOT duplicate locators — if the same element is used in multiple steps, define it once
-10. Group related fill actions into a single method (e.g., fillLoginForm(username, password))
+10. Group related fill actions into a single method (e.g., fillLoginForm(username, password))${locatorNote}
+
+**LOCATOR EXAMPLES for constructor:**
+\`\`\`javascript
+constructor(page) {
+  this.page = page;
+  // GOOD — semantic, resilient locators:
+  this.signInButton = page.getByRole('button', { name: 'Sign In' });
+  this.usernameInput = page.getByRole('textbox', { name: 'Username' });
+  this.passwordInput = page.getByLabel('Password');
+  this.devicesLink = page.getByRole('link', { name: 'Devices' });
+  this.armedStatus = page.getByText('Armed Home');
+  // AVOID — fragile CSS/ID locators:
+  // this.signInButton = page.locator('#LoginButton');
+}
+\`\`\`
 
 **CRITICAL — Async/Await & Wait Rules (mandatory in every method):**
 - Every Playwright call MUST use \`await\` — .click(), .fill(), .check(), .selectOption(), .goto(), .waitFor*(), expect().toBe*() are all async
 - After \`this.page.goto()\` — add \`await this.page.waitForLoadState('domcontentloaded');\`
-- After a click that triggers a full page navigation (new URL) — add \`await this.page.waitForLoadState('networkidle');\`
-- After form login / submit that loads a new page — add \`await this.page.waitForLoadState('networkidle');\`
+- After a click that triggers a full page navigation (new URL) — add \`await expect(this.page).toHaveURL(/expected-url-pattern/, { timeout: 15000 });\` to wait for the new page
+- After form login / submit — add \`await expect(this.page).toHaveURL(/\\/home/, { timeout: 15000 });\` to wait for redirect
+- NEVER use \`waitForLoadState('networkidle')\` — it times out on Single Page Applications. Use \`expect(page).toHaveURL()\` or \`waitForURL()\` instead
 - Do NOT add \`waitForLoadState\` after simple clicks (buttons, tabs, toggles on the same page) — Playwright auto-waits
 - Do NOT add \`waitForTimeout()\` or artificial delays
 - NEVER fire-and-forget: every action must complete before the next line runs
@@ -243,13 +285,14 @@ function buildRecordedActionsToSpecPrompt({ parsedInstructions, recordedActions,
 **CRITICAL — Async/Await & Wait Rules (mandatory — violating these causes flaky tests):**
 - Every Playwright call MUST use \`await\` — .click(), .fill(), .goto(), .waitFor*(), expect().toBe*() are ALL async
 - After \`page.goto()\` or Page Object \`.open()\` — add \`await page.waitForLoadState('domcontentloaded');\`
-- After a click/submit that navigates to a NEW page/URL — add \`await page.waitForLoadState('networkidle');\`
-- After form login that loads a dashboard/home page — add \`await page.waitForLoadState('networkidle');\`
+- After a click/submit that navigates to a NEW page/URL — use \`await expect(page).toHaveURL(/expected-pattern/, { timeout: 15000 });\` or \`await page.waitForURL(/pattern/, { timeout: 10000 });\`
+- After form login — use \`await expect(page).toHaveURL(/\\/home/, { timeout: 15000 });\` to confirm redirect
+- NEVER use \`waitForLoadState('networkidle')\` — it causes 2-minute timeouts on Single Page Applications. This is BANNED.
 - Do NOT add \`waitForLoadState\` after simple clicks (buttons, checkboxes, toggles on same page) — Playwright auto-waits
 - Do NOT add \`waitForTimeout()\` or artificial delays
 - NEVER use Promise.all() or parallel execution for sequential UI actions — each action MUST complete before the next begins
 - Inside test.step() callbacks, every action must be awaited
-- If you call a Page Object method, always \`await\` it
+- If you call a Page Object method, always \`await\` it — the Page Object method already handles its own wait internally, do NOT add extra waits after calling it
 
 CRITICAL: Generate REAL, COMPLETE, RUNNABLE JavaScript code. The "code" field must contain actual working source code, NOT a placeholder.
 

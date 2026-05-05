@@ -83,12 +83,27 @@ function readInstructionsInteractive() {
  * Run a single test case through the NL authoring graph.
  * @returns {{id, title, instructions, status, actions, assertions, pageObjects, testSpecs, errors, durationMs}}
  */
-async function runSingleTestCase(graph, { id, title, instructions, url, autoLogin, headed }) {
+async function runSingleTestCase(graph, { id, title, instructions, url, autoLogin, headed, preferredLocators, outputDir, pagesDir, entryCriteria, exitCriteria }) {
   const start = Date.now();
   const entry = { id, title, instructions, status: 'FAIL', actions: { passed: 0, failed: 0 }, assertions: { passed: 0, failed: 0, total: 0 }, pageObjects: [], testSpecs: [], errors: [], durationMs: 0 };
 
   try {
-    const result = await graph.invoke({ instructions, baseUrl: url, autoLogin, headed });
+    // Inject entry/exit criteria into instructions if provided
+    let fullInstructions = instructions;
+    if (entryCriteria) fullInstructions = `PRECONDITION: ${entryCriteria}\n${fullInstructions}`;
+    if (exitCriteria) fullInstructions = `${fullInstructions}\nEXPECTED RESULT: ${exitCriteria}`;
+
+    const result = await graph.invoke({
+      instructions: fullInstructions,
+      baseUrl: url,
+      autoLogin,
+      headed,
+      preferredLocators: preferredLocators || [],
+      outputDir: outputDir || '',
+      pagesDir: pagesDir || '',
+      entryCriteria: entryCriteria || '',
+      exitCriteria: exitCriteria || '',
+    });
 
     const allActions = result.recordedActions || [];
     const actionSteps = allActions.filter(a => !a.isAssertion);
@@ -242,6 +257,15 @@ async function main() {
     console.log(`║  Test Cases: ${String(suite.testCases.length).padEnd(43)} ║`);
     console.log(`║  Login:      ${String(autoLogin).padEnd(43)} ║`);
     console.log(`║  Headed:     ${String(headed).padEnd(43)} ║`);
+    if (suite.suiteOptions.preferredLocators) {
+      console.log(`║  Locators:   ${suite.suiteOptions.preferredLocators.join(', ').substring(0, 43).padEnd(43)} ║`);
+    }
+    if (suite.suiteOptions.outputDir) {
+      console.log(`║  Output:     ${suite.suiteOptions.outputDir.substring(0, 43).padEnd(43)} ║`);
+    }
+    if (suite.suiteOptions.pagesDir) {
+      console.log(`║  Pages:      ${suite.suiteOptions.pagesDir.substring(0, 43).padEnd(43)} ║`);
+    }
     console.log('╠══════════════════════════════════════════════════════════╣');
     for (const tc of suite.testCases) {
       console.log(`║  ${tc.id}: ${tc.title.substring(0, 50).padEnd(50)}   ║`);
@@ -270,6 +294,11 @@ async function main() {
         url: tcUrl,
         autoLogin: tcLogin,
         headed: tcHeaded,
+        preferredLocators: tc.options.preferredLocators || suite.suiteOptions.preferredLocators || [],
+        outputDir: tc.options.outputDir || suite.suiteOptions.outputDir || '',
+        pagesDir: tc.options.pagesDir || suite.suiteOptions.pagesDir || '',
+        entryCriteria: tc.entryCriteria || '',
+        exitCriteria: tc.exitCriteria || '',
       });
 
       results.push(result);

@@ -3,6 +3,21 @@
  * Playwright test spec files from identified user flows.
  */
 
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Load the exploration context markdown file for additional guidance.
+ */
+function loadExplorationContext() {
+  const contextPath = path.join(__dirname, 'exploration-context.md');
+  try {
+    return fs.readFileSync(contextPath, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Build prompt for generating a test spec file.
  * @param {object} params
@@ -14,28 +29,35 @@
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
 function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName, testDataConfig }) {
+  const explorationContext = loadExplorationContext();
+
   const systemPrompt = `You are a Playwright test engineer. Generate a test spec file that follows the EXACT pattern shown in the example below.
+
+${explorationContext ? `**APPLICATION CONTEXT (use this for test flow design, assertions, and locator usage):**\n${explorationContext}\n` : ''}
 
 **Rules:**
 1. Use CommonJS: \`const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');\` — this provides AI self-healing when enabled
 2. Import \`allure\` from \`allure-js-commons\`
 3. Every test MUST have these allure tags: \`allure.epic()\`, \`allure.feature()\`, \`allure.story()\`, \`allure.severity()\`, \`allure.tags()\`
-4. Use \`test.describe()\` to group related tests
+4. Use \`test.describe()\` to group related tests — add \`@smoke @tc @tc-plan\` tags to the describe title
 5. Use \`test.step()\` for each logical step in the test
 6. Tests receive \`{ page }\` from the fixture — use \`page\` directly to create locators and perform actions
-7. Import Page Object classes and instantiate them in the test with \`new PageClass(page)\`
+7. Import Page Object classes using EXACTLY this path pattern: \`const { ClassName } = require('../../framework/pages/generated/ClassName');\` — the path MUST be \`../../framework/pages/generated/\` — NEVER use \`../../framework/page-objects/\` or any other path
 8. Add meaningful assertions after key actions using \`expect\`
 9. NEVER hardcode test data (emails, passwords, URLs, search terms) inline — ALL test data MUST come from the imported testDataConfig
 10. Keep tests focused — one flow per test, with positive and optionally negative scenarios
 11. Do NOT import from fixture files that don't exist — use \`@playwright/test\` directly
 12. ALWAYS add this import at the top of the file: \`const { testDataConfig } = require('../../framework/config/test-data.config');\`
-13. Reference test data ONLY via \`testDataConfig.targetApp.credentials.email\`, \`testDataConfig.targetApp.searchData.keywords\`, \`testDataConfig.targetApp.baseUrl\`, etc. — NEVER define a local const/var with hardcoded test values
+13. Reference test data ONLY via \`testDataConfig.targetApp.credentials.email\`, \`testDataConfig.targetApp.credentials.password\`, \`testDataConfig.targetApp.baseUrl\`, etc. — NEVER define a local const/var with hardcoded test values
+14. For login flows: use \`try { await loginPage.acceptConsent(); } catch {}\` to handle cookie consent — it may or may not appear
+15. After login submit, wait for dashboard with: \`await expect(page).toHaveURL(/.*\\/home/, { timeout: 15000 });\` — do NOT use waitForLoadState('networkidle')
 
 **CRITICAL — Async/Await & Wait Rules (mandatory — violating these causes flaky tests):**
 - Every Playwright call MUST use \`await\` — .click(), .fill(), .goto(), .waitFor*(), expect().toBe*() are ALL async
 - After \`page.goto()\` or Page Object \`.open()\` — add \`await page.waitForLoadState('domcontentloaded');\`
-- After a click/submit that navigates to a NEW page/URL — add \`await page.waitForLoadState('networkidle');\`
-- After form login that loads a dashboard/home page — add \`await page.waitForLoadState('networkidle');\`
+- After a click/submit that navigates to a NEW page/URL — add \`await page.waitForLoadState('domcontentloaded');\`
+- After form login that loads a dashboard/home page — add \`await page.waitForLoadState('domcontentloaded');\`
+- Do NOT use \`waitForLoadState('networkidle')\` — it causes timeouts on SPAs and real-world apps with background requests
 - Do NOT add \`waitForLoadState\` after simple clicks (buttons, checkboxes, toggles on same page) — Playwright auto-waits
 - Do NOT add \`waitForTimeout()\` or artificial delays
 - NEVER use Promise.all() or parallel execution for sequential UI actions — each action MUST complete before the next begins
@@ -44,10 +66,16 @@ function buildTestSpecGenPrompt({ flow, pageObjects, patternExample, appName, te
 
 CRITICAL: The "code" field in your JSON response must contain the ACTUAL, COMPLETE, RUNNABLE JavaScript source code for the test spec — NOT a description or placeholder. The code must be a real implementation that can be saved to a .spec.js file and executed by Playwright directly.
 
+IMPORT PATH RULES (MUST follow exactly):
+- Fixture: require('../../framework/ai/fixtures/tc.ai.fixture')
+- Allure: require('allure-js-commons')
+- Test data: require('../../framework/config/test-data.config')
+- Page Objects: require('../../framework/pages/generated/ClassName') — use destructured import { ClassName }
+
 You MUST respond with valid JSON:
 {
   "fileName": "kebab-case-flow-name.spec.js",
-  "code": "const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');\\nconst allure = require('allure-js-commons');\\nconst { testDataConfig } = require('../../framework/config/test-data.config');\\n\\ntest.describe('Flow Name', () => {\\n  test('test title', async ({ page }) => {\\n    await allure.epic(testDataConfig.targetApp.name);\\n    // ... actual test steps using testDataConfig ...\\n  });\\n});",
+  "code": "const { test, expect } = require('../../framework/ai/fixtures/tc.ai.fixture');\\nconst allure = require('allure-js-commons');\\nconst { testDataConfig } = require('../../framework/config/test-data.config');\\nconst { TotalConnect2LoginPage } = require('../../framework/pages/generated/TotalConnect2LoginPage');\\n\\ntest.describe('@smoke @tc @tc-plan Flow Name', () => {\\n  test('TC01 - test title', async ({ page }) => {\\n    await allure.epic(testDataConfig.targetApp.name);\\n    // ... actual test steps using testDataConfig ...\\n  });\\n});",
   "testCases": [
     { "title": "test title", "steps": ["step 1 description", "step 2 description"] }
   ]

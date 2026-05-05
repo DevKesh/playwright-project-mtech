@@ -3,6 +3,21 @@
  * Playwright Page Object classes from discovered page structures.
  */
 
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Load the exploration context markdown file for additional guidance.
+ */
+function loadExplorationContext() {
+  const contextPath = path.join(__dirname, 'exploration-context.md');
+  try {
+    return fs.readFileSync(contextPath, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Build prompt for generating a Page Object class.
  * @param {object} params
@@ -14,8 +29,11 @@
  */
 function buildPageObjectGenPrompt({ pageData, patternExample, domSnapshot, testDataConfig }) {
   const baseUrl = testDataConfig?.targetApp?.baseUrl || '';
+  const explorationContext = loadExplorationContext();
 
   const systemPrompt = `You are a Playwright test framework engineer. Generate a Page Object class that follows the EXACT pattern shown in the example below.
+
+${explorationContext ? `**APPLICATION CONTEXT (use this for locator strategy and naming):**\n${explorationContext}\n` : ''}
 
 **Rules:**
 1. The class MUST use CommonJS module syntax: \`module.exports = { ClassName }\`
@@ -30,8 +48,9 @@ function buildPageObjectGenPrompt({ pageData, patternExample, domSnapshot, testD
 **CRITICAL — Async/Await & Wait Rules (mandatory in every method):**
 - Every Playwright call MUST use \`await\` — .click(), .fill(), .check(), .selectOption(), .goto(), .waitFor*(), expect().toBe*() are ALL async
 - After \`this.page.goto()\` — add \`await this.page.waitForLoadState('domcontentloaded');\`
-- After a click that triggers a full page navigation (new URL) — add \`await this.page.waitForLoadState('networkidle');\`
-- After form login / submit that loads a new page — add \`await this.page.waitForLoadState('networkidle');\`
+- After a click that triggers a full page navigation (new URL) — add \`await this.page.waitForLoadState('domcontentloaded');\`
+- After form login / submit that loads a new page — add \`await this.page.waitForLoadState('domcontentloaded');\`
+- Do NOT use \`waitForLoadState('networkidle')\` — it is unreliable on SPAs and causes timeouts
 - Do NOT add \`waitForLoadState\` after simple clicks (buttons, tabs, toggles on the same page) — Playwright auto-waits
 - Do NOT add \`waitForTimeout()\` or artificial delays
 - NEVER fire-and-forget: every action must complete before the next line runs

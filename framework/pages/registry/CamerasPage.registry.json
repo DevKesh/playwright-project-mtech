@@ -1,0 +1,16 @@
+{
+  "pageName": "CamerasPage",
+  "url": "/cameras",
+  "urlPattern": "**/cameras",
+  "description": "Cameras page showing live/recorded camera feeds",
+  "elements": {
+    "cameraFeedSection": {
+      "selector": "page.locator('[class*=camera], [class*=video], .camera-feed')",
+      "type": "container",
+      "action": "assert",
+      "context": "Camera feed section confirming cameras page loaded"
+    }
+  },
+  "stateTransitions": {},
+  "dataBindings": {}
+}

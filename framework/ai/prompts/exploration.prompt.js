@@ -2,6 +2,22 @@
  * Exploration Prompts: prompt builders for page classification and app analysis.
  */
 
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Load the exploration context markdown file.
+ * Users can edit this .md file in plain English to control exploration behavior.
+ */
+function loadExplorationContext() {
+  const contextPath = path.join(__dirname, 'exploration-context.md');
+  try {
+    return fs.readFileSync(contextPath, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Build prompt for classifying a single page.
  * @param {object} params
@@ -10,11 +26,15 @@
  * @returns {{ systemPrompt: string, userPrompt: string }}
  */
 function buildPageClassificationPrompt({ url, pageStructure }) {
+  const explorationContext = loadExplorationContext();
+
   const systemPrompt = `You are a web application analyst. Given the URL and the structured elements of a web page, classify it and analyze its purpose.
 
 IMPORTANT: You MUST always provide a specific, meaningful classification — NEVER use "unknown" or "other" unless the page is truly blank or broken. Even complex pages like e-commerce homepages, multi-purpose dashboards, or content-heavy pages have a clear primary purpose. Use the URL path, page title, headings, and element types to determine the classification.
 
 For the "pageName" field, ALWAYS derive a specific PascalCase name from the page's purpose and the application name. Examples: "AmazonHomePage", "GoogleSearchPage", "LoginPage", "ProductCatalogPage". NEVER use "UnknownPage".
+
+${explorationContext ? `**APPLICATION CONTEXT (provided by the user — use this to guide classification):**\n${explorationContext}\n` : ''}
 
 You MUST respond with valid JSON matching this schema:
 {
