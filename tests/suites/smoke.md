@@ -40,7 +40,7 @@ verify the partition status text shows "Disarmed"
 login to the app
 dismiss cookie popup if visible
 close any pop up that occurs by clicking on DONE
-click the sidebar button with id "submenu-AutomationMenu" (text "Devices") to navigate to Devices
+click the sidebar navigation button with text "Devices" to navigate to Devices
 verify the URL contains /automation
 verify at least one device or device category is visible on the page
 
@@ -51,7 +51,8 @@ verify at least one device or device category is visible on the page
 login to the app
 dismiss cookie popup if visible
 close any pop up that occurs by clicking on DONE
-click the sidebar button with id "submenu-CamerasMenu" (text "Cameras") to navigate to Cameras
+click the sidebar navigation button with text "Cameras" to navigate to Cameras
+verify the URL contains /cameras
 verify the cameras page is loaded
 
 ## TC-SMOKE-005: Navigate to Activity page
@@ -61,5 +62,6 @@ verify the cameras page is loaded
 login to the app
 dismiss cookie popup if visible
 close any pop up that occurs by clicking on DONE
-click the sidebar button with id "submenu-EventsListMenu" (text "Activity") to navigate to Activity
+click the sidebar navigation button with text "Activity" to navigate to Activity
+verify the URL contains /events
 verify the activity log entries are displayed

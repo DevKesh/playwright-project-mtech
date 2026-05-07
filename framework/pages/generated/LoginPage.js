@@ -16,6 +16,22 @@ class LoginPage {
     await this.usernameInput.fill(username);
     await this.passwordInput.fill(password);
   }
+
+  async clickLoginButton() {
+    await this.page.getByRole('button', { name: /log\s*in/i }).click();
+  }
+
+  async dismissCookiePopup() {
+    const cookieBtn = this.page.locator('[id*="cookie"] button, [class*="cookie"] button').first();
+    const visible = await cookieBtn.isVisible().catch(() => false);
+    if (visible) await cookieBtn.click();
+  }
+
+  async closePopup() {
+    const doneBtn = this.page.getByRole('button', { name: /done/i });
+    const visible = await doneBtn.isVisible().catch(() => false);
+    if (visible) await doneBtn.click();
+  }
 }
 
 module.exports = { LoginPage };

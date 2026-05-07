@@ -73,6 +73,7 @@ const RuntimeHealingState = Annotation.Root({
   healed: Annotation({ reducer: (_, b) => b, default: () => false }),
   healedSelector: Annotation({ reducer: (_, b) => b, default: () => null }),
   confidence: Annotation({ reducer: (_, b) => b, default: () => 0 }),
+  actionResult: Annotation({ reducer: (_, b) => b, default: () => undefined }),
 });
 
 module.exports = { HealingState, RuntimeHealingState };

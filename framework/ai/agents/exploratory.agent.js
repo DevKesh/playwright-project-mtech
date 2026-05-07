@@ -67,17 +67,27 @@ class ExploratoryAgent {
         });
       });
 
-      // Buttons
+      // Buttons — skip parent buttons that contain child buttons (avoid duplicated text from nested structures)
       const buttons = document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]');
       buttons.forEach(btn => {
-        const text = (btn.textContent || btn.value || '').trim().substring(0, 100);
+        if (btn.querySelector('button, [role="button"]')) return;
+        // Prefer aria-label, then direct text nodes, then full textContent
+        const ariaLabel = btn.getAttribute('aria-label');
+        const directText = Array.from(btn.childNodes)
+          .filter(n => n.nodeType === 3)
+          .map(n => n.textContent.trim())
+          .join(' ')
+          .trim();
+        const text = (ariaLabel || directText || btn.textContent || btn.value || '').trim().substring(0, 100);
         if (!text) return;
+        const isNav = !!btn.closest('nav, [role="navigation"], [role="list"], ul, ol');
         result.buttons.push({
           text,
           type: btn.type || btn.tagName.toLowerCase(),
           id: btn.id || null,
-          className: (btn.className || '').split(' ').slice(0, 3).join(' ') || null,
-          ariaLabel: btn.getAttribute('aria-label') || null,
+          ariaLabel: ariaLabel || null,
+          role: btn.getAttribute('role') || 'button',
+          isNavigation: isNav,
         });
       });
 

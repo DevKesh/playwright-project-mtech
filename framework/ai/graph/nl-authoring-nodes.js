@@ -165,11 +165,25 @@ async function extractDOMSnapshot(page, opts = {}) {
 
       // Buttons
       document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]').forEach(btn => {
-        const text = (btn.textContent || btn.value || '').trim().substring(0, 100);
+        // Skip parent buttons that contain child buttons (avoid duplicated text from nested structures)
+        if (btn.querySelector('button, [role="button"]')) return;
+        // Use direct/shallow text: prefer aria-label, else first direct text node or short textContent
+        const ariaLabel = btn.getAttribute('aria-label');
+        const directText = Array.from(btn.childNodes)
+          .filter(n => n.nodeType === 3)
+          .map(n => n.textContent.trim())
+          .join(' ')
+          .trim();
+        const text = (ariaLabel || directText || btn.textContent || btn.value || '').trim().substring(0, 100);
+        if (!text) return;
         const attrs = [];
         if (btn.id) attrs.push(`id="${btn.id}"`);
-        if (btn.className) attrs.push(`class="${(btn.className || '').toString().split(' ').slice(0, 3).join(' ')}"`);
-        if (btn.getAttribute('aria-label')) attrs.push(`aria-label="${btn.getAttribute('aria-label')}"`);
+        if (ariaLabel) attrs.push(`aria-label="${ariaLabel}"`);
+        const role = btn.getAttribute('role') || 'button';
+        attrs.push(`role="${role}"`);
+        // Mark if button is inside a navigation list
+        const isNav = !!btn.closest('nav, [role="navigation"], [role="list"], ul, ol');
+        if (isNav) attrs.push('data-nav="true"');
         elements.push(`<button ${attrs.join(' ')}>${text}</button>`);
       });
 
@@ -328,29 +342,51 @@ function createNLAuthoringNodes(config) {
             await page.locator('#truste-consent-button').click({ timeout: 3000 });
           } catch { /* no consent */ }
 
-          const userSelectors = ['#UsernameInput', '#username', 'input[name="username"]', 'input[name="email"]', '#email'];
-          const passSelectors = ['#PasswordInput', '#password', 'input[name="password"]', 'input[type="password"]'];
-          const submitSelectors = ['#LoginButton', '#loginButton', 'button[type="submit"]', 'input[type="submit"]'];
-
+          // Strategy 1: getByLabel (works for TC2 and most modern apps)
           let filled = false;
-          for (const sel of userSelectors) {
-            if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-              await page.locator(sel).first().fill(creds.email);
-              filled = true;
-              break;
+          const labelUser = page.getByLabel('Username');
+          const labelPass = page.getByLabel('Password');
+          if (await labelUser.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await labelUser.fill(creds.email);
+            if (await labelPass.isVisible({ timeout: 2000 }).catch(() => false)) {
+              await labelPass.fill(creds.password);
             }
+            filled = true;
           }
-          if (filled) {
-            for (const sel of passSelectors) {
+
+          // Strategy 2: fallback to common CSS selectors
+          if (!filled) {
+            const userSelectors = ['#UsernameInput', '#username', 'input[name="username"]', 'input[name="email"]', '#email'];
+            for (const sel of userSelectors) {
               if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-                await page.locator(sel).first().fill(creds.password);
+                await page.locator(sel).first().fill(creds.email);
+                filled = true;
                 break;
               }
             }
-            for (const sel of submitSelectors) {
-              if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-                await page.locator(sel).first().click();
-                break;
+            if (filled) {
+              const passSelectors = ['#PasswordInput', '#password', 'input[name="password"]', 'input[type="password"]'];
+              for (const sel of passSelectors) {
+                if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+                  await page.locator(sel).first().fill(creds.password);
+                  break;
+                }
+              }
+            }
+          }
+
+          if (filled) {
+            // Try submit: getByRole first, then CSS selectors
+            const signInBtn = page.getByRole('button', { name: 'Sign In' });
+            if (await signInBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+              await signInBtn.click();
+            } else {
+              const submitSelectors = ['#LoginButton', '#loginButton', 'button[type="submit"]', 'input[type="submit"]'];
+              for (const sel of submitSelectors) {
+                if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+                  await page.locator(sel).first().click();
+                  break;
+                }
               }
             }
             try {

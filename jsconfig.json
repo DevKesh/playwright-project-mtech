@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "framework/*": ["framework/*"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "framework/**/*.js",

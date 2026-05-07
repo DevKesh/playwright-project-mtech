@@ -119,30 +119,53 @@ function createExplorationNodes(config) {
           console.log('[EXPLORE] Auto-login: Dismissed cookie consent');
         } catch { /* no consent banner */ }
 
-        // Try common selectors for login form fields
-        const userSelectors = ['#UsernameInput', '#username', 'input[name="username"]', 'input[name="email"]', '#email', 'input[type="email"]'];
-        const passSelectors = ['#PasswordInput', '#password', 'input[name="password"]', 'input[type="password"]'];
-        const submitSelectors = ['#LoginButton', '#loginButton', 'button[type="submit"]', 'input[type="submit"]'];
-
+        // Try to find and fill login form (TC2 uses aria-label/label, fallback to IDs)
         let filled = false;
-        for (const sel of userSelectors) {
-          if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-            await page.locator(sel).first().fill(creds.email);
-            filled = true;
-            break;
+
+        // Strategy 1: getByLabel (works for TC2 and most modern apps)
+        const labelUser = page.getByLabel('Username');
+        const labelPass = page.getByLabel('Password');
+        if (await labelUser.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await labelUser.fill(creds.email);
+          if (await labelPass.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await labelPass.fill(creds.password);
           }
+          filled = true;
         }
-        if (filled) {
-          for (const sel of passSelectors) {
+
+        // Strategy 2: fallback to common CSS selectors
+        if (!filled) {
+          const userSelectors = ['#UsernameInput', '#username', 'input[name="username"]', 'input[name="email"]', '#email', 'input[type="email"]'];
+          for (const sel of userSelectors) {
             if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-              await page.locator(sel).first().fill(creds.password);
+              await page.locator(sel).first().fill(creds.email);
+              filled = true;
               break;
             }
           }
-          for (const sel of submitSelectors) {
-            if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
-              await page.locator(sel).first().click();
-              break;
+          if (filled) {
+            const passSelectors = ['#PasswordInput', '#password', 'input[name="password"]', 'input[type="password"]'];
+            for (const sel of passSelectors) {
+              if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+                await page.locator(sel).first().fill(creds.password);
+                break;
+              }
+            }
+          }
+        }
+
+        if (filled) {
+          // Try to click submit: getByRole first, then CSS selectors
+          const signInBtn = page.getByRole('button', { name: 'Sign In' });
+          if (await signInBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await signInBtn.click();
+          } else {
+            const submitSelectors = ['#LoginButton', '#loginButton', 'button[type="submit"]', 'input[type="submit"]'];
+            for (const sel of submitSelectors) {
+              if (await page.locator(sel).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+                await page.locator(sel).first().click();
+                break;
+              }
             }
           }
           try {

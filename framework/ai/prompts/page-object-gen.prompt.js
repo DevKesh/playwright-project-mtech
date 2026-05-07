@@ -37,8 +37,16 @@ ${explorationContext ? `**APPLICATION CONTEXT (use this for locator strategy and
 
 **Rules:**
 1. The class MUST use CommonJS module syntax: \`module.exports = { ClassName }\`
-2. The constructor takes \`page\` and stores locators as properties using \`page.locator()\`, \`page.getByRole()\`, \`page.getByText()\`, \`page.getByLabel()\`, \`page.getByPlaceholder()\`, or \`page.getByTestId()\`
-3. Use the most robust locator strategy: prefer \`#id\` over \`.class\`, prefer \`getByRole\` for buttons, prefer \`getByPlaceholder\` for inputs with placeholders, prefer \`getByText\` for unique text
+2. The constructor takes \`page\` and stores locators as properties using \`page.getByRole()\`, \`page.getByLabel()\`, \`page.getByText()\`, \`page.getByPlaceholder()\`, \`page.getByTestId()\`, or \`page.locator()\` as a last resort
+3. Use the most robust locator strategy in this STRICT priority order:
+   a) \`getByRole('button', { name: '...' })\` for buttons — ALWAYS prefer this over #id or .class
+   b) \`getByRole('link', { name: '...' })\` for navigation links
+   c) \`getByLabel('...')\` for form inputs with labels
+   d) \`getByPlaceholder('...')\` for inputs with placeholder text
+   e) \`getByText('...')\` for unique visible text
+   f) \`#id\` selectors only when the ID is clearly stable and semantic (NOT generated IDs like #submenu-CamerasMenu)
+   g) CSS selectors as absolute last resort
+   For navigation buttons in sidebars/navbars, ALWAYS use: \`page.getByRole('button', { name: 'ButtonText' }).first()\`
 4. Each meaningful user action gets an async method
 5. Import \`expect\` from \`@playwright/test\` if assertions are needed
 6. If this is an entry page, add \`async open(url)\` method that calls \`this.page.goto(url)\` — do NOT hardcode URLs as default parameter values

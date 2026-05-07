@@ -63,14 +63,17 @@ After login, the sidebar has these navigation links:
 ## Actual DOM Structure (from live app inspection)
 
 ### Sidebar Navigation
-The sidebar uses `<button>` elements (NOT `<a>` links). Use these IDs:
-- **Security/Home:** `#menu-HomeMenu` or `#submenu-HomeMenu` (text: "Security")
-- **Devices:** `#menu-AutomationMenu` or `#submenu-AutomationMenu` (text: "Devices")
-- **Cameras:** `#menu-CamerasMenu` or `#submenu-CamerasMenu` (text: "Cameras")
-- **Activity:** `#menu-EventsListMenu` or `#submenu-EventsListMenu` (text: "Activity")
-- **Scenes:** `#menu-SmartScenesGripMenu` or `#submenu-SmartScenesGripMenu` (text: "Scenes")
+The sidebar uses `<button>` elements (NOT `<a>` links). Each nav item is a nested button inside a list. Use role-based locators:
+- **Security:** `page.getByRole('button', { name: 'Security' }).first()`
+- **Devices:** `page.getByRole('button', { name: 'Devices' }).first()`
+- **Cameras:** `page.getByRole('button', { name: 'Cameras' }).first()`
+- **Activity:** `page.getByRole('button', { name: 'Activity' }).first()`
+- **Scenes:** `page.getByRole('button', { name: 'Scenes' }).first()`
+- **My Profile:** `page.getByRole('button', { name: 'My Profile' }).first()`
+- **Locations:** `page.getByRole('button', { name: 'Locations' }).first()`
 
-Best locator for sidebar navigation: `page.locator('#submenu-AutomationMenu')` or `page.getByRole('button', { name: 'Devices' }).last()`
+Best locator for sidebar navigation: `page.getByRole('button', { name: 'Devices' }).first()`
+**NOTE:** Old `#submenu-*` ID selectors (e.g. `#submenu-CamerasMenu`) no longer exist in the DOM. Do NOT use them.
 
 ### Security Panel / Arming
 - **Partition status text:** "2 of 2 Partitions Disarmed" (shown in a `<p>` tag)

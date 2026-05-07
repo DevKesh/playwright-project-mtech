@@ -59,31 +59,31 @@
       "context": "Shows partition count summary like '2 of 2 Partitions Disarmed'"
     },
     "securityNav": {
-      "selector": "page.locator('#submenu-HomeMenu')",
+      "selector": "page.getByRole('button', { name: 'Security' }).first()",
       "type": "button",
       "action": "click",
       "context": "Sidebar navigation to Security/Home page"
     },
     "devicesNav": {
-      "selector": "page.locator('#submenu-AutomationMenu')",
+      "selector": "page.getByRole('button', { name: 'Devices' }).first()",
       "type": "button",
       "action": "click",
       "context": "Sidebar navigation to Devices page (/automation)"
     },
     "camerasNav": {
-      "selector": "page.locator('#submenu-CamerasMenu')",
+      "selector": "page.getByRole('button', { name: 'Cameras' }).first()",
       "type": "button",
       "action": "click",
       "context": "Sidebar navigation to Cameras page (/cameras)"
     },
     "activityNav": {
-      "selector": "page.locator('#submenu-EventsListMenu')",
+      "selector": "page.getByRole('button', { name: 'Activity' }).first()",
       "type": "button",
       "action": "click",
       "context": "Sidebar navigation to Activity page (/events)"
     },
     "scenesNav": {
-      "selector": "page.locator('#submenu-SmartScenesGripMenu')",
+      "selector": "page.getByRole('button', { name: 'Scenes' }).first()",
       "type": "button",
       "action": "click",
       "context": "Sidebar navigation to Scenes page (/smartscenes)"

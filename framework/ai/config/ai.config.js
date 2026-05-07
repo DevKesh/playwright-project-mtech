@@ -24,7 +24,7 @@ function loadAIConfig() {
     testCaseHealing: enabled && process.env.AI_HEALING_TEST_CASE === 'true',
 
     // Healing parameters
-    maxRetries: parseInt(process.env.AI_HEALING_MAX_RETRIES || '2', 10),
+    maxRetries: parseInt(process.env.AI_HEALING_MAX_RETRIES || '3', 10),
     confidenceThreshold: parseFloat(process.env.AI_HEALING_CONFIDENCE_THRESHOLD || '0.7'),
 
     // Timeouts (ms)

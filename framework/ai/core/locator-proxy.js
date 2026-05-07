@@ -13,6 +13,7 @@
 
 const { createRuntimeHealingGraph } = require('../graph/runtime-graph');
 const { dismissPopups } = require('../../utils/popupInterceptor');
+const { getCachedHealing, cacheHealedSelector, invalidateCachedHealing } = require('../storage/healing-cache');
 
 // When healing is active, use a short timeout for the initial action attempt so
 // it fails quickly (instead of eating the entire 30 s test timeout) and leaves
@@ -173,7 +174,24 @@ function createLocatorProxy(locator, context) {
         context.page._healingInProgress = true;
 
         try {
-          // Step 1: Try dismissing a blocking popup
+          // Step 1: Check healing cache for a previously successful heal
+          const cached = getCachedHealing(context.selectorDescription);
+          if (cached) {
+            console.log(`[AI-HEAL] Cache hit for "${context.selectorDescription}" → "${cached.healedSelector}"`);
+            try {
+              const cachedLocator = _buildLocatorFromCache(context.page, cached);
+              if (cachedLocator) {
+                const cachedResult = await cachedLocator[action](...args);
+                console.log(`[AI-HEAL] Cached healed selector worked — no GPT call needed`);
+                return cachedResult;
+              }
+            } catch {
+              console.log(`[AI-HEAL] Cached selector no longer works — invalidating and proceeding to live heal`);
+              invalidateCachedHealing(context.selectorDescription);
+            }
+          }
+
+          // Step 2: Try dismissing a blocking popup
           try {
             const dismissed = await dismissPopups(
               context.page,
@@ -191,7 +209,7 @@ function createLocatorProxy(locator, context) {
             }
           } catch { /* popup check failed */ }
 
-          // Step 2: Invoke the LangGraph healing workflow
+          // Step 3: Invoke the LangGraph healing workflow
           console.log(`[AI-HEAL] Locator failed: ${context.selectorDescription} → invoking healing graph...`);
 
           try {
@@ -203,7 +221,7 @@ function createLocatorProxy(locator, context) {
               errorMessage: error.message,
               action,
               actionArgs: args,
-              maxAttempts: context.config.maxRetries || 3,
+              maxAttempts: context.config.maxRetries + 1,
             });
 
             if (graphResult.healed && graphResult.healedSelector) {
@@ -211,8 +229,14 @@ function createLocatorProxy(locator, context) {
                 `[AI-HEAL] Graph healed: "${context.selectorDescription}" → "${graphResult.healedSelector}" ` +
                 `(confidence: ${graphResult.confidence}, attempts: ${graphResult.attemptCount})`
               );
-              // The healer agent already performed the action during validation
-              return;
+
+              // Persist to cache for next run
+              const typeMatch = graphResult.healedSelector.match(/^(\w+)\(/);
+              const type = typeMatch ? typeMatch[1] : 'locator';
+              cacheHealedSelector(context.selectorDescription, graphResult.healedSelector, type, graphResult.confidence);
+
+              // The healer agent already performed the action during validation — return its result
+              return graphResult.actionResult;
             }
 
             console.log(`[AI-HEAL] Graph exhausted ${graphResult.attemptCount} attempts, healing failed`);
@@ -229,6 +253,83 @@ function createLocatorProxy(locator, context) {
   }
 
   return locator;
+}
+
+/**
+ * Build a Playwright locator from a cached healing entry.
+ * Uses raw (unpatched) methods to avoid recursive healing.
+ * @param {import('@playwright/test').Page} page
+ * @param {{ healedSelector: string, type: string }} cached
+ * @returns {import('@playwright/test').Locator|null}
+ */
+function _buildLocatorFromCache(page, cached) {
+  const raw = page.__rawLocatorMethods || {};
+  const rawLocator = raw.locator || page.locator.bind(page);
+  const rawGetByRole = raw.getByRole || page.getByRole.bind(page);
+  const rawGetByText = raw.getByText || page.getByText.bind(page);
+  const rawGetByLabel = raw.getByLabel || page.getByLabel.bind(page);
+  const rawGetByPlaceholder = raw.getByPlaceholder || page.getByPlaceholder.bind(page);
+  const rawGetByTestId = raw.getByTestId || page.getByTestId.bind(page);
+
+  const selectorStr = cached.healedSelector;
+
+  try {
+    // Parse the stored format: "type(selectorContent)"
+    const typeMatch = selectorStr.match(/^(\w+)\((.+)\)$/s);
+    if (!typeMatch) {
+      return rawLocator(selectorStr);
+    }
+
+    const type = typeMatch[1];
+    const inner = typeMatch[2];
+
+    if (type === 'locator') {
+      return rawLocator(inner);
+    } else if (type === 'getByRole') {
+      // Parse: 'button', { name: 'Submit' }
+      const roleMatch = inner.match(/'([^']+)'(?:\s*,\s*\{(.+)\})?/);
+      if (roleMatch) {
+        const role = roleMatch[1];
+        const optsStr = roleMatch[2];
+        if (optsStr) {
+          const nameMatch = optsStr.match(/name\s*:\s*(?:'([^']+)'|"([^"]+)"|\/(.+?)\/([gimsuy]*))/);
+          if (nameMatch) {
+            const name = nameMatch[3]
+              ? new RegExp(nameMatch[3], nameMatch[4] || '')
+              : nameMatch[1] || nameMatch[2];
+            return rawGetByRole(role, { name });
+          }
+          return rawGetByRole(role);
+        }
+        return rawGetByRole(role);
+      }
+    } else if (type === 'getByText') {
+      const arg = _extractArgFromCacheStr(inner);
+      if (arg) return rawGetByText(arg);
+    } else if (type === 'getByLabel') {
+      const arg = _extractArgFromCacheStr(inner);
+      if (arg) return rawGetByLabel(arg);
+    } else if (type === 'getByPlaceholder') {
+      const arg = _extractArgFromCacheStr(inner);
+      if (arg) return rawGetByPlaceholder(arg);
+    } else if (type === 'getByTestId') {
+      const arg = _extractArgFromCacheStr(inner);
+      if (arg) return rawGetByTestId(arg);
+    }
+
+    // Fallback
+    return rawLocator(inner);
+  } catch {
+    return null;
+  }
+}
+
+function _extractArgFromCacheStr(str) {
+  const regexMatch = str.match(/\/(.+?)\/([gimsuy]*)/);
+  if (regexMatch) return new RegExp(regexMatch[1], regexMatch[2] || '');
+  const strMatch = str.match(/['"]([^'"]+)['"]/);
+  if (strMatch) return strMatch[1];
+  return str.trim() || null;
 }
 
 module.exports = { createLocatorProxy };

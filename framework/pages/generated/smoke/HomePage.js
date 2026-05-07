@@ -10,9 +10,9 @@ class HomePage {
     this.armAwayButton = page.locator('button', { hasText: 'ARM AWAY' }).first();
     this.disarmButton = page.locator('button', { hasText: 'DISARM' }).first();
     this.partitionStatusText = page.getByText(/Armed Home|Armed Away|Disarmed/);
-    this.devicesNav = page.locator('#submenu-AutomationMenu');
-    this.camerasNav = page.locator('#submenu-CamerasMenu');
-    this.activityNav = page.locator('#submenu-EventsListMenu');
+    this.devicesNav = page.getByRole('button', { name: 'Devices' }).first();
+    this.camerasNav = page.getByRole('button', { name: 'Cameras' }).first();
+    this.activityNav = page.getByRole('button', { name: 'Activity' }).first();
   }
 
   async dismissCookiePopup() {

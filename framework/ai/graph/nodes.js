@@ -152,6 +152,7 @@ function createNodes(config) {
           healed: result.healed,
           healedSelector: result.healed ? result.healedSelector : null,
           confidence: result.confidence || 0,
+          actionResult: result.actionResult,
         };
       } catch (err) {
         console.log(`[GRAPH] Heal attempt failed: ${err.message}`);
