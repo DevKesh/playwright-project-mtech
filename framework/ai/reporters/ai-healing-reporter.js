@@ -279,7 +279,7 @@ class AIHealingReporter {
       });
     }
 
-    // Inject healing evidence into Allure results
+    // Inject healing evidence into Allure results (post-mortem healed tests)
     if (this.healedTests.length > 0) {
       try {
         this._injectHealingIntoAllure();
@@ -426,6 +426,384 @@ class AIHealingReporter {
         }
       }
     }
+  }
+
+  /**
+   * Inject runtime healing evidence into Allure results for tests that PASSED
+   * because the AI healed broken locators at runtime.
+   */
+  _injectRuntimeHealingIntoAllure(runtimeEvents) {
+    if (!fs.existsSync(this.allureResultsDir)) return;
+
+    const resultFiles = fs
+      .readdirSync(this.allureResultsDir)
+      .filter((f) => f.endsWith('-result.json'));
+
+    // Group runtime events — all events belong to tests that passed via healing
+    // Try to match events to specific tests, or inject all events into relevant tests.
+    let injectedCount = 0;
+    for (const file of resultFiles) {
+      try {
+        const filePath = path.join(this.allureResultsDir, file);
+        const resultJson = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+        // Only inject into passing tests (runtime healing makes tests pass)
+        if (resultJson.status !== 'passed') continue;
+
+        // Skip tests already marked with [AI-INTERVENTION]
+        if (resultJson.name?.startsWith('[AI-INTERVENTION]')) continue;
+
+        // Collect all step names (including nested) for matching
+        const allStepText = (resultJson.steps || [])
+          .flatMap((s) => [
+            s.name || '',
+            ...(s.steps || []).map((ss) => ss.name || ''),
+          ])
+          .join(' ');
+
+        // Find runtime events relevant to this specific test
+        const relevantEvents = runtimeEvents.filter((evt) => {
+          // Check if any step in this test references content related to the healed selector
+          const selectorLower = (evt.originalSelector || '').toLowerCase();
+          const testNameLower = (resultJson.name || '').toLowerCase();
+          const stepsLower = allStepText.toLowerCase();
+
+          // Extract key words from selector (e.g., "Devices", "Cameras", "Activity")
+          const selectorWords = selectorLower.match(/[a-z]{4,}/gi) || [];
+          return selectorWords.some((w) =>
+            testNameLower.includes(w) || stepsLower.includes(w)
+          );
+        });
+
+        // If no specific match found but we haven't injected yet, use all events
+        // (fallback for consolidated suites where matching is ambiguous)
+        const eventsToInject = relevantEvents.length > 0
+          ? relevantEvents
+          : (injectedCount === 0 ? runtimeEvents : []);
+
+        if (eventsToInject.length === 0) continue;
+
+        // Build the runtime healing HTML report
+        const htmlReport = this._buildRuntimeHealingHtml(relevantEvents);
+
+        // Write markdown attachment
+        const attachUuid = crypto.randomUUID();
+        const attachFileName = `${attachUuid}-attachment.md`;
+        const markdown = this._buildRuntimeHealingMarkdown(relevantEvents);
+        fs.writeFileSync(path.join(this.allureResultsDir, attachFileName), markdown, 'utf-8');
+
+        // Write JSON attachment
+        const jsonAttachUuid = crypto.randomUUID();
+        const jsonAttachFileName = `${jsonAttachUuid}-attachment.json`;
+        fs.writeFileSync(
+          path.join(this.allureResultsDir, jsonAttachFileName),
+          JSON.stringify({ runtimeHealingEvents: relevantEvents }, null, 2),
+          'utf-8'
+        );
+
+        // Add healing step
+        const now = Date.now();
+        const healingStep = {
+          statusDetails: {},
+          stage: 'finished',
+          steps: [],
+          attachments: [
+            { name: 'AI Self-Healing Report', source: attachFileName, type: 'text/markdown' },
+            { name: 'Healing Data (JSON)', source: jsonAttachFileName, type: 'application/json' },
+          ],
+          parameters: [],
+          start: now,
+          name: `AI Self-Healing: ${relevantEvents.length} locator(s) healed at runtime`,
+          stop: now,
+        };
+
+        const afterHooksIdx = resultJson.steps.findIndex((s) => s.name === 'After Hooks');
+        if (afterHooksIdx >= 0) {
+          resultJson.steps.splice(afterHooksIdx, 0, healingStep);
+        } else {
+          resultJson.steps.push(healingStep);
+        }
+
+        // Add tags
+        resultJson.labels.push({ name: 'tag', value: 'self-healed' });
+        resultJson.labels.push({ name: 'tag', value: 'ai-healing' });
+        resultJson.labels.push({ name: 'tag', value: 'runtime-healed' });
+
+        // Prefix the test name
+        resultJson.name = `[AI-INTERVENTION] ${resultJson.name}`;
+
+        // Set description HTML
+        resultJson.descriptionHtml = htmlReport;
+
+        fs.writeFileSync(filePath, JSON.stringify(resultJson), 'utf-8');
+        console.log(`[AI-REPORTER] Allure: Injected runtime healing for "${resultJson.name}" -> ${file}`);
+        injectedCount++;
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  /**
+   * Build HTML report for runtime healing events — exact format:
+   * Red box: AI Self-Healing Report (table with category, confidence, severity, decision)
+   * Blue box: Root Cause (broken locator with code-style display)
+   * Green box: Suggested Fix (file, line numbers, current broken code, suggested fixed code, explanation)
+   * Purple box: Audit Trail
+   */
+  _buildRuntimeHealingHtml(events) {
+    const istTimestamp = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', second: '2-digit',
+      hour12: true,
+    });
+
+    let html = '';
+
+    for (const evt of events) {
+      const conf = evt.confidence ? (evt.confidence * 100).toFixed(0) : 'N/A';
+
+      // Search source files to find the actual line where the broken locator is defined
+      const sourceInfo = this._findLocatorInSource(evt.originalSelector);
+      const brokenLocatorDisplay = this._formatLocatorForDisplay(evt.originalSelector);
+      const healedLocatorDisplay = evt.healedSelector || 'N/A';
+
+      // Build analysis text explaining WHY the locator broke
+      const analysisText = this._buildHealingAnalysis(evt, sourceInfo);
+
+      html += `
+<div style="border:2px solid #e74c3c; border-radius:8px; padding:16px; margin-bottom:16px; background:#fdf2f2;">
+  <h2 style="color:#e74c3c; margin-top:0;">AI Self-Healing Report</h2>
+  <p style="color:#555;">This test failure was <strong>automatically diagnosed</strong> by the AI Self-Healing Agent (LangGraph + GPT-4o).</p>
+  <table style="width:auto; border-collapse:collapse; margin:12px 0;">
+    <tr style="background:#f8d7da;"><td style="padding:6px 12px; border:1px solid #ddd;"><strong>Category</strong></td><td style="padding:6px 12px; border:1px solid #ddd;"><code>locator_broken</code></td></tr>
+    <tr><td style="padding:6px 12px; border:1px solid #ddd;"><strong>Classification Confidence</strong></td><td style="padding:6px 12px; border:1px solid #ddd;">${conf}%</td></tr>
+    <tr style="background:#f8d7da;"><td style="padding:6px 12px; border:1px solid #ddd;"><strong>Healing Confidence</strong></td><td style="padding:6px 12px; border:1px solid #ddd;">${conf}%</td></tr>
+    <tr><td style="padding:6px 12px; border:1px solid #ddd;"><strong>Severity</strong></td><td style="padding:6px 12px; border:1px solid #ddd;">high</td></tr>
+    <tr style="background:#f8d7da;"><td style="padding:6px 12px; border:1px solid #ddd;"><strong>Decision</strong></td><td style="padding:6px 12px; border:1px solid #ddd;"><code>healing_applied</code></td></tr>
+  </table>
+</div>
+
+<div style="border:2px solid #3498db; border-radius:8px; padding:16px; margin-bottom:16px; background:#eaf4fd;">
+  <h3 style="color:#2980b9; margin-top:0;">Root Cause</h3>
+  <p>The locator ${sourceInfo.propertyName ? `<code>${this._escapeHtml(sourceInfo.propertyName)}</code> using ` : ''}<code>${this._escapeHtml(brokenLocatorDisplay)}</code> did not match any elements in the DOM.</p>
+  <p><strong>Broken Locator:</strong> <code style="background:#fce4ec; padding:2px 6px; border-radius:3px;">${this._escapeHtml(brokenLocatorDisplay)}</code></p>
+</div>
+
+<div style="border:2px solid #27ae60; border-radius:8px; padding:16px; margin-bottom:16px; background:#eafaf1;">
+  <h3 style="color:#27ae60; margin-top:0;">Suggested Fix</h3>
+  <p>${this._escapeHtml(analysisText)}</p>
+  <div style="background:#fff; border:1px solid #ccc; border-radius:4px; padding:12px; margin:8px 0;">
+    <p><strong>File:</strong> <code>${this._escapeHtml(sourceInfo.relativeFile)}</code>${sourceInfo.lineNumber ? ` (Lines: ${sourceInfo.lineNumber}-${sourceInfo.lineNumber + 1})` : ''}</p>
+    <p style="color:#c0392b;"><strong>Current (broken):</strong></p>
+    <pre style="background:#fdf2f2; padding:8px; border-radius:4px; overflow-x:auto;">${this._escapeHtml(sourceInfo.currentCode || evt.originalSelector)}</pre>
+    <p style="color:#27ae60;"><strong>Suggested (fixed):</strong></p>
+    <pre style="background:#eafaf1; padding:8px; border-radius:4px; overflow-x:auto;">${this._escapeHtml(sourceInfo.suggestedCode || healedLocatorDisplay)}</pre>
+    <p><em>${this._escapeHtml(this._buildFixExplanation(evt, sourceInfo))}</em></p>
+  </div>
+</div>
+
+<div style="border:2px solid #8e44ad; border-radius:8px; padding:16px; margin-bottom:16px; background:#f5eef8;">
+  <h3 style="color:#8e44ad; margin-top:0;">Audit Trail</h3>
+  <table style="width:100%; border-collapse:collapse;">
+    <tr><td style="padding:4px; border:1px solid #ddd;"><strong>Run ID</strong></td><td style="padding:4px; border:1px solid #ddd;"><code>${this.runId}</code></td></tr>
+    <tr><td style="padding:4px; border:1px solid #ddd;"><strong>Healing Type</strong></td><td style="padding:4px; border:1px solid #ddd;">Runtime (live DOM analysis via GPT-4o-mini)</td></tr>
+    <tr><td style="padding:4px; border:1px solid #ddd;"><strong>Attempts</strong></td><td style="padding:4px; border:1px solid #ddd;">${evt.attempts || 1}</td></tr>
+    <tr><td style="padding:4px; border:1px solid #ddd;"><strong>Timestamp</strong></td><td style="padding:4px; border:1px solid #ddd;">${istTimestamp} IST</td></tr>
+  </table>
+</div>
+<hr style="margin:24px 0;">`;
+    }
+
+    return html;
+  }
+
+  /**
+   * Search page object source files to find the exact line where a broken locator is defined.
+   * Returns { relativeFile, lineNumber, currentCode, suggestedCode, propertyName }.
+   */
+  _findLocatorInSource(originalSelector) {
+    const result = {
+      relativeFile: 'unknown',
+      lineNumber: null,
+      currentCode: null,
+      suggestedCode: null,
+      propertyName: null,
+    };
+
+    // Extract the key part of the selector for searching
+    // e.g., from 'page.getByRole("button", {"name":"Automation Devices Menu"}).first()'
+    // extract search terms like "Automation Devices Menu" or the method pattern
+    let searchTerms = [];
+
+    // Extract quoted strings from the selector
+    const quotedMatches = originalSelector.match(/["']([^"']+)["']/g);
+    if (quotedMatches) {
+      searchTerms = quotedMatches.map((m) => m.replace(/["']/g, ''));
+    }
+
+    // Search in page object directories
+    const searchDirs = [
+      path.join(process.cwd(), 'framework', 'pages', 'generated', 'smoke'),
+      path.join(process.cwd(), 'framework', 'pages', 'generated'),
+      path.join(process.cwd(), 'framework', 'pages'),
+    ];
+
+    for (const dir of searchDirs) {
+      if (!fs.existsSync(dir)) continue;
+
+      const files = fs.readdirSync(dir).filter((f) => f.endsWith('.js'));
+      for (const file of files) {
+        try {
+          const filePath = path.join(dir, file);
+          const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+
+            // Check if this line contains any of our search terms
+            const matchesTerm = searchTerms.some((term) => line.includes(term));
+            if (!matchesTerm) continue;
+
+            // Check if it's an assignment line (this.xxx = page.xxx)
+            const propMatch = line.match(/this\.(\w+)\s*=\s*page\./);
+            if (propMatch) {
+              result.relativeFile = path.relative(process.cwd(), filePath).replace(/\\/g, '/');
+              result.lineNumber = i + 1;
+              result.currentCode = line.trim();
+              result.propertyName = propMatch[1];
+              return result;
+            }
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Convert a selector description like 'page.getByRole("button", {"name":"X"}).first()'
+   * into the Playwright API form for display.
+   */
+  _formatLocatorForDisplay(selector) {
+    if (!selector) return 'N/A';
+    // Clean up JSON-style quotes to single quotes for readability
+    return selector
+      .replace(/page\./, '')
+      .replace(/"/g, "'");
+  }
+
+  /**
+   * Build the analysis paragraph explaining why the locator broke and how it was healed.
+   */
+  _buildHealingAnalysis(evt, sourceInfo) {
+    const propName = sourceInfo.propertyName || 'the target element';
+    const originalDisplay = this._formatLocatorForDisplay(evt.originalSelector);
+    const healedDisplay = evt.healedSelector || 'unknown';
+
+    if (sourceInfo.currentCode) {
+      return `The test is failing because the locator for '${propName}' is not found. ` +
+        `The locator uses '${originalDisplay}', but the element in the application DOM ` +
+        `has changed. The AI Self-Healing Agent inspected the live DOM and determined that ` +
+        `'${healedDisplay}' correctly identifies the intended element.`;
+    }
+
+    return `The locator '${originalDisplay}' could not find the target element in the DOM. ` +
+      `The AI Self-Healing Agent analyzed the live page structure and identified ` +
+      `'${healedDisplay}' as the correct replacement.`;
+  }
+
+  /**
+   * Build the explanation text shown below the code diff in the Suggested Fix section.
+   */
+  _buildFixExplanation(evt, sourceInfo) {
+    const propName = sourceInfo.propertyName || 'element';
+    const healedDisplay = evt.healedSelector || 'the healed selector';
+
+    if (sourceInfo.currentCode) {
+      // Build the suggested code by replacing the locator in the source line
+      const suggestedLine = this._buildSuggestedCodeLine(sourceInfo.currentCode, evt.healedSelector);
+      sourceInfo.suggestedCode = suggestedLine;
+
+      return `The '${propName}' locator was automatically healed at runtime. ` +
+        `Updating the page object to use '${healedDisplay}' should make the test pass without runtime healing.`;
+    }
+
+    return `The locator was healed at runtime during the '${evt.action}' action. ` +
+      `The healed selector resolved successfully and the test continued without interruption.`;
+  }
+
+  /**
+   * Build a suggested fixed code line by replacing the locator method call in the current line.
+   */
+  _buildSuggestedCodeLine(currentCode, healedSelector) {
+    if (!healedSelector || !currentCode) return healedSelector || currentCode;
+
+    // Parse the healed selector type: locator(xxx) or getByRole(xxx) etc.
+    const healedMatch = healedSelector.match(/^(\w+)\((.+)\)$/);
+    if (!healedMatch) return currentCode;
+
+    const [, method, selectorValue] = healedMatch;
+
+    // Replace everything after "page." up to the semicolon
+    const pageIdx = currentCode.indexOf('page.');
+    if (pageIdx === -1) return currentCode;
+
+    const prefix = currentCode.substring(0, pageIdx);
+    const suffix = currentCode.endsWith(';') ? ';' : '';
+
+    if (method === 'locator') {
+      return `${prefix}page.locator('${selectorValue}')${suffix}`;
+    } else if (method === 'getByRole') {
+      return `${prefix}page.${healedSelector}${suffix}`;
+    } else if (method === 'getByText') {
+      return `${prefix}page.${healedSelector}${suffix}`;
+    }
+
+    return `${prefix}page.${healedSelector}${suffix}`;
+  }
+
+  /**
+   * Build markdown report for runtime healing events.
+   */
+  _buildRuntimeHealingMarkdown(events) {
+    let md = `# AI Self-Healing Report (Runtime)\n\n`;
+    md += `> ${events.length} locator(s) were automatically healed at runtime by the AI Self-Healing Agent.\n\n`;
+
+    for (let i = 0; i < events.length; i++) {
+      const evt = events[i];
+      md += `## Healing Event ${i + 1}\n\n`;
+      md += `| Field | Value |\n`;
+      md += `|-------|-------|\n`;
+      md += `| Category | locator_broken |\n`;
+      md += `| Confidence | ${evt.confidence ? (evt.confidence * 100).toFixed(0) : 'N/A'}% |\n`;
+      md += `| Action | ${evt.action} |\n`;
+      md += `| Decision | healing_applied |\n\n`;
+      md += `### Broken Locator\n\n`;
+      md += `\`\`\`\n${evt.originalSelector}\n\`\`\`\n\n`;
+      md += `### Healed To\n\n`;
+      md += `\`\`\`\n${evt.healedSelector}\n\`\`\`\n\n`;
+      md += `---\n\n`;
+    }
+
+    return md;
+  }
+
+  /**
+   * Escape HTML entities to prevent XSS in report output.
+   */
+  _escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**

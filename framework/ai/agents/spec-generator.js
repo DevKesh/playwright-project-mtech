@@ -152,14 +152,68 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 - Methods for each logical action group
 - Import expect from @playwright/test if assertions needed
 - Optional elements: check isVisible before acting
+- For verification methods: use BROAD locators that check for actual visible content
+  * text patterns (regex matching multiple possible words) 
+  * semantic locators (getByRole headings, lists, etc.)
+  * Do NOT guess CSS class names — they are unreliable and app-specific
+  * If no registry entry exists, use text-based or role-based verification
+- For navigation methods: click element + waitForURL with URL pattern
+- For popup/dialog dismissal: wrap in isVisible() check with catch(() => false)
+- For arming operations: include error dialog detection that throws on system errors
 
 ## Spec Rules:
-- Import { test, expect } from @playwright/test
-- Import page objects: require('../../../framework/pages/generated/smoke/PageName')
+- Import { test, expect, chromium } from @playwright/test
+- Import ALL page objects needed: require('../../../framework/pages/generated/smoke/PageName')
 - Import testDataConfig: require('../../../framework/config/test-data.config')
 - Use test.describe with tags in title
-- Use test.step() for each logical step group
-- Add meaningful expect() assertions for verification steps`;
+- Use test.describe.configure({ mode: 'serial' }) to ensure order
+- CRITICAL: Use beforeAll/afterAll hooks for SHARED BROWSER SESSION:
+  * beforeAll: launch browser, create context + page, login ONCE, dismiss popups
+  * afterAll: close browser
+- Each test case is a separate test() block inside the describe
+- Each test should navigate back to home if needed before its flow
+- Use test.step() for each logical action within a test
+- Add meaningful expect() assertions for verification steps
+- The browser must NOT close between tests — only afterAll closes it
+- For arm/disarm tests: add test.setTimeout(180000) for the extra time needed
+
+## CONSOLIDATED SUITE TEMPLATE (follow this pattern exactly):
+\`\`\`javascript
+const { test, expect, chromium } = require('@playwright/test');
+const { testDataConfig } = require('../../../framework/config/test-data.config');
+// ... page object imports ...
+
+test.describe('@smoke @tc @tc-plan Suite Name', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let page, context, browser;
+  let loginPage, homePage; // ... other page objects
+
+  test.beforeAll(async () => {
+    browser = await chromium.launch({ headless: false });
+    context = await browser.newContext();
+    page = await context.newPage();
+    // instantiate page objects
+    loginPage = new LoginPage(page);
+    homePage = new HomePage(page);
+    // Login ONCE for the entire suite
+    await page.goto(testDataConfig.targetApp.loginUrl);
+    await loginPage.dismissCookieConsent();
+    await loginPage.login(testDataConfig.targetApp.credentials.email, testDataConfig.targetApp.credentials.password);
+    await page.waitForURL('**/home', { timeout: 30000 });
+    await homePage.dismissCookiePopup();
+    await homePage.closeDonePopup();
+  });
+
+  test.afterAll(async () => {
+    if (browser) await browser.close();
+  });
+
+  test('TC-XXX: Test name', async () => {
+    // test.step blocks here
+  });
+});
+\`\`\``;
 
   const userPrompt = `## Test Instructions (Natural Language):
 ${instructions}

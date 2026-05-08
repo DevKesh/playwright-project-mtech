@@ -42,6 +42,8 @@ function parseArgs() {
       parsed.tags = args[++i].split(',').map(t => t.trim());
     } else if (args[i] === '--all') {
       parsed.all = true;
+    } else if (args[i] === '--consolidated') {
+      parsed.consolidated = true;
     }
   }
 
@@ -174,11 +176,51 @@ async function main() {
     console.log('Usage:');
     console.log('  node framework/ai/scripts/generate-spec.js --suite tests/suites/smoke.md --tc 2');
     console.log('  node framework/ai/scripts/generate-spec.js --suite tests/suites/smoke.md --all');
+    console.log('  node framework/ai/scripts/generate-spec.js --suite tests/suites/smoke.md --all --consolidated');
     console.log('  node framework/ai/scripts/generate-spec.js --instructions "login and verify home page"');
     process.exit(0);
   }
 
-  // Execute generation
+  // ── CONSOLIDATED MODE: Send ALL test cases as ONE prompt, get ONE suite file ──
+  if (args.consolidated && args.suite && tasks.length > 1) {
+    console.log(`\n[CONSOLIDATED] Generating single suite file with ${tasks.length} test cases...`);
+
+    const { suiteConfig, testCases } = parseSuiteFile(args.suite);
+    const tags = (suiteConfig.tags || '@smoke @tc @tc-plan').split(' ').map(t => t.trim());
+    const output = args.output || suiteConfig.output || 'tests/generated/smoke';
+    const pages = args.pages || suiteConfig.pages || 'framework/pages/generated/smoke';
+
+    // Combine all test cases into a single instruction block
+    const combinedInstructions = testCases.map(tc =>
+      `### ${tc.id}: ${tc.title}\nEntry: ${tc.entry}\nExit: ${tc.exit}\n${tc.instructions.join('\n')}`
+    ).join('\n\n---\n\n');
+
+    const testMeta = {
+      testId: testCases[0].id,
+      title: `${testCases.length} Smoke Tests (Consolidated Suite)`,
+      tags,
+      entry: 'User is on login page',
+      exit: 'All test assertions pass',
+      consolidated: true,
+      testCaseCount: testCases.length,
+    };
+
+    try {
+      const result = await generateAndWriteSpec({
+        instructions: combinedInstructions,
+        testMeta,
+        outputDir: path.resolve(PROJECT_ROOT, output),
+        pagesDir: path.resolve(PROJECT_ROOT, pages),
+      });
+      console.log(`\n[CONSOLIDATED] ✓ Suite generated in ${(result.durationMs / 1000).toFixed(1)}s`);
+      console.log(`[CONSOLIDATED] → ${result.spec.fileName}`);
+    } catch (err) {
+      console.error(`[CONSOLIDATED] ✗ Failed: ${err.message}`);
+    }
+    process.exit(0);
+  }
+
+  // Execute generation (individual mode)
   let successCount = 0;
   let totalTokens = 0;
 

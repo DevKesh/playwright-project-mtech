@@ -5,7 +5,7 @@ class TotalConnectHomePage {
     this.page = page;
     this.securityNav = page.getByRole('button', { name: 'Security' }).first();
     this.devicesNav = page.getByRole('button', { name: 'Devices' }).first();
-    this.camerasNav = page.getByRole('button', { name: 'Cameras' }).first();
+    this.camerasNav = page.getByRole('button', { name: 'Cameras-broken' }).first();
     this.activityNav = page.getByRole('button', { name: 'Activity' }).first();
     this.scenesNav = page.getByRole('button', { name: 'Scenes' }).first();
     this.profileNav = page.getByRole('button', { name: 'My Profile' }).first();

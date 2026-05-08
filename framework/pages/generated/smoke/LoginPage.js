@@ -1,3 +1,4 @@
+// Full page object source code
 const { expect } = require('@playwright/test');
 
 class LoginPage {
@@ -6,22 +7,19 @@ class LoginPage {
     this.usernameInput = page.getByLabel('Username');
     this.passwordInput = page.getByLabel('Password');
     this.signInButton = page.getByRole('button', { name: 'Sign In' });
-  }
-
-  async open() {
-    await this.page.goto('https://qa2.totalconnect2.com/login');
-    await this.page.waitForLoadState('domcontentloaded');
-  }
-
-  async fillLoginForm(username, password) {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
+    this.cookieConsentButton = page.locator('#truste-consent-button');
   }
 
   async login(username, password) {
-    await this.fillLoginForm(username, password);
+    await this.usernameInput.fill(username);
+    await this.passwordInput.fill(password);
     await this.signInButton.click();
-    await this.page.waitForURL('**/home', { timeout: 15000 });
+  }
+
+  async dismissCookieConsent() {
+    if (await this.cookieConsentButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await this.cookieConsentButton.click();
+    }
   }
 }
 

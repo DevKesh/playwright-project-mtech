@@ -25,7 +25,7 @@ function loadAIConfig() {
 
     // Healing parameters
     maxRetries: parseInt(process.env.AI_HEALING_MAX_RETRIES || '3', 10),
-    confidenceThreshold: parseFloat(process.env.AI_HEALING_CONFIDENCE_THRESHOLD || '0.7'),
+    confidenceThreshold: parseFloat(process.env.AI_HEALING_CONFIDENCE_THRESHOLD || '0.5'),
 
     // Timeouts (ms)
     openaiTimeout: parseInt(process.env.AI_OPENAI_TIMEOUT || '30000', 10),

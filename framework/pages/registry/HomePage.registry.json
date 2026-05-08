@@ -104,7 +104,10 @@
   "stateTransitions": {
     "afterSelectAll": {
       "description": "Arming buttons become visible (Arm Home All, Arm Away All)",
-      "visibleElements": ["armHomeAllButton", "armAwayAllButton"]
+      "visibleElements": [
+        "armHomeAllButton",
+        "armAwayAllButton"
+      ]
     },
     "afterArmHome": {
       "description": "Partition status changes to 'Armed Home'. Disarm button becomes available on next SELECT ALL",
@@ -134,5 +137,10 @@
       "waitFor": "page.waitForURL('**/events', { timeout: 15000 })"
     }
   },
-  "dataBindings": {}
+  "dataBindings": {},
+  "metadata": {
+    "lastUpdated": "2026-05-08T13:22:31.181Z",
+    "source": "playwright-codegen",
+    "verified": true
+  }
 }

@@ -80,4 +80,4 @@ function patchPageWithHealing(page, { healerAgent, config }) {
   }
 }
 
-module.exports = { test, expect: base.expect };
+module.exports = { test, expect: base.expect, patchPageWithHealing, healerAgent };

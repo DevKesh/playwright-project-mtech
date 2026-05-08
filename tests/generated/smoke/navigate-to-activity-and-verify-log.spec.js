@@ -2,12 +2,13 @@ const { test, expect } = require('@playwright/test');
 const { testDataConfig } = require('../../../framework/config/test-data.config');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
 const { HomePage } = require('../../../framework/pages/generated/smoke/HomePage');
+const { ActivityPage } = require('../../../framework/pages/generated/smoke/ActivityPage');
 
-test.describe('@smoke @tc @tc-plan TC-SMOKE-002: Arm Home and Disarm', () => {
-  test('should arm home and disarm partitions successfully', async ({ page }) => {
-    test.setTimeout(180000); // Extended timeout — arm/disarm + possible precondition disarm + 15s system cooldown
+test.describe('@smoke @tc @tc-plan TC-SMOKE-005: Navigate to Activity Page', () => {
+  test('should navigate to activity and verify log entries', async ({ page }) => {
     const loginPage = new LoginPage(page);
     const homePage = new HomePage(page);
+    const activityPage = new ActivityPage(page);
 
     await test.step('Navigate to login page', async () => {
       await page.goto(testDataConfig.targetApp.loginUrl);
@@ -30,32 +31,16 @@ test.describe('@smoke @tc @tc-plan TC-SMOKE-002: Arm Home and Disarm', () => {
       await homePage.closeDonePopup();
     });
 
-    await test.step('Ensure all partitions are disarmed before test', async () => {
-      await homePage.ensureDisarmed();
+    await test.step('Navigate to Activity page', async () => {
+      await homePage.navigateToActivity();
     });
 
-    await test.step('Select all partitions', async () => {
-      await homePage.selectAllPartitions();
+    await test.step('Verify URL contains /events', async () => {
+      await expect(page).toHaveURL(/.*\/events/);
     });
 
-    await test.step('Arm Home', async () => {
-      await homePage.armHome();
-    });
-
-    await test.step('Verify partition shows Armed Home', async () => {
-      await homePage.verifyPartitionStatus('Armed Home');
-    });
-
-    await test.step('Select all partitions again', async () => {
-      await homePage.selectAllPartitions();
-    });
-
-    await test.step('Disarm', async () => {
-      await homePage.disarm();
-    });
-
-    await test.step('Verify partition shows Disarmed', async () => {
-      await homePage.verifyPartitionStatus('Disarmed');
+    await test.step('Verify activity log entries are displayed', async () => {
+      await activityPage.verifyActivityLogEntries();
     });
   });
 });
