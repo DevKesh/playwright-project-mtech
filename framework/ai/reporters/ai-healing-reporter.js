@@ -22,6 +22,7 @@ const { loadAIConfig } = require('../config/ai.config');
 const { createHealingGraph } = require('../graph/healing-graph');
 const { appendRunHistory } = require('../storage/healing-history');
 const { AuditTrail } = require('../audit/audit-trail');
+const { getCostSummary, clearCostLog } = require('../metrics/cost-tracker');
 
 class AIHealingReporter {
   constructor() {
@@ -46,6 +47,9 @@ class AIHealingReporter {
   onBegin(config, suite) {
     if (this.config.enabled) {
       console.log('[AI-REPORTER] AI Healing Reporter active (LangGraph orchestration)');
+
+      // Clear cost log for fresh tracking this run
+      try { clearCostLog(); } catch { /* ignore */ }
 
       // Record run start in audit trail
       if (this.config.auditEnabled) {
@@ -616,6 +620,12 @@ class AIHealingReporter {
 <hr style="margin:24px 0;">`;
     }
 
+    // Add healing flow diagram for runtime healing
+    html += this._buildRuntimeFlowDiagram(events);
+
+    // Add cost summary
+    html += this._buildCostSummaryHtml();
+
     return html;
   }
 
@@ -934,6 +944,12 @@ class AIHealingReporter {
   </table>
 </div>`;
 
+    // Add healing flow diagram
+    html += this._buildHealingFlowDiagram(healedTest);
+
+    // Add cost summary
+    html += this._buildCostSummaryHtml();
+
     return html;
   }
 
@@ -1008,7 +1024,186 @@ class AIHealingReporter {
 
     lines.push(`ai_run_id=${this.runId}`);
 
+    // Add cost tracking data
+    try {
+      const costSummary = getCostSummary();
+      if (costSummary.totalCalls > 0) {
+        lines.push(`ai_total_api_calls=${costSummary.totalCalls}`);
+        lines.push(`ai_total_tokens=${costSummary.totalTokens}`);
+        lines.push(`ai_total_prompt_tokens=${costSummary.totalPromptTokens}`);
+        lines.push(`ai_total_completion_tokens=${costSummary.totalCompletionTokens}`);
+        lines.push(`ai_estimated_cost_usd=$${costSummary.totalCostUSD.toFixed(4)}`);
+        for (const [model, data] of Object.entries(costSummary.byModel)) {
+          const safeModel = model.replace(/[^a-zA-Z0-9_-]/g, '_');
+          lines.push(`ai_cost_${safeModel}=$${data.costUSD.toFixed(4)} (${data.calls} calls, ${data.tokens} tokens)`);
+        }
+      }
+    } catch { /* cost tracking is optional */ }
+
     fs.writeFileSync(envPath, lines.filter(Boolean).join('\n') + '\n', 'utf-8');
+  }
+
+  /**
+   * Build a flow diagram for runtime healing (locator healed live, test passed).
+   */
+  _buildRuntimeFlowDiagram(events) {
+    const count = events.length;
+    const avgConf = events.reduce((s, e) => s + (e.confidence || 0), 0) / (count || 1);
+    const confStr = (avgConf * 100).toFixed(0) + '%';
+
+    return `
+<div style="border:2px solid #2c3e50; border-radius:8px; padding:20px; margin:16px 0; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+  <h3 style="color:#e94560; margin-top:0; text-align:center; font-size:18px;">AI Self-Healing Pipeline (Runtime)</h3>
+  <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; padding:16px 0;">
+    <div style="text-align:center;">
+      <div style="background:#e74c3c; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(231,76,60,0.4); min-width:100px;">LOCATOR FAILED</div>
+      <div style="color:#e74c3c; font-size:10px; margin-top:4px;">${count} locator(s)</div>
+    </div>
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite;">&#10132;</div>
+    <div style="text-align:center;">
+      <div style="background:#f39c12; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(243,156,18,0.4); min-width:100px;">DOM EXTRACTED</div>
+      <div style="color:#f39c12; font-size:10px; margin-top:4px;">Live page snapshot</div>
+    </div>
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.3s;">&#10132;</div>
+    <div style="text-align:center;">
+      <div style="background:#3498db; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(52,152,219,0.4); min-width:100px;">GPT-4o-mini</div>
+      <div style="color:#3498db; font-size:10px; margin-top:4px;">CSS → Role → Text</div>
+    </div>
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.6s;">&#10132;</div>
+    <div style="text-align:center;">
+      <div style="background:#9b59b6; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(155,89,182,0.4); min-width:100px;">HEALED</div>
+      <div style="color:#9b59b6; font-size:10px; margin-top:4px;">${confStr} confidence</div>
+    </div>
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.9s;">&#10132;</div>
+    <div style="text-align:center;">
+      <div style="background:#27ae60; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(39,174,96,0.4); min-width:100px;">TEST PASSED</div>
+      <div style="color:#27ae60; font-size:10px; margin-top:4px;">Action completed</div>
+    </div>
+  </div>
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</div>`;
+  }
+
+  /**
+   * Build an animated SVG flow diagram showing the healing pipeline.
+   * Stages: Test Failed → AI Analyzed → Strategy Selected → Locator Healed → Test Passed
+   */
+  _buildHealingFlowDiagram(healedTest) {
+    const category = healedTest.failureCategory || 'locator_broken';
+    const confidence = healedTest.classificationConfidence
+      ? (healedTest.classificationConfidence * 100).toFixed(0) + '%'
+      : 'N/A';
+    const decision = healedTest.decision || 'healing_suggested';
+    const strategy = healedTest.testCaseHealResult?.suggestedChanges?.[0]
+      ? 'Code Fix'
+      : 'Locator Replacement';
+
+    return `
+<div style="border:2px solid #2c3e50; border-radius:8px; padding:20px; margin:16px 0; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+  <h3 style="color:#e94560; margin-top:0; text-align:center; font-size:18px;">AI Self-Healing Pipeline</h3>
+  <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; padding:16px 0;">
+    <!-- Stage 1: Test Failed -->
+    <div style="text-align:center; animation: fadeIn 0.5s ease-in;">
+      <div style="background:#e74c3c; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(231,76,60,0.4); min-width:100px;">
+        TEST FAILED
+      </div>
+      <div style="color:#e74c3c; font-size:10px; margin-top:4px;">${this._escapeHtml(category)}</div>
+    </div>
+    <!-- Arrow -->
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite;">&#10132;</div>
+    <!-- Stage 2: AI Analyzed -->
+    <div style="text-align:center; animation: fadeIn 0.8s ease-in;">
+      <div style="background:#f39c12; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(243,156,18,0.4); min-width:100px;">
+        AI ANALYZED
+      </div>
+      <div style="color:#f39c12; font-size:10px; margin-top:4px;">GPT-4o (${confidence})</div>
+    </div>
+    <!-- Arrow -->
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.3s;">&#10132;</div>
+    <!-- Stage 3: Strategy Selected -->
+    <div style="text-align:center; animation: fadeIn 1.1s ease-in;">
+      <div style="background:#3498db; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(52,152,219,0.4); min-width:100px;">
+        STRATEGY
+      </div>
+      <div style="color:#3498db; font-size:10px; margin-top:4px;">${this._escapeHtml(strategy)}</div>
+    </div>
+    <!-- Arrow -->
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.6s;">&#10132;</div>
+    <!-- Stage 4: Locator Healed -->
+    <div style="text-align:center; animation: fadeIn 1.4s ease-in;">
+      <div style="background:#9b59b6; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(155,89,182,0.4); min-width:100px;">
+        HEALED
+      </div>
+      <div style="color:#9b59b6; font-size:10px; margin-top:4px;">${this._escapeHtml(decision)}</div>
+    </div>
+    <!-- Arrow -->
+    <div style="color:#e94560; font-size:24px; font-weight:bold; animation: pulse 1.5s infinite 0.9s;">&#10132;</div>
+    <!-- Stage 5: Fix Ready -->
+    <div style="text-align:center; animation: fadeIn 1.7s ease-in;">
+      <div style="background:#27ae60; color:white; border-radius:12px; padding:12px 16px; font-weight:bold; font-size:13px; box-shadow:0 4px 12px rgba(39,174,96,0.4); min-width:100px;">
+        FIX READY
+      </div>
+      <div style="color:#27ae60; font-size:10px; margin-top:4px;">Pending Review</div>
+    </div>
+  </div>
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</div>`;
+  }
+
+  /**
+   * Build an HTML cost summary section showing OpenAI token usage and estimated costs.
+   */
+  _buildCostSummaryHtml() {
+    try {
+      const summary = getCostSummary();
+      if (summary.totalCalls === 0) return '';
+
+      let modelRows = '';
+      for (const [model, data] of Object.entries(summary.byModel)) {
+        modelRows += `
+    <tr>
+      <td style="padding:6px 12px; border:1px solid #ddd;"><code>${this._escapeHtml(model)}</code></td>
+      <td style="padding:6px 12px; border:1px solid #ddd; text-align:center;">${data.calls}</td>
+      <td style="padding:6px 12px; border:1px solid #ddd; text-align:right;">${data.tokens.toLocaleString()}</td>
+      <td style="padding:6px 12px; border:1px solid #ddd; text-align:right; font-weight:bold;">$${data.costUSD.toFixed(4)}</td>
+    </tr>`;
+      }
+
+      return `
+<div style="border:2px solid #e67e22; border-radius:8px; padding:16px; margin:16px 0; background:#fef9e7;">
+  <h3 style="color:#e67e22; margin-top:0;">OpenAI Cost Tracking</h3>
+  <table style="width:100%; border-collapse:collapse; margin:8px 0;">
+    <thead>
+      <tr style="background:#fdebd0;">
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:left;">Model</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:center;">API Calls</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:right;">Tokens</th>
+        <th style="padding:8px 12px; border:1px solid #ddd; text-align:right;">Est. Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${modelRows}
+    </tbody>
+    <tfoot>
+      <tr style="background:#fdebd0; font-weight:bold;">
+        <td style="padding:8px 12px; border:1px solid #ddd;">TOTAL</td>
+        <td style="padding:8px 12px; border:1px solid #ddd; text-align:center;">${summary.totalCalls}</td>
+        <td style="padding:8px 12px; border:1px solid #ddd; text-align:right;">${summary.totalTokens.toLocaleString()}</td>
+        <td style="padding:8px 12px; border:1px solid #ddd; text-align:right; color:#e74c3c;">$${summary.totalCostUSD.toFixed(4)}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <p style="color:#888; font-size:11px; margin-bottom:0;">Prompt tokens: ${summary.totalPromptTokens.toLocaleString()} | Completion tokens: ${summary.totalCompletionTokens.toLocaleString()}</p>
+</div>`;
+    } catch {
+      return '';
+    }
   }
 }
 

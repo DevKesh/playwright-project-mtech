@@ -47,7 +47,14 @@ class AIClient {
           throw new Error('Empty response from OpenAI');
         }
 
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        // Attach token usage as a non-enumerable property so existing callers are unaffected
+        try {
+          if (response.usage && parsed && typeof parsed === 'object') {
+            Object.defineProperty(parsed, '__usage', { value: response.usage, enumerable: false });
+          }
+        } catch { /* never break the response for cost tracking */ }
+        return parsed;
       } catch (err) {
         lastError = err;
         if (attempt < retries) {
@@ -108,7 +115,13 @@ class AIClient {
           throw new Error('Empty response from OpenAI');
         }
 
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        try {
+          if (response.usage && parsed && typeof parsed === 'object') {
+            Object.defineProperty(parsed, '__usage', { value: response.usage, enumerable: false });
+          }
+        } catch { /* never break the response for cost tracking */ }
+        return parsed;
       } catch (err) {
         lastError = err;
         if (attempt < retries) {

@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { appendCostEntry } = require('./cost-tracker');
 
 const REPORTS_DIR = path.resolve(__dirname, '../../../ai-reports');
 const LATENCY_LOG = path.join(REPORTS_DIR, 'latency-log.json');
@@ -60,6 +61,18 @@ function wrapWithLatencyTracking(aiClient) {
         promptLength: (systemPrompt || '').length + (userPrompt || '').length,
         timestamp: new Date().toISOString(),
       });
+      // Track token costs if usage data is available (never fail the call for this)
+      try {
+        if (result && result.__usage) {
+          appendCostEntry({
+            model: options.model || 'default',
+            method: 'chatCompletionJSON',
+            promptTokens: result.__usage.prompt_tokens || 0,
+            completionTokens: result.__usage.completion_tokens || 0,
+            totalTokens: result.__usage.total_tokens || 0,
+          });
+        }
+      } catch { /* cost tracking must never break healing flow */ }
       return result;
     } catch (err) {
       const durationMs = Date.now() - start;
@@ -90,6 +103,18 @@ function wrapWithLatencyTracking(aiClient) {
         imageSize: imageBuffer ? imageBuffer.length : 0,
         timestamp: new Date().toISOString(),
       });
+      // Track token costs if usage data is available (never fail the call for this)
+      try {
+        if (result && result.__usage) {
+          appendCostEntry({
+            model: options.model || 'default',
+            method: 'visionCompletionJSON',
+            promptTokens: result.__usage.prompt_tokens || 0,
+            completionTokens: result.__usage.completion_tokens || 0,
+            totalTokens: result.__usage.total_tokens || 0,
+          });
+        }
+      } catch { /* cost tracking must never break healing flow */ }
       return result;
     } catch (err) {
       const durationMs = Date.now() - start;
