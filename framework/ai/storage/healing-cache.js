@@ -19,6 +19,7 @@ const path = require('path');
 const REPORTS_DIR = path.resolve(__dirname, '../../../ai-reports');
 const CACHE_FILE = path.join(REPORTS_DIR, 'healing-cache.json');
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MIN_SUCCESS_COUNT = 2; // Must succeed at least twice before being trusted from cache
 
 let _cache = null;
 
@@ -94,6 +95,7 @@ function cacheHealedSelector(originalSelector, healedSelector, type, confidence)
 
 /**
  * Look up a previously healed selector from the cache.
+ * Only returns entries that have been validated at least MIN_SUCCESS_COUNT times.
  * @param {string} originalSelector - The selector description to look up.
  * @returns {{ healedSelector: string, type: string, confidence: number } | null}
  */
@@ -107,6 +109,11 @@ function getCachedHealing(originalSelector) {
   if (age > CACHE_TTL_MS) {
     delete cache[originalSelector];
     saveCache();
+    return null;
+  }
+
+  // Only trust entries validated multiple times to prevent bad heals from being cached
+  if ((entry.successCount || 0) < MIN_SUCCESS_COUNT) {
     return null;
   }
 

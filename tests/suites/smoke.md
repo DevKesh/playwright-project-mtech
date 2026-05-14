@@ -65,3 +65,39 @@ close any pop up that occurs by clicking on DONE
 click the sidebar navigation button with text "Activity" to navigate to Activity
 verify the URL contains /events
 verify the activity log entries are displayed
+
+## TC-SMOKE-006: Verify all cameras are visible on Cameras page
+**Entry:** User is logged in and on home page
+**Exit:** Cameras page shows all available camera feeds
+
+login to the app
+dismiss cookie popup if visible
+close any pop up that occurs by clicking on DONE
+click the sidebar navigation button with text "Cameras" to navigate to Cameras
+verify the URL contains /cameras
+verify that all cameras on the page are visible and present
+verify the number of cameras displayed is greater than zero
+
+## TC-SMOKE-007: Verify camera names are displayed on Cameras page
+**Entry:** User is logged in and on home page
+**Exit:** Each camera on the page has a visible name or label
+
+login to the app
+dismiss cookie popup if visible
+close any pop up that occurs by clicking on DONE
+click the sidebar navigation button with text "Cameras" to navigate to Cameras
+verify the URL contains /cameras
+verify each camera displayed has a name or label visible
+verify no camera name is empty or missing
+
+## TC-SMOKE-008: Verify camera feed sections load on Cameras page
+**Entry:** User is logged in and on home page
+**Exit:** Camera feed sections are fully loaded without errors
+
+login to the app
+dismiss cookie popup if visible
+close any pop up that occurs by clicking on DONE
+click the sidebar navigation button with text "Cameras" to navigate to Cameras
+verify the URL contains /cameras
+verify camera feed sections are loaded and visible on the page
+verify no loading indicators or error messages are displayed

@@ -8,15 +8,23 @@
       "selector": "page.getByRole('heading', { name: /Devices|Automation/ })",
       "type": "heading",
       "action": "assert",
-      "context": "Page heading confirming Devices page loaded"
+      "context": "Page heading confirming Devices page loaded",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:00:52.586Z",
+      "verifiedAt": "2026-05-14T11:30:02.833Z"
     },
     "deviceCategories": {
       "selector": "page.locator('.device-category, .automation-card, [class*=device]')",
       "type": "container",
       "action": "assert",
-      "context": "Device category cards/sections"
+      "context": "Device category cards/sections",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.852Z"
     }
   },
   "stateTransitions": {},
-  "dataBindings": {}
+  "dataBindings": {},
+  "metadata": {
+    "lastValidated": "2026-05-14T11:30:02.852Z"
+  }
 }

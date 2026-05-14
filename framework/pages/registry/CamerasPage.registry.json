@@ -8,9 +8,19 @@
       "selector": "page.locator('[class*=camera], [class*=video], .camera-feed')",
       "type": "container",
       "action": "assert",
-      "context": "Camera feed section confirming cameras page loaded"
+      "context": "Camera feed section confirming cameras page loaded",
+      "verified": false,
+      "note": "Needs codegen recording — run: npm run codegen:record:cameras",
+      "brokenSince": "2026-05-14T11:29:59.280Z"
     }
   },
   "stateTransitions": {},
-  "dataBindings": {}
+  "dataBindings": {},
+  "metadata": {
+    "source": "manual",
+    "lastUpdated": "2026-05-14T00:00:00.000Z",
+    "verified": false,
+    "note": "Registry needs codegen recording to populate verified locators. Run: npm run codegen:record:cameras",
+    "lastValidated": "2026-05-14T11:29:59.280Z"
+  }
 }

@@ -9,21 +9,27 @@
       "type": "button",
       "action": "click",
       "context": "Dismisses cookie popup if visible after login",
-      "optional": true
+      "optional": true,
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.869Z"
     },
     "doneButton": {
       "selector": "page.getByRole('button', { name: 'DONE' })",
       "type": "button",
       "action": "click",
       "context": "Closes the Security Notifications popup that appears after first login",
-      "optional": true
+      "optional": true,
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.881Z"
     },
     "selectAllCheckbox": {
       "selector": "page.getByText(/SELECT ALL|DESELECT ALL/).first()",
       "type": "text-toggle",
       "action": "click",
       "context": "Selects/deselects all security partitions. Text toggles between SELECT ALL and DESELECT ALL. After clicking, arming buttons appear. MUST add waitForTimeout(1000) after click for buttons to render.",
-      "postAction": "await page.waitForTimeout(1000)"
+      "postAction": "await page.waitForTimeout(1000)",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.883Z"
     },
     "armHomeButton": {
       "selector": "page.locator('button', { hasText: 'ARM HOME' }).first()",
@@ -50,55 +56,78 @@
       "selector": "page.getByText(/Armed Home|Armed Away|Disarmed/)",
       "type": "text",
       "action": "assert",
-      "context": "Shows current arming status of partitions. Values: 'Armed Home', 'Armed Away', 'Disarmed'"
+      "context": "Shows current arming status of partitions. Values: 'Armed Home', 'Armed Away', 'Disarmed'",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.886Z"
     },
     "partitionSummaryText": {
       "selector": "page.getByText(/\\d+ of \\d+ Partitions/)",
       "type": "text",
       "action": "assert",
-      "context": "Shows partition count summary like '2 of 2 Partitions Disarmed'"
+      "context": "Shows partition count summary like '2 of 2 Partitions Disarmed'",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.890Z"
     },
     "securityNav": {
       "selector": "page.getByRole('button', { name: 'Security' }).first()",
       "type": "button",
       "action": "click",
-      "context": "Sidebar navigation to Security/Home page"
+      "context": "Sidebar navigation to Security/Home page",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:01:00.941Z",
+      "verifiedAt": "2026-05-14T11:30:02.899Z"
     },
     "devicesNav": {
       "selector": "page.getByRole('button', { name: 'Devices' }).first()",
       "type": "button",
       "action": "click",
-      "context": "Sidebar navigation to Devices page (/automation)"
+      "context": "Sidebar navigation to Devices page (/automation)",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:01:00.948Z",
+      "verifiedAt": "2026-05-14T11:30:02.904Z"
     },
     "camerasNav": {
       "selector": "page.getByRole('button', { name: 'Cameras' }).first()",
       "type": "button",
       "action": "click",
-      "context": "Sidebar navigation to Cameras page (/cameras)"
+      "context": "Sidebar navigation to Cameras page (/cameras)",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:01:00.954Z",
+      "verifiedAt": "2026-05-14T11:30:02.907Z"
     },
     "activityNav": {
       "selector": "page.getByRole('button', { name: 'Activity' }).first()",
       "type": "button",
       "action": "click",
-      "context": "Sidebar navigation to Activity page (/events)"
+      "context": "Sidebar navigation to Activity page (/events)",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:01:00.959Z",
+      "verifiedAt": "2026-05-14T11:30:02.911Z"
     },
     "scenesNav": {
       "selector": "page.getByRole('button', { name: 'Scenes' }).first()",
       "type": "button",
       "action": "click",
-      "context": "Sidebar navigation to Scenes page (/smartscenes)"
+      "context": "Sidebar navigation to Scenes page (/smartscenes)",
+      "verified": true,
+      "brokenSince": "2026-05-14T11:01:00.966Z",
+      "verifiedAt": "2026-05-14T11:30:02.915Z"
     },
     "todaysActivitiesHeading": {
       "selector": "page.getByText('Today\\'s Activities')",
       "type": "text",
       "action": "assert",
-      "context": "Section heading for the activity feed on home page"
+      "context": "Section heading for the activity feed on home page",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.920Z"
     },
     "viewAllActivitiesButton": {
       "selector": "page.getByText('View all activities')",
       "type": "button",
       "action": "click",
-      "context": "Link to full activity log from home page"
+      "context": "Link to full activity log from home page",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:02.932Z"
     }
   },
   "stateTransitions": {
@@ -141,6 +170,7 @@
   "metadata": {
     "lastUpdated": "2026-05-08T13:22:31.181Z",
     "source": "playwright-codegen",
-    "verified": true
+    "verified": true,
+    "lastValidated": "2026-05-14T11:30:02.932Z"
   }
 }

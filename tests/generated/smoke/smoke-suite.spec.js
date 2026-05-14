@@ -22,7 +22,11 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   /** @type {import('@playwright/test').Browser} */
   let browser;
 
-  let loginPage, homePage, devicesPage, camerasPage, activityPage;
+  /** @type {LoginPage} */   let loginPage;
+  /** @type {HomePage} */    let homePage;
+  /** @type {DevicesPage} */ let devicesPage;
+  /** @type {CamerasPage} */ let camerasPage;
+  /** @type {ActivityPage} */ let activityPage;
 
   test.beforeAll(async () => {
     browser = await chromium.launch({ headless: false });
@@ -164,6 +168,72 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
 
     await test.step('Verify activity log entries are displayed', async () => {
       await activityPage.verifyActivityLogEntries();
+    });
+  });
+
+  test('TC-006: Verify all cameras are visible on Cameras page', async () => {
+    await test.step('Navigate back to home page', async () => {
+      if (!page.url().includes('/home')) {
+        await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
+        await page.waitForURL('**/home', { timeout: 15000 });
+      }
+    });
+
+    await test.step('Navigate to Cameras page', async () => {
+      await homePage.navigateToCameras();
+    });
+
+    await test.step('Verify URL contains /cameras', async () => {
+      await expect(page).toHaveURL(/.*\/cameras/);
+    });
+
+    await test.step('Verify all cameras are visible and present', async () => {
+      const count = await camerasPage.verifyAllCamerasVisible();
+      console.log(`[TC-006] Found ${count} camera elements on the page`);
+    });
+  });
+
+  test('TC-007: Verify camera names are displayed on Cameras page', async () => {
+    await test.step('Navigate back to home page', async () => {
+      if (!page.url().includes('/home')) {
+        await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
+        await page.waitForURL('**/home', { timeout: 15000 });
+      }
+    });
+
+    await test.step('Navigate to Cameras page', async () => {
+      await homePage.navigateToCameras();
+    });
+
+    await test.step('Verify URL contains /cameras', async () => {
+      await expect(page).toHaveURL(/.*\/cameras/);
+    });
+
+    await test.step('Verify each camera has a visible name', async () => {
+      const count = await camerasPage.verifyCameraNames();
+      console.log(`[TC-007] Found ${count} camera name labels on the page`);
+    });
+  });
+
+  test('TC-008: Verify camera feed sections load on Cameras page', async () => {
+    await test.step('Navigate back to home page', async () => {
+      if (!page.url().includes('/home')) {
+        await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
+        await page.waitForURL('**/home', { timeout: 15000 });
+      }
+    });
+
+    await test.step('Navigate to Cameras page', async () => {
+      await homePage.navigateToCameras();
+    });
+
+    await test.step('Verify URL contains /cameras', async () => {
+      await expect(page).toHaveURL(/.*\/cameras/);
+    });
+
+    await test.step('Verify camera feeds are loaded and visible', async () => {
+      const count = await camerasPage.verifyCameraFeedsLoaded();
+      console.log(`[TC-008] Found ${count} camera feed elements on the page`);
     });
   });
 });

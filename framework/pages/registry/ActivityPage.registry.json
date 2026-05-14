@@ -5,18 +5,25 @@
   "description": "Activity log page showing historical security events with timestamps",
   "elements": {
     "activityEntries": {
-      "selector": "page.locator('[class*=event], [class*=activity], .event-row, tr')",
+      "selector": "page.locator('[class*=event], [class*=activity], .event-row, tr').first()",
       "type": "list",
       "action": "assert",
-      "context": "Activity log entries with timestamps"
+      "context": "Activity log entries with timestamps",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:00:38.278Z"
     },
     "activityTimestamp": {
       "selector": "page.getByText(/\\d{1,2}:\\d{2}:\\d{2}\\s*(AM|PM)/)",
       "type": "text",
       "action": "assert",
-      "context": "Timestamp format in activity entries"
+      "context": "Timestamp format in activity entries",
+      "verified": false,
+      "brokenSince": "2026-05-14T11:29:56.243Z"
     }
   },
   "stateTransitions": {},
-  "dataBindings": {}
+  "dataBindings": {},
+  "metadata": {
+    "lastValidated": "2026-05-14T11:29:56.243Z"
+  }
 }

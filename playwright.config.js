@@ -62,6 +62,10 @@ export default defineConfig({
         },
       ],
     }],
+    ['./framework/reporters/allure-auto-reporter.js', {
+      resultsDir: 'allure-results',
+      outputDir: 'allure-reports-history',
+    }],
     ...(process.env.AI_HEALING_ENABLED === 'true'
       ? [/** @type {const} */ (['./framework/ai/reporters/ai-healing-reporter.js'])]
       : []),

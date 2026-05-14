@@ -230,10 +230,12 @@ function createLocatorProxy(locator, context) {
                 `(confidence: ${graphResult.confidence}, attempts: ${graphResult.attemptCount})`
               );
 
-              // Persist to cache for next run
-              const typeMatch = graphResult.healedSelector.match(/^(\w+)\(/);
-              const type = typeMatch ? typeMatch[1] : 'locator';
-              cacheHealedSelector(context.selectorDescription, graphResult.healedSelector, type, graphResult.confidence);
+              // Persist to cache for next run (only high-confidence heals)
+              if (graphResult.confidence >= 0.9) {
+                const typeMatch = graphResult.healedSelector.match(/^(\w+)\(/);
+                const type = typeMatch ? typeMatch[1] : 'locator';
+                cacheHealedSelector(context.selectorDescription, graphResult.healedSelector, type, graphResult.confidence);
+              }
 
               // The healer agent already performed the action during validation — return its result
               return graphResult.actionResult;

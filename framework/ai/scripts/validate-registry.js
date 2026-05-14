@@ -3,6 +3,11 @@
  * Locator Validator: Opens the browser, navigates to each page, and VERIFIES
  * every locator in the registry resolves correctly (exactly 1 match, or handles .first()).
  *
+ * GROUND RULE: The app MUST be fully logged in and confirmed at
+ * https://qa2.totalconnect2.com/home before ANY validation begins.
+ * No locator checks, no GPT calls, no alternative strategies run until
+ * the home page URL is explicitly confirmed.
+ *
  * Usage:
  *   node framework/ai/scripts/validate-registry.js --page HomePage
  *   node framework/ai/scripts/validate-registry.js --all
@@ -35,40 +40,23 @@ const targetPage = getArg('--page');
 const validateAll = hasFlag('--all');
 const autoFix = hasFlag('--fix');
 
+const HOME_URL = 'https://qa2.totalconnect2.com/home';
+
 /**
- * Login to the app and return the page.
+ * GROUND RULE GATE: Confirms the browser is truly at /home and the app is ready.
+ * Polls the actual URL every second for up to maxWait ms.
+ * Returns true only if page.url() === HOME_URL (or starts with it).
  */
-async function loginAndNavigate(page, targetUrl) {
-  const creds = testDataConfig?.targetApp?.credentials;
-  const loginUrl = testDataConfig?.targetApp?.loginUrl || 'https://qa2.totalconnect2.com/login';
-
-  await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-  // Dismiss cookie
-  try {
-    await page.locator('#truste-consent-button').click({ timeout: 3000 });
-  } catch {}
-
-  // Fill login
-  await page.locator('#UsernameInput').fill(creds.email);
-  await page.locator('#PasswordInput').fill(creds.password);
-  await page.locator('#LoginButton').click();
-
-  // Wait for home page
-  await page.waitForURL('**/home', { timeout: 20000 });
-
-  // Dismiss DONE popup if visible
-  try {
-    const doneBtn = page.getByRole('button', { name: 'DONE' });
-    if (await doneBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await doneBtn.click();
+async function confirmAtHome(page, maxWait = 15000) {
+  const start = Date.now();
+  while (Date.now() - start < maxWait) {
+    const currentUrl = page.url();
+    if (currentUrl.startsWith(HOME_URL)) {
+      return true;
     }
-  } catch {}
-
-  // Navigate to target if not home
-  if (targetUrl && !targetUrl.includes('/home')) {
-    await page.goto(`https://qa2.totalconnect2.com${targetUrl}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1000);
   }
+  return false;
 }
 
 /**
@@ -151,18 +139,196 @@ async function main() {
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   const page = await context.newPage();
 
+  // ── STEP 1: Login and CONFIRM at /home — NOTHING proceeds until this passes ──
+  console.log(`[VALIDATOR] Step 1: Logging in and confirming home page...`);
+  console.log(`[VALIDATOR]   GROUND RULE: App must be fully at ${HOME_URL} before any validation.`);
+  try {
+    const creds = testDataConfig?.targetApp?.credentials;
+    const loginUrl = testDataConfig?.targetApp?.loginUrl || 'https://qa2.totalconnect2.com/login';
+
+    if (!creds || !creds.email || !creds.password) {
+      throw new Error('Credentials missing in test-data.config.js → targetApp.credentials');
+    }
+
+    await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    console.log(`[VALIDATOR]   → Login page loaded: ${page.url()}`);
+
+    // Dismiss cookie banner (non-blocking)
+    try { await page.locator('#truste-consent-button').click({ timeout: 3000 }); } catch {}
+
+    // Fill credentials and submit
+    await page.locator('#UsernameInput').fill(creds.email);
+    await page.locator('#PasswordInput').fill(creds.password);
+    await page.locator('#LoginButton').click();
+    console.log(`[VALIDATOR]   → Credentials submitted, waiting for /home...`);
+
+    // Wait for URL to become /home (the app may take time due to API calls after login)
+    await page.waitForURL('**/home', { timeout: 60000 });
+
+    // Dismiss popups that appear after login (DONE button, notifications, etc.)
+    try {
+      const doneBtn = page.getByRole('button', { name: 'DONE' });
+      if (await doneBtn.isVisible({ timeout: 8000 }).catch(() => false)) {
+        await doneBtn.click();
+        console.log(`[VALIDATOR]   → Dismissed DONE popup`);
+      }
+    } catch {}
+
+    // Wait for a known home page element to confirm the app is truly loaded
+    // (Security nav button is verified in the registry — it's always present on /home)
+    try {
+      await page.getByRole('button', { name: 'Security' }).first().waitFor({ state: 'visible', timeout: 15000 });
+    } catch {
+      // If Security button isn't found, fall back to waiting for any sidebar nav
+      await page.waitForTimeout(3000);
+    }
+
+    // ═══ GROUND RULE CHECK: Confirm URL is EXACTLY /home ═══
+    const confirmedAtHome = await confirmAtHome(page, 10000);
+    if (!confirmedAtHome) {
+      throw new Error(`After login, URL is "${page.url()}" — NOT at ${HOME_URL}. Login may have failed silently.`);
+    }
+
+    console.log(`[VALIDATOR]   ✓ CONFIRMED at home: ${page.url()}`);
+    console.log(`[VALIDATOR]   ✓ App is fully loaded. Proceeding to validation.\n`);
+  } catch (loginErr) {
+    console.error(`[VALIDATOR]   ✗ LOGIN FAILED: ${loginErr.message}`);
+    console.error(`[VALIDATOR]   ABORTING — cannot validate locators without a confirmed /home session.`);
+    console.error(`[VALIDATOR]   Fix: Ensure the app is reachable and credentials in test-data.config.js are correct.`);
+    await browser.close();
+    process.exit(1);
+  }
+
+  console.log(`[VALIDATOR] Step 2: Validating locators on each page...\n`);
+
+  // Load HomePage registry for navigation buttons
+  let homeRegistry = null;
+  const homeRegPath = path.join(REGISTRY_DIR, 'HomePage.registry.json');
+  if (fs.existsSync(homeRegPath)) {
+    homeRegistry = JSON.parse(fs.readFileSync(homeRegPath, 'utf-8'));
+  }
+
+  // Map page URLs to their nav button selectors + waitFor patterns
+  const navMap = {};
+  if (homeRegistry && homeRegistry.stateTransitions) {
+    const transitionToNav = {
+      afterDevicesNav: { nav: 'devicesNav', url: '/automation' },
+      afterCamerasNav: { nav: 'camerasNav', url: '/cameras' },
+      afterActivityNav: { nav: 'activityNav', url: '/events' },
+    };
+    for (const [key, mapping] of Object.entries(transitionToNav)) {
+      const transition = homeRegistry.stateTransitions[key];
+      const navElement = homeRegistry.elements[mapping.nav];
+      if (transition && navElement) {
+        navMap[mapping.url] = {
+          selector: navElement.selector,
+          waitFor: transition.waitFor,
+          expectedUrl: transition.expectedUrl,
+        };
+      }
+    }
+  }
+
   let totalElements = 0;
   let validCount = 0;
   let brokenCount = 0;
   let fixedCount = 0;
+  let skippedPages = 0;
 
   for (const registryFile of registryFiles) {
     const registry = JSON.parse(fs.readFileSync(registryFile, 'utf-8'));
     console.log(`[VALIDATOR] ─── ${registry.pageName} (${registry.url}) ───`);
 
-    // Login and navigate to the page
-    await loginAndNavigate(page, registry.url);
-    await page.waitForTimeout(2000); // Let SPA render
+    // Navigate to the target page using nav buttons (like a real user)
+    let navigationSuccess = false;
+    try {
+      const targetUrl = registry.url;
+
+      // If already on the correct page, skip navigation
+      const currentPath = new URL(page.url()).pathname;
+      if (currentPath.includes(targetUrl.replace('/', ''))) {
+        navigationSuccess = true;
+        console.log(`[VALIDATOR]   ✓ Already on page: ${page.url()}`);
+      }
+      // HomePage: just go back to /home
+      else if (targetUrl === '/home') {
+        await page.goto('https://qa2.totalconnect2.com/home', { waitUntil: 'domcontentloaded', timeout: 20000 });
+        await page.waitForTimeout(2000);
+        navigationSuccess = true;
+        console.log(`[VALIDATOR]   ✓ On page: ${page.url()}`);
+      }
+      // Other pages: click the nav button from home (like a real user)
+      else if (navMap[targetUrl]) {
+        // First ensure we're back at /home (ground rule: always navigate FROM home)
+        if (!page.url().startsWith(HOME_URL)) {
+          await page.goto(HOME_URL, { waitUntil: 'domcontentloaded', timeout: 20000 });
+          await page.waitForTimeout(2000);
+          const backAtHome = await confirmAtHome(page, 10000);
+          if (!backAtHome) {
+            console.log(`[VALIDATOR]   ✗ Could not return to /home (at "${page.url()}") — skipping ${registry.pageName}`);
+            skippedPages++;
+            continue;
+          }
+        }
+
+        const nav = navMap[targetUrl];
+        console.log(`[VALIDATOR]   → Clicking nav button: ${nav.selector}`);
+
+        // Click the nav button
+        const navFn = new Function('page', `return (async () => {
+          const locator = ${nav.selector};
+          await locator.click({ timeout: 10000 });
+        })()`);
+        await navFn(page);
+
+        // Wait for URL change (non-blocking — if it times out we still check where we are)
+        if (nav.waitFor) {
+          try {
+            const waitFn = new Function('page', `return (async () => { await ${nav.waitFor}; })()`);
+            await waitFn(page);
+          } catch {
+            // waitForURL timed out — we'll check actual URL below
+          }
+        }
+        await page.waitForTimeout(2000); // Let SPA render
+
+        // NOW extract the actual URL and verify we're on the right page
+        const actualUrl = page.url();
+        const actualPath = new URL(actualUrl).pathname;
+        if (actualPath.includes(targetUrl.replace('/', ''))) {
+          navigationSuccess = true;
+          console.log(`[VALIDATOR]   ✓ Navigated to: ${actualUrl}`);
+        } else {
+          console.log(`[VALIDATOR]   ✗ Clicked nav but landed on "${actualPath}" instead of "${targetUrl}"`);
+        }
+      }
+      // Fallback: direct URL (for pages without a nav button mapping)
+      else {
+        console.log(`[VALIDATOR]   → No nav button found, trying direct URL...`);
+        await page.goto(`https://qa2.totalconnect2.com${targetUrl}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        await page.waitForTimeout(3000);
+
+        const afterUrl = new URL(page.url()).pathname;
+        if (afterUrl.includes(targetUrl.replace('/', ''))) {
+          navigationSuccess = true;
+          console.log(`[VALIDATOR]   ✓ On page: ${page.url()}`);
+        }
+      }
+
+      if (!navigationSuccess) {
+        console.log(`[VALIDATOR]   ✗ NAVIGATION FAILED — ended up at "${page.url()}" instead of "${targetUrl}"`);
+        console.log(`[VALIDATOR]   ⏭ SKIPPING ${registry.pageName}`);
+        console.log('');
+        skippedPages++;
+        continue;
+      }
+    } catch (navErr) {
+      console.log(`[VALIDATOR]   ✗ NAVIGATION ERROR: ${navErr.message}`);
+      console.log(`[VALIDATOR]   ⏭ SKIPPING ${registry.pageName}`);
+      console.log('');
+      skippedPages++;
+      continue;
+    }
 
     const elements = registry.elements;
     let modified = false;
@@ -230,11 +396,21 @@ async function main() {
   await browser.close();
 
   console.log(`\n[VALIDATOR] ═══ Summary ═══`);
-  console.log(`  Total elements: ${totalElements}`);
-  console.log(`  Valid:           ${validCount}`);
-  console.log(`  Broken:          ${brokenCount}`);
-  console.log(`  Auto-fixed:      ${fixedCount}`);
-  console.log(`  Pass rate:       ${totalElements > 0 ? Math.round((validCount / totalElements) * 100) : 0}%\n`);
+  console.log(`  Total elements:  ${totalElements}`);
+  console.log(`  Valid:            ${validCount}`);
+  console.log(`  Broken:           ${brokenCount}`);
+  console.log(`  Auto-fixed:       ${fixedCount}`);
+  if (skippedPages > 0) {
+    console.log(`  Pages skipped:    ${skippedPages} (navigation failed — NOT counted as broken)`);
+  }
+  const validatable = totalElements > 0 ? totalElements : 1;
+  console.log(`  Pass rate:        ${Math.round((validCount / validatable) * 100)}% (of elements that were actually validated)\n`);
+
+  if (skippedPages > 0) {
+    console.log(`  ⚠ ${skippedPages} page(s) were skipped because the browser could not navigate to them.`);
+    console.log(`    This does NOT mean locators are broken — it means login/navigation failed.`);
+    console.log(`    Ensure the app is reachable and credentials are correct, then retry.\n`);
+  }
 
   if (brokenCount > 0 && !autoFix) {
     console.log(`  💡 Run with --fix to attempt auto-repair, or use codegen to re-record:\n`);

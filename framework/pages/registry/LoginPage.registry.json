@@ -8,26 +8,34 @@
       "selector": "page.getByLabel('Username')",
       "type": "input",
       "action": "fill",
-      "context": "Username/email input field for authentication"
+      "context": "Username/email input field for authentication",
+      "verified": true,
+      "verifiedAt": "2026-05-14T11:30:06.635Z"
     },
     "passwordInput": {
       "selector": "page.getByLabel('Password')",
       "type": "input",
       "action": "fill",
-      "context": "Password input field"
+      "context": "Password input field",
+      "verified": true,
+      "verifiedAt": "2026-05-14T11:30:06.636Z"
     },
     "signInButton": {
       "selector": "page.getByRole('button', { name: 'Sign In' })",
       "type": "button",
       "action": "click",
-      "context": "Submits login form, redirects to /home on success"
+      "context": "Submits login form, redirects to /home on success",
+      "verified": true,
+      "verifiedAt": "2026-05-14T11:30:06.639Z"
     },
     "cookieConsentButton": {
       "selector": "page.locator('#truste-consent-button')",
       "type": "button",
       "action": "click",
       "context": "Dismisses cookie consent banner (may not appear)",
-      "optional": true
+      "optional": true,
+      "verified": false,
+      "brokenSince": "2026-05-14T11:30:06.646Z"
     }
   },
   "stateTransitions": {
@@ -40,5 +48,8 @@
   "dataBindings": {
     "username": "testDataConfig.targetApp.credentials.email",
     "password": "testDataConfig.targetApp.credentials.password"
+  },
+  "metadata": {
+    "lastValidated": "2026-05-14T11:30:06.646Z"
   }
 }

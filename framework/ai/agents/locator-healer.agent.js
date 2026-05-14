@@ -190,6 +190,11 @@ class LocatorHealerAgent {
           continue;
         }
 
+        // If multiple elements match and original had .first(), apply .first() to avoid strict mode errors
+        if (count > 1 && failedSelector.includes('.first()')) {
+          healedLocator = healedLocator.first();
+        }
+
         // 4. Retry the original action with the healed locator
         const actionResult = await healedLocator[action](...actionArgs);
 
@@ -303,16 +308,45 @@ class LocatorHealerAgent {
    * Extract targeted context for text-filter locator mismatches.
    * When the failed selector is like `page.locator("span.menuName", {"hasText":"Activities"})`,
    * find all elements matching the base CSS selector and list their text content.
+   * Also handles getByRole selectors to list all elements with that role.
    * This helps GPT see the actual values and pick the closest match.
    */
   async _extractTargetedContext(page, failedSelector) {
+    const rawLocator = page.__rawLocatorMethods?.locator || page.locator.bind(page);
+    const rawGetByRole = page.__rawLocatorMethods?.getByRole || page.getByRole.bind(page);
+
+    // Handle getByRole selectors: page.getByRole("button", {"name":"Cameras-broken"})
+    const roleMatch = failedSelector.match(/page\.getByRole\("([^"]+)"/);
+    if (roleMatch) {
+      const role = roleMatch[1];
+      // Extract the intended name from the selector for context
+      const nameMatch = failedSelector.match(/"name"\s*:\s*"([^"]+)"/);
+      const intendedName = nameMatch ? nameMatch[1] : '';
+
+      // Find all elements with this role on the page
+      const elements = rawLocator(`[role="${role}"], ${role}`);
+      const count = await elements.count();
+      if (count > 0 && count <= 50) {
+        const items = [];
+        for (let i = 0; i < count; i++) {
+          const text = await elements.nth(i).textContent().catch(() => null);
+          const ariaLabel = await elements.nth(i).getAttribute('aria-label').catch(() => null);
+          const label = ariaLabel || (text ? text.trim() : null);
+          if (label) items.push(label);
+        }
+        if (items.length > 0) {
+          return `\n\n**All "${role}" elements currently on the page:**\n${items.map((t, i) => `${i + 1}. "${t}"`).join('\n')}\n\nThe original selector was looking for name: "${intendedName}". Pick the element whose name/text is closest to the intended target. The name may have been slightly changed or the suffix removed.`;
+        }
+      }
+      return '';
+    }
+
     // Parse base CSS selector from the description
     // Format: page.locator("span.menuName", {"hasText":"Activities"})
     const locatorMatch = failedSelector.match(/page\.locator\("([^"]+)"/);
     if (!locatorMatch) return '';
 
     const baseCSS = locatorMatch[1];
-    const rawLocator = page.__rawLocatorMethods?.locator || page.locator.bind(page);
 
     const elements = rawLocator(baseCSS);
     const count = await elements.count();

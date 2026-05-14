@@ -1,4 +1,5 @@
 const { expect } = require('@playwright/test');
+const { waitForPageReady } = require('../../../utils/waitForPageReady');
 
 class ActivityPage {
   constructor(page) {
@@ -8,6 +9,8 @@ class ActivityPage {
   }
 
   async verifyActivityLogEntries() {
+    // Wait for any loaders (e.g., "Loading activities") to disappear first
+    await waitForPageReady(this.page);
     await expect(this.activityEntries).toBeVisible({ timeout: 10000 });
   }
 

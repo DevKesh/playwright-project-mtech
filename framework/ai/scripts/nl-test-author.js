@@ -9,12 +9,15 @@
  *   npm run ai:author -- --file test-instructions.txt
  *   npm run ai:author -- --suite tests/suites/smoke.md
  *   npm run ai:author -- --suite tests/suites/smoke.md --login
+ *   npm run ai:author -- --suite tests/suites/smoke.md --login --tc 6
+ *   npm run ai:author -- --suite tests/suites/smoke.md --login --tc TC-SMOKE-006
  *   npm run ai:author                          (interactive mode)
  *
  * Options:
  *   --instructions "..."   Plain English test description (wrap in quotes)
  *   --file <path>          Read instructions from a plain text file
  *   --suite <path>         Run a test suite from a .md file (multiple test cases)
+ *   --tc <N|ID>            Run only the Nth test case or by ID (e.g. --tc 6 or --tc TC-SMOKE-006)
  *   --url <URL>            Override base URL from test-data.config.js
  *   --login                Auto-login before executing steps
  *   --headless             Run browser in headless mode (default: headed)
@@ -211,6 +214,7 @@ async function main() {
   let url = testDataConfig?.targetApp?.baseUrl || '';
   let autoLogin = false;
   let headed = true;
+  let tcFilter = null; // --tc N or --tc TC-SMOKE-006
 
   // Parse CLI arguments
   for (let i = 0; i < args.length; i++) {
@@ -227,6 +231,8 @@ async function main() {
       }
     } else if (args[i] === '--suite' && args[i + 1]) {
       suitePath = path.resolve(args[++i]);
+    } else if (args[i] === '--tc' && args[i + 1]) {
+      tcFilter = args[++i];
     } else if (args[i] === '--url' && args[i + 1]) {
       url = args[++i];
     } else if (args[i] === '--login') {
@@ -246,6 +252,29 @@ async function main() {
       process.exit(1);
     }
 
+    // Filter to a single TC if --tc was specified
+    let testCasesToRun = suite.testCases;
+    if (tcFilter) {
+      const tcNum = parseInt(tcFilter, 10);
+      if (!isNaN(tcNum) && tcNum >= 1 && tcNum <= suite.testCases.length) {
+        // Numeric filter: --tc 6 means the 6th test case
+        testCasesToRun = [suite.testCases[tcNum - 1]];
+      } else {
+        // ID-based filter: --tc TC-SMOKE-006 or partial match --tc 006
+        const match = suite.testCases.filter(tc =>
+          tc.id === tcFilter || tc.id.includes(tcFilter)
+        );
+        if (match.length > 0) {
+          testCasesToRun = match;
+        } else {
+          console.error(`TC not found: "${tcFilter}". Available:`);
+          suite.testCases.forEach((tc, i) => console.error(`  ${i + 1}. ${tc.id}: ${tc.title}`));
+          process.exit(1);
+        }
+      }
+      console.log(`[NL-AUTHOR] Filtered to ${testCasesToRun.length} test case(s): ${testCasesToRun.map(t => t.id).join(', ')}`);
+    }
+
     const config = loadAIConfig();
     if (!config.openaiApiKey) { console.error('OPENAI_API_KEY not set. Add it to your .env file.'); process.exit(1); }
 
@@ -254,7 +283,7 @@ async function main() {
     console.log('╠══════════════════════════════════════════════════════════╣');
     console.log(`║  Suite:      ${suite.suiteName.substring(0, 43).padEnd(43)} ║`);
     console.log(`║  File:       ${suite.suiteFile.substring(0, 43).padEnd(43)} ║`);
-    console.log(`║  Test Cases: ${String(suite.testCases.length).padEnd(43)} ║`);
+    console.log(`║  Test Cases: ${String(testCasesToRun.length + (tcFilter ? ` (filtered from ${suite.testCases.length})` : '')).padEnd(43)} ║`);
     console.log(`║  Login:      ${String(autoLogin).padEnd(43)} ║`);
     console.log(`║  Headed:     ${String(headed).padEnd(43)} ║`);
     if (suite.suiteOptions.preferredLocators) {
@@ -267,7 +296,7 @@ async function main() {
       console.log(`║  Pages:      ${suite.suiteOptions.pagesDir.substring(0, 43).padEnd(43)} ║`);
     }
     console.log('╠══════════════════════════════════════════════════════════╣');
-    for (const tc of suite.testCases) {
+    for (const tc of testCasesToRun) {
       console.log(`║  ${tc.id}: ${tc.title.substring(0, 50).padEnd(50)}   ║`);
     }
     console.log('╚══════════════════════════════════════════════════════════╝');
@@ -276,15 +305,15 @@ async function main() {
     const graph = createNLAuthoringGraph(config);
     const results = [];
 
-    for (let i = 0; i < suite.testCases.length; i++) {
-      const tc = suite.testCases[i];
+    for (let i = 0; i < testCasesToRun.length; i++) {
+      const tc = testCasesToRun[i];
       const tcUrl = tc.options.url || url;
       const tcLogin = tc.options.autoLogin !== undefined ? tc.options.autoLogin : autoLogin;
       const tcHeaded = tc.options.headless !== undefined ? !tc.options.headless : headed;
 
       console.log('');
       console.log(`┌──────────────────────────────────────────────────────────┐`);
-      console.log(`│  [${istTimestamp()}] Running ${i + 1}/${suite.testCases.length}: ${tc.id}: ${tc.title.substring(0, 35).padEnd(35)}│`);
+      console.log(`│  [${istTimestamp()}] Running ${i + 1}/${testCasesToRun.length}: ${tc.id}: ${tc.title.substring(0, 35).padEnd(35)}│`);
       console.log(`└──────────────────────────────────────────────────────────┘`);
 
       const result = await runSingleTestCase(graph, {
