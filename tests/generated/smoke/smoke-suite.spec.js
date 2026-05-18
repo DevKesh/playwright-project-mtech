@@ -1,7 +1,8 @@
-const { test, expect, chromium } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
+const { launchBrowser } = require('../../../framework/utils/browser-launcher');
 const { testDataConfig } = require('../../../framework/config/test-data.config');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
-const { HomePage } = require('../../../framework/pages/generated/smoke/HomePage');
+const { TotalConnectHomePage } = require('../../../framework/pages/generated/smoke/TotalConnectHomePage');
 const { DevicesPage } = require('../../../framework/pages/generated/smoke/DevicesPage');
 const { CamerasPage } = require('../../../framework/pages/generated/smoke/CamerasPage');
 const { ActivityPage } = require('../../../framework/pages/generated/smoke/ActivityPage');
@@ -23,15 +24,16 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   let browser;
 
   /** @type {LoginPage} */   let loginPage;
-  /** @type {HomePage} */    let homePage;
+  /** @type {TotalConnectHomePage} */    let homePage;
   /** @type {DevicesPage} */ let devicesPage;
   /** @type {CamerasPage} */ let camerasPage;
   /** @type {ActivityPage} */ let activityPage;
 
   test.beforeAll(async () => {
-    browser = await chromium.launch({ headless: false });
-    context = await browser.newContext();
-    page = await context.newPage();
+    const session = await launchBrowser();
+    browser = session.browser;
+    context = session.context;
+    page = session.page;
 
     // Apply AI self-healing to the page when enabled
     if (healerAgent) {
@@ -40,7 +42,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     }
 
     loginPage = new LoginPage(page);
-    homePage = new HomePage(page);
+    homePage = new TotalConnectHomePage(page);
     devicesPage = new DevicesPage(page);
     camerasPage = new CamerasPage(page);
     activityPage = new ActivityPage(page);
@@ -130,6 +132,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-004: Navigate to Cameras page', async () => {
+    test.setTimeout(90000); // Cameras load async — first visit takes longer
     await test.step('Navigate back to home page', async () => {
       if (!page.url().includes('/home')) {
         await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
@@ -172,6 +175,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-006: Verify all cameras are visible on Cameras page', async () => {
+    test.setTimeout(90000);
     await test.step('Navigate back to home page', async () => {
       if (!page.url().includes('/home')) {
         await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
@@ -194,15 +198,14 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-007: Verify camera names are displayed on Cameras page', async () => {
-    await test.step('Navigate back to home page', async () => {
-      if (!page.url().includes('/home')) {
-        await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
-        await page.waitForURL('**/home', { timeout: 15000 });
+    await test.step('Navigate to Cameras page if not already there', async () => {
+      if (!page.url().includes('/cameras')) {
+        if (!page.url().includes('/home')) {
+          await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
+          await page.waitForURL('**/home', { timeout: 15000 });
+        }
+        await homePage.navigateToCameras();
       }
-    });
-
-    await test.step('Navigate to Cameras page', async () => {
-      await homePage.navigateToCameras();
     });
 
     await test.step('Verify URL contains /cameras', async () => {
@@ -216,15 +219,14 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-008: Verify camera feed sections load on Cameras page', async () => {
-    await test.step('Navigate back to home page', async () => {
-      if (!page.url().includes('/home')) {
-        await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
-        await page.waitForURL('**/home', { timeout: 15000 });
+    await test.step('Navigate to Cameras page if not already there', async () => {
+      if (!page.url().includes('/cameras')) {
+        if (!page.url().includes('/home')) {
+          await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'));
+          await page.waitForURL('**/home', { timeout: 15000 });
+        }
+        await homePage.navigateToCameras();
       }
-    });
-
-    await test.step('Navigate to Cameras page', async () => {
-      await homePage.navigateToCameras();
     });
 
     await test.step('Verify URL contains /cameras', async () => {

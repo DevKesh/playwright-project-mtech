@@ -165,6 +165,8 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 - Import { test, expect, chromium } from @playwright/test
 - Import ALL page objects needed: require('../../../framework/pages/generated/smoke/PageName')
 - Import testDataConfig: require('../../../framework/config/test-data.config')
+- CRITICAL IMPORT PATHS: The spec file lives at tests/generated/smoke/. Relative paths MUST use '../../../framework/...' (3 levels up). NEVER use '../../framework/...' (2 levels). NEVER invent paths like 'pages/total-connect/'.
+- Use ONLY page object classes that exist in the "Existing Page Objects" list below. Match the EXACT class names and file names.
 - Use test.describe with tags in title
 - Use test.describe.configure({ mode: 'serial' }) to ensure order
 - CRITICAL: Use beforeAll/afterAll hooks for SHARED BROWSER SESSION:
@@ -268,12 +270,17 @@ async function generateSpecFromRegistry({ instructions, testMeta, config: config
 
   console.log(`[SPEC-GEN] Loaded ${Object.keys(relevantRegistries).length} relevant page registries: ${Object.keys(relevantRegistries).join(', ')}`);
 
-  // Check for existing page objects to reuse
+  // Check for existing page objects to reuse (include smoke subdirectory)
   let existingPOs = '';
   const poDir = path.join(PROJECT_ROOT, 'framework', 'pages', 'generated');
   if (fs.existsSync(poDir)) {
     const poFiles = fs.readdirSync(poDir).filter(f => f.endsWith('.js'));
-    existingPOs = poFiles.map(f => `- ${f}`).join('\n');
+    existingPOs = poFiles.map(f => `- ${f} (import: '../../../framework/pages/generated/${f}')`).join('\n');
+  }
+  const poSmokeDir = path.join(poDir, 'smoke');
+  if (fs.existsSync(poSmokeDir)) {
+    const smokeFiles = fs.readdirSync(poSmokeDir).filter(f => f.endsWith('.js'));
+    existingPOs += '\n' + smokeFiles.map(f => `- smoke/${f} (import: '../../../framework/pages/generated/smoke/${f}')`).join('\n');
   }
 
   // Build prompt and call GPT ONCE
@@ -328,9 +335,15 @@ async function generateAndWriteSpec({ instructions, testMeta, outputDir, pagesDi
   fs.writeFileSync(poPath, result.pageObject.code, 'utf-8');
   console.log(`[SPEC-GEN] ✓ Page Object written: ${poPath}`);
 
-  // Write spec
+  // Write spec (with import path validation)
+  let specCode = result.spec.code;
+  // Fix common GPT import path mistakes: ensure 3-level relative path from tests/generated/smoke/
+  specCode = specCode.replace(/require\(['"]\.\.\/\.\.\/framework\//g, "require('../../../framework/");
+  specCode = specCode.replace(/require\(['"]\.\.\/\.\.\/\.\.\/\.\.\/framework\//g, "require('../../../framework/");
+  specCode = specCode.replace(/require\(['"](?:\.\.\/)*framework\/pages\/total-connect\//g, "require('../../../framework/pages/generated/smoke/");
+
   const specPath = path.join(specDir, result.spec.fileName);
-  fs.writeFileSync(specPath, result.spec.code, 'utf-8');
+  fs.writeFileSync(specPath, specCode, 'utf-8');
   console.log(`[SPEC-GEN] ✓ Spec written: ${specPath}`);
 
   // Log to audit trail

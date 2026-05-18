@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const runtime = require('../config/runtime.config');
 
 /**
  * Custom Playwright reporter that auto-generates a timestamped Allure HTML report
@@ -34,13 +35,23 @@ class AllureAutoReporter {
     }
 
     try {
+      // Generate report (always sync — we need the files to exist)
       console.log(`[AllureAutoReporter] Generating report → ${reportDir}`);
       execSync(
-        `npx allure generate ./${this.resultsDir} -o "${reportDir}" --open`,
+        `npx allure generate ./${this.resultsDir} -o "${reportDir}"`,
         { stdio: 'inherit', cwd: process.cwd() }
       );
       console.log(`[AllureAutoReporter] ✔ Report saved: ${reportDir}`);
       console.log(`[AllureAutoReporter]   Status: ${result.status} | Duration: ${this._formatDuration(result.duration)}`);
+
+      // Open report in browser WITHOUT blocking (so slack-notify can run after)
+      if (runtime.reporting.openAfterRun) {
+        const reportIndex = require('path').join(reportDir, 'index.html');
+        const { exec } = require('child_process');
+        exec(`start "" "${reportIndex}"`, (err) => {
+          if (err) console.error('[AllureAutoReporter] Could not open report:', err.message);
+        });
+      }
     } catch (err) {
       console.error('[AllureAutoReporter] ✖ Failed to generate Allure report:', err.message);
     }

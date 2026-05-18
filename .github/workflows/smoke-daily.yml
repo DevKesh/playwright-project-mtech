@@ -1,0 +1,174 @@
+name: 🔥 Daily Smoke Tests
+
+on:
+  schedule:
+    # Weekdays at 2 AM UTC (9:30 AM IST)
+    - cron: '0 2 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner type'
+        required: true
+        default: 'ubuntu-latest'
+        type: choice
+        options:
+          - ubuntu-latest
+          - self-hosted
+      headed:
+        description: 'Run headed (for live demo)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+env:
+  CI: 'true'
+
+jobs:
+  smoke:
+    name: Smoke Tests
+    timeout-minutes: 20
+    runs-on: ${{ github.event.inputs.runner || 'ubuntu-latest' }}
+    outputs:
+      test_outcome: ${{ steps.run_tests.outcome }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chrome
+
+    - name: Clean previous results
+      run: |
+        rm -rf allure-results allure-report playwright-report test-results
+        mkdir -p allure-results
+
+    - name: Run smoke tests
+      id: run_tests
+      continue-on-error: true
+      run: npx playwright test --project tc-smoke
+      env:
+        TC_USERNAME: ${{ secrets.TC_USERNAME }}
+        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
+        HEADED: ${{ github.event.inputs.headed || 'false' }}
+
+    - name: Upload test results
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-results
+        path: |
+          allure-results/
+          test-results/
+        retention-days: 14
+
+  heal:
+    name: AI Self-Healing (on failure)
+    needs: smoke
+    if: needs.smoke.outputs.test_outcome == 'failure'
+    timeout-minutes: 15
+    runs-on: ${{ github.event.inputs.runner || 'ubuntu-latest' }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chrome
+
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        name: smoke-results
+        path: .
+
+    - name: Re-run with AI healing
+      id: heal_run
+      continue-on-error: true
+      run: npx playwright test --project tc-smoke --retries 1
+      env:
+        TC_USERNAME: ${{ secrets.TC_USERNAME }}
+        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
+        AI_HEALING_ENABLED: 'true'
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    - name: Upload healed results
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-results-healed
+        path: |
+          allure-results/
+          ai-reports/
+        retention-days: 14
+
+  report:
+    name: Generate Report & Notify
+    needs: [smoke, heal]
+    if: always()
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: smoke-results*
+        merge-multiple: true
+        path: .
+
+    - name: Generate Allure report
+      run: npx allure generate ./allure-results -o ./allure-report --clean
+
+    - name: Bundle portable report
+      run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
+
+    - name: Upload report
+      uses: actions/upload-artifact@v4
+      with:
+        name: smoke-allure-report
+        path: |
+          allure-report/
+          allure-report-portable.html
+        retention-days: 30
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./allure-report
+
+    - name: Notify Slack
+      if: always()
+      run: node framework/utils/slack-notify.js
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        TEST_OUTCOME: ${{ needs.smoke.outputs.test_outcome }}
+        HEAL_ENABLED: ${{ needs.heal.result != 'skipped' && 'true' || 'false' }}

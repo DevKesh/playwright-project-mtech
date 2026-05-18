@@ -1,6 +1,7 @@
+// Full page object source code
 const { expect } = require('@playwright/test');
 
-class HomePage {
+class TotalConnectHomePage {
   constructor(page) {
     this.page = page;
     this.cookieDismissButton = page.locator('#truste-consent-button');
@@ -11,7 +12,7 @@ class HomePage {
     this.disarmButton = page.locator('button', { hasText: 'DISARM' }).first();
     this.partitionStatusText = page.getByText(/Armed Home|Armed Away|Disarmed/);
     this.devicesNav = page.getByRole('button', { name: 'Devices' }).first();
-    this.camerasNav = page.getByRole('button', { name: 'Cameras-broken' }).first();
+    this.camerasNav = page.getByRole('button', { name: 'Cameras' }).first();
     this.activityNav = page.getByRole('button', { name: 'Activity' }).first();
   }
 
@@ -39,14 +40,14 @@ class HomePage {
   }
 
   async selectAllPartitions() {
-    await this.selectAllCheckbox.click();
+    await this.selectAllCheckbox.click({ timeout: 10000 });
     // Wait for arming buttons to appear after selection
     await this.page.waitForTimeout(1000);
   }
 
   async armHome() {
     await this.armHomeButton.waitFor({ state: 'visible', timeout: 10000 });
-    await this.armHomeButton.click();
+    await this.armHomeButton.click({ timeout: 10000 });
     // If an error dialog appears, the test should fail — do NOT silently dismiss
     const errorDialog = this.page.getByText('Unable to perform the action');
     const hasError = await errorDialog.isVisible({ timeout: 8000 }).catch(() => false);
@@ -57,12 +58,12 @@ class HomePage {
 
   async armAway() {
     await this.armAwayButton.waitFor({ state: 'visible', timeout: 10000 });
-    await this.armAwayButton.click();
+    await this.armAwayButton.click({ timeout: 10000 });
   }
 
   async disarm() {
     await this.disarmButton.waitFor({ state: 'visible', timeout: 10000 });
-    await this.disarmButton.click();
+    await this.disarmButton.click({ timeout: 10000 });
     // If an error dialog appears, the test should fail — do NOT silently dismiss
     const errorDialog = this.page.getByText('Unable to perform the action');
     const hasError = await errorDialog.isVisible({ timeout: 8000 }).catch(() => false);
@@ -72,7 +73,6 @@ class HomePage {
   }
 
   async waitForArmedHome() {
-    // Use exact match to avoid matching activity log entries like "Armed Home-P2 Partition-02"
     await this.page.getByText('Armed Home', { exact: true }).first().waitFor({ timeout: 30000 });
   }
 
@@ -81,7 +81,6 @@ class HomePage {
   }
 
   async waitForDisarmed() {
-    // Use exact match to avoid matching activity log entries like "Disarmed-P1 Partition 1"
     await this.page.getByText('Disarmed', { exact: true }).first().waitFor({ timeout: 30000 });
   }
 
@@ -97,13 +96,13 @@ class HomePage {
   async ensureDisarmed() {
     // Wait for partition section to fully render
     await this.selectAllCheckbox.waitFor({ state: 'visible', timeout: 15000 });
-    await this.page.waitForTimeout(2000);
+    await this.page.waitForTimeout(500);
 
     // Select all partitions to reveal action buttons (ARM HOME / DISARM)
     const selectAllText = this.page.getByText('SELECT ALL', { exact: true });
     const isSelectAll = await selectAllText.isVisible({ timeout: 2000 }).catch(() => false);
     if (isSelectAll) {
-      await selectAllText.click();
+      await selectAllText.click({ timeout: 10000 });
       await this.page.waitForTimeout(1000);
     }
     // If DESELECT ALL was already showing, partitions are already selected — that's fine
@@ -116,17 +115,17 @@ class HomePage {
       // Deselect all to leave clean state
       const deselectAll = this.page.getByText('DESELECT ALL', { exact: true });
       if (await deselectAll.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await deselectAll.click();
+        await deselectAll.click({ timeout: 10000 });
         await this.page.waitForTimeout(500);
       }
       return;
     }
 
     console.log('[ensureDisarmed] Partitions are armed. Clicking DISARM...');
-    await this.disarmButton.click();
+    await this.disarmButton.click({ timeout: 10000 });
 
     // Wait for ARM HOME button to appear — confirms disarm completed
-    await this.armHomeButton.waitFor({ state: 'visible', timeout: 30000 });
+    await this.armHomeButton.waitFor({ state: 'visible', timeout: 60000 });
     console.log('[ensureDisarmed] Disarm confirmed — ARM HOME button now visible.');
 
     // Dismiss any error dialog
@@ -135,30 +134,30 @@ class HomePage {
     // Deselect all partitions to leave clean state
     const deselectAll = this.page.getByText('DESELECT ALL', { exact: true });
     if (await deselectAll.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await deselectAll.click();
+      await deselectAll.click({ timeout: 10000 });
       await this.page.waitForTimeout(500);
     }
 
     // Wait for the security system to stabilize before allowing re-arm
-    console.log('[ensureDisarmed] Waiting 15s for security system cooldown...');
-    await this.page.waitForTimeout(15000);
+    console.log('[ensureDisarmed] Waiting 5s for security system cooldown...');
+    await this.page.waitForTimeout(5000);
     console.log('[ensureDisarmed] Cooldown complete. Ready for test.');
   }
 
   async navigateToDevices() {
-    await this.devicesNav.click();
+    await this.devicesNav.click({ timeout: 10000 });
     await this.page.waitForURL('**/automation', { timeout: 15000 });
   }
 
   async navigateToCameras() {
-    await this.camerasNav.click();
+    await this.camerasNav.click({ timeout: 10000 });
     await this.page.waitForURL('**/cameras', { timeout: 15000 });
   }
 
   async navigateToActivity() {
-    await this.activityNav.click();
+    await this.activityNav.click({ timeout: 10000 });
     await this.page.waitForURL('**/events', { timeout: 15000 });
   }
 }
 
-module.exports = { HomePage };
+module.exports = { TotalConnectHomePage };

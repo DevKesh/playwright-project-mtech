@@ -53,7 +53,7 @@ jobs:
       run: npm ci
 
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install --with-deps chrome
 
     - name: Clean previous results
       run: |
@@ -78,6 +78,8 @@ jobs:
       run: npx playwright test ${{ steps.scope.outputs.test_args }}
       env:
         CI: 'true'
+        TC_USERNAME: ${{ secrets.TC_USERNAME }}
+        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
 
     - name: Upload test artifacts
       if: ${{ !cancelled() }}
@@ -111,7 +113,7 @@ jobs:
       run: npm ci
 
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install --with-deps chrome
 
     - name: Download test results from Stage 1
       uses: actions/download-artifact@v4
@@ -138,6 +140,8 @@ jobs:
         CI: 'true'
         AI_HEALING_ENABLED: 'true'
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        TC_USERNAME: ${{ secrets.TC_USERNAME }}
+        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
         AI_HEALING_LOCATOR: 'true'
         AI_HEALING_ANALYSIS: 'true'
 
@@ -256,10 +260,27 @@ jobs:
         echo "│  URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ │"
         echo "└──────────────────────────────────────────────────────────┘"
 
+    # Generate portable single-file report
+    - name: Bundle portable report
+      run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
+
     # Also keep as downloadable artifact
     - name: Upload report artifact
       uses: actions/upload-artifact@v4
       with:
         name: allure-report
-        path: allure-report/
+        path: |
+          allure-report/
+          allure-report-portable.html
         retention-days: 30
+
+    # Slack notification
+    - name: Notify Slack
+      if: always()
+      run: node framework/utils/slack-notify.js
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        TEST_OUTCOME: ${{ needs.test.outputs.test_outcome }}
+        HEAL_ENABLED: ${{ github.event.inputs.enable_healing }}

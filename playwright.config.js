@@ -78,8 +78,10 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
     browserName: 'chromium',
 
-    /* Run headed locally, headless in CI. */
-    headless: !!process.env.CI,
+    /* Run headed locally, headless in CI. Controlled by HEADLESS in .env */
+    headless: process.env.HEADLESS !== undefined
+      ? process.env.HEADLESS === 'true'
+      : !!process.env.CI,
 
     /* Capture screenshot on every test (Allure attaches them automatically). */
     screenshot: 'on',
@@ -89,6 +91,10 @@ export default defineConfig({
 
     /* Keep trace artifacts for failed tests for debugging. */
     trace: 'retain-on-failure',
+
+    /* Safety net: no single action (click, fill, etc.) should hang more than 30s */
+    actionTimeout: 30000,
+    navigationTimeout: 30000,
   },
 
   /* Configure projects for major browsers */
@@ -104,11 +110,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 
-    /* Total Connect Smoke Tests — runs only @smoke tagged tests from generated specs */
+    /* Total Connect Smoke Tests — runs the consolidated smoke suite serially */
     {
       name: 'tc-smoke',
-      testDir: './tests/generated',
-      grep: /@smoke/,
+      testDir: './tests/generated/smoke',
+      testMatch: 'smoke-suite.spec.js',
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 

@@ -5,10 +5,14 @@
  * All AI-generated test specs import data from here instead of
  * hardcoding values inline.
  *
+ * Credentials are sourced from runtime.config.js (which reads .env).
+ *
  * Usage:
  *   const { testDataConfig } = require('../../framework/config/test-data.config');
  *   testDataConfig.targetApp.credentials.email
  */
+
+const runtime = require('./runtime.config');
 
 const testDataConfig = {
   // --- Target application ---
@@ -17,9 +21,9 @@ const testDataConfig = {
     baseUrl: 'https://qa2.totalconnect2.com/',
     loginUrl: 'https://qa2.totalconnect2.com/login',
     credentials: {
-      email: 'tmsqa@1',
-      password: 'Password@3',
-      userName: 'Keshav QA_Testt',
+      email: runtime.credentials.username,
+      password: runtime.credentials.password,
+      userName: runtime.credentials.displayName,
     },
 
     /**

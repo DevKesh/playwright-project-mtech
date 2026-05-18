@@ -36,7 +36,7 @@ const LOADER_PATTERNS = [
  * @param {number} options.timeout - Max time to wait for loaders to disappear (default 30s)
  * @param {number} options.stabilityDelay - Extra wait after loaders disappear to ensure page is stable (default 500ms)
  */
-async function waitForPageReady(page, { timeout = 30000, stabilityDelay = 500 } = {}) {
+async function waitForPageReady(page, { timeout = 10000, stabilityDelay = 500 } = {}) {
   const startTime = Date.now();
 
   for (const pattern of LOADER_PATTERNS) {
