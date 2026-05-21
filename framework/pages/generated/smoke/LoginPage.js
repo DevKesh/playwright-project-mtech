@@ -7,6 +7,8 @@ class LoginPage {
     this.usernameInput = page.getByLabel('Username');
     this.passwordInput = page.getByLabel('Password');
     this.signInButton = page.getByRole('button', { name: 'Sign In' });
+    // Cookie consent selectors — try multiple (OneTrust / TrustArc variants)
+    this.cookieAcceptAll = page.getByRole('button', { name: 'ACCEPT ALL' });
     this.cookieConsentButton = page.locator('#truste-consent-button');
   }
 
@@ -17,8 +19,20 @@ class LoginPage {
   }
 
   async dismissCookieConsent() {
-    if (await this.cookieConsentButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await this.cookieConsentButton.click();
+    try {
+      // Try the new "ACCEPT ALL" button first (OneTrust-style banner)
+      const acceptAll = this.cookieAcceptAll;
+      if (await acceptAll.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await acceptAll.click();
+        await acceptAll.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+        return;
+      }
+      // Fallback: old TrustArc button
+      if (await this.cookieConsentButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await this.cookieConsentButton.click();
+      }
+    } catch {
+      // Banner not present — continue
     }
   }
 }

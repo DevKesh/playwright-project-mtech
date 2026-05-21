@@ -88,7 +88,15 @@
     "heal": "npm run execute:smoke:heal",
     "gen": "npm run ai:gen:smoke:suite",
     "validate": "npm run registry:validate:fix",
-    "record": "npm run codegen:record"
+    "record": "npm run codegen:record",
+
+    "test:lambda": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda playwright test && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js",
+    "test:lambda:smoke": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda npx playwright test --project tc-smoke && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js",
+    "test:lambda:plan": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda npx playwright test --project tc-plan && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js",
+    "test:lambda:generated": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda npx playwright test tests/generated/ --project chrome && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js",
+    "execute:smoke:lambda": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js",
+    "lt:status": "cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js",
+    "lambda": "npm run test:lambda:smoke"
   },
   "keywords": [],
   "author": "",

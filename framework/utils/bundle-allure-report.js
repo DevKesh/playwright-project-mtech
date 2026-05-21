@@ -64,6 +64,21 @@ const dataFiles = new Map(); // JSON + attachments + everything else
 for (const [relPath, content] of allFiles) {
   if (relPath === 'index.html') continue;
   
+  // Skip large binary attachments that can't render inline (traces, videos, zips)
+  // Replace with a small placeholder so Allure still shows the attachment entry
+  const ext = path.extname(relPath).toLowerCase();
+  const sizeMB = content.length / (1024 * 1024);
+  if (['.zip', '.webm', '.mp4', '.avi'].includes(ext) || sizeMB > 5) {
+    const placeholder = Buffer.from(
+      `[Portable Report] This attachment (${sizeMB.toFixed(1)} MB) was excluded from the bundle.\n` +
+      `View the full report with traces/recordings:\n` +
+      `  npx allure open allure-report\n` +
+      `  OR find the file at: ${relPath}\n`
+    );
+    dataFiles.set(relPath, placeholder);
+    continue;
+  }
+
   if (relPath.endsWith('.js')) {
     jsFiles.set(relPath, content.toString('base64'));
   } else if (relPath.endsWith('.css')) {

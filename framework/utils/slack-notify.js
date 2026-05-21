@@ -74,6 +74,11 @@ function buildMessage(summary) {
   const healEnabled = process.env.HEAL_ENABLED === 'true' || runtime.ai.healingEnabled;
   const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
+  // Execution platform detection
+  const isLambda = runtime.lambda && runtime.lambda.isLambda;
+  const platformLabel = isLambda ? ':cloud: LambdaTest Cloud' : ':computer: Local';
+  const ltBuild = isLambda ? (runtime.lambda.buildName || process.env.LT_BUILD_NAME || '') : '';
+
   // Build stats
   let total = 0, pass = 0, fail = 0, broken = 0, skipped = 0;
   if (summary && summary.statistic) {
@@ -128,9 +133,11 @@ function buildMessage(summary) {
       type: 'section',
       fields: [
         { type: 'mrkdwn', text: `*:clock1: Duration*\n${duration}` },
+        { type: 'mrkdwn', text: `*:rocket: Platform*\n${platformLabel}` },
         { type: 'mrkdwn', text: `*:gear: Environment*\n\`${runtime.mode.toUpperCase()}\`` },
         { type: 'mrkdwn', text: `*:robot_face: AI Healing*\n${healEnabled ? ':white_check_mark: Active' : ':no_entry_sign: Disabled'}` },
         { type: 'mrkdwn', text: `*:calendar: Executed*\n${timestamp}` },
+        ...(isLambda ? [{ type: 'mrkdwn', text: `*:label: LT Build*\n\`${ltBuild}\`` }] : []),
       ],
     },
   ];
@@ -151,7 +158,7 @@ function buildMessage(summary) {
   blocks.push({
     type: 'context',
     elements: [
-      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Browser: ${runtime.browser.channel}  •  Headless: ${runtime.browser.headless}_` },
+      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Platform: ${isLambda ? 'LambdaTest' : 'Local'}  •  Browser: ${runtime.browser.channel}  •  Headless: ${runtime.browser.headless}_` },
     ],
   });
 

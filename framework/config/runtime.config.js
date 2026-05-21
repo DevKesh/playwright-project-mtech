@@ -96,4 +96,53 @@ module.exports = {
     action: parseInt(process.env.ACTION_TIMEOUT || (isCI ? '15000' : '10000'), 10),
     test: parseInt(process.env.TEST_TIMEOUT || (isCI ? '120000' : '60000'), 10),
   },
+
+  /** LambdaTest Cloud Execution Configuration */
+  lambda: {
+    /** Execution platform: 'local' (default) | 'lambda' */
+    platform: process.env.EXECUTION_PLATFORM || 'local',
+
+    /** LambdaTest credentials */
+    username: process.env.LT_USERNAME || '',
+    accessKey: process.env.LT_ACCESS_KEY || '',
+
+    /** Build & project identification on LambdaTest dashboard
+     *  Auto-generates: TC2-{TestType}-YYYY-MM-DD_HH-MM-SS
+     *  TestType derived from npm script name or defaults to 'Run'
+     */
+    buildName: process.env.LT_BUILD_NAME || (() => {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const script = process.env.npm_lifecycle_event || '';
+      let suite = 'Full Test Run';
+      if (script.includes('smoke')) suite = 'Smoke Suite (8 TCs)';
+      else if (script.includes('plan')) suite = 'Test Plan - All Tagged';
+      else if (script.includes('regression')) suite = 'Regression Suite';
+      else if (script.includes('generated')) suite = 'Generated Tests';
+      else if (script.includes('heal')) suite = 'AI Healing Run';
+      return `TotalConnect QA - ${suite} - ${dateStr} ${timeStr}`;
+    })(),
+    projectName: process.env.LT_PROJECT_NAME || 'TC2-Automation',
+
+    /** Browser capabilities */
+    browserName: process.env.LT_BROWSER || 'Chrome',
+    browserVersion: process.env.LT_BROWSER_VERSION || 'latest',
+    platformName: process.env.LT_PLATFORM || 'Windows 11',
+    resolution: process.env.LT_RESOLUTION || '1920x1080',
+
+    /** Recording & debugging options */
+    video: process.env.LT_VIDEO !== 'false',
+    console: process.env.LT_CONSOLE !== 'false',
+    network: process.env.LT_NETWORK !== 'false',
+
+    /** LambdaTest Tunnel (for internal/private apps) */
+    tunnel: process.env.LT_TUNNEL === 'true',
+    tunnelName: process.env.LT_TUNNEL_NAME || '',
+
+    /** Helper: true when running on LambdaTest */
+    get isLambda() {
+      return this.platform === 'lambda';
+    },
+  },
 };

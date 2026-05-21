@@ -37,6 +37,10 @@ class AllureAutoReporter {
     try {
       // Generate report (always sync — we need the files to exist)
       console.log(`[AllureAutoReporter] Generating report → ${reportDir}`);
+      // Remove existing report dir if present (Allure 3.x doesn't support --clean)
+      if (fs.existsSync(reportDir)) {
+        fs.rmSync(reportDir, { recursive: true, force: true });
+      }
       execSync(
         `npx allure generate ./${this.resultsDir} -o "${reportDir}"`,
         { stdio: 'inherit', cwd: process.cwd() }
@@ -46,9 +50,8 @@ class AllureAutoReporter {
 
       // Open report in browser WITHOUT blocking (so slack-notify can run after)
       if (runtime.reporting.openAfterRun) {
-        const reportIndex = require('path').join(reportDir, 'index.html');
         const { exec } = require('child_process');
-        exec(`start "" "${reportIndex}"`, (err) => {
+        exec(`npx allure open "${reportDir}"`, (err) => {
           if (err) console.error('[AllureAutoReporter] Could not open report:', err.message);
         });
       }
