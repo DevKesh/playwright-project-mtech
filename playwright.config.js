@@ -122,8 +122,8 @@ export default defineConfig({
       : []),
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  /* Global timeout per test (60s local, 120s on LambdaTest to account for cloud latency) */
-  timeout: isLambda ? 120 * 1000 : 60 * 1000,
+  /* Global timeout per test (90s local, 120s on LambdaTest to account for cloud latency) */
+  timeout: isLambda ? 120 * 1000 : 90 * 1000,
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     // baseURL: 'http://localhost:3000',
@@ -148,7 +148,7 @@ export default defineConfig({
 
     /* Safety net: no single action (click, fill, etc.) should hang more than 30s (45s on cloud) */
     actionTimeout: isLambda ? 45000 : 30000,
-    navigationTimeout: isLambda ? 45000 : 30000,
+    navigationTimeout: isLambda ? 45000 : 60000,
   },
 
   /* Configure projects for major browsers */

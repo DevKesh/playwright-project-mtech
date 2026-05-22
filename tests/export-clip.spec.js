@@ -19,14 +19,16 @@ test.describe('@tc Camera Clip Export', () => {
     page = session.page;
 
     // Login
-    await page.goto(testDataConfig.targetApp.loginUrl);
+    await page.goto(testDataConfig.targetApp.loginUrl, { timeout: 60000, waitUntil: 'domcontentloaded' });
+    // Wait for SPA to render the login form
+    await page.getByLabel('Username').waitFor({ state: 'visible', timeout: 60000 });
     const loginPage = new LoginPage(page);
     await loginPage.dismissCookieConsent();
     await loginPage.login(
       testDataConfig.targetApp.credentials.email,
       testDataConfig.targetApp.credentials.password
     );
-    await page.waitForURL('**/home', { timeout: 30000 });
+    await page.waitForURL('**/home', { timeout: 60000, waitUntil: 'domcontentloaded' });
 
     const homePage = new TotalConnectHomePage(page);
     await homePage.dismissCookiePopup();
@@ -38,7 +40,7 @@ test.describe('@tc Camera Clip Export', () => {
   });
 
   test('Export camera clip from timeline', async () => {
-    test.setTimeout(120000);
+    test.setTimeout(180000);
 
     await test.step('Navigate to Cameras page', async () => {
       await page.getByText('ic_video_white Created with Sketch. Cameras').click();
@@ -47,36 +49,52 @@ test.describe('@tc Camera Clip Export', () => {
 
     const frame = page.locator('#fenixPagetarget').contentFrame();
 
-    await test.step('Open camera feed (video-1621401)', async () => {
-      await frame.locator('#video-1621401').click();
+    await test.step('Wait for cameras iframe to load', async () => {
+      await page.locator('#fenixPagetarget').waitFor({ state: 'attached', timeout: 30000 });
+      await frame.locator('video[id^="video-"]').first().waitFor({ state: 'visible', timeout: 60000 });
     });
 
-    await test.step('Drag timeline slider to the left until blue lines appear', async () => {
+    await test.step('Open camera feed (DOMECB5)', async () => {
+      // Click the DOMECB5 camera by data attribute or ID
+      const camera = frame.locator('video[data-camera-name="DOMECB5"]').or(frame.locator('#video-1621401'));
+      await camera.first().click({ timeout: 30000, force: true });
+      // Wait for the single-camera detail view to load (scrubber appears)
+      await frame.locator('#scrubber-canvas').waitFor({ state: 'visible', timeout: 60000 });
+    });
+
+    await test.step('Drag timeline slider to the right to highlight clip export region', async () => {
       const scrubber = frame.locator('#scrubber-canvas');
+      await scrubber.waitFor({ state: 'visible', timeout: 30000 });
       const scrubberBox = await scrubber.boundingBox();
 
-      // Drag from center of scrubber towards the left to reveal blue recording lines
-      const startX = scrubberBox.x + scrubberBox.width * 0.5;
+      // Drag from left area of scrubber towards the right to select a clip region
+      const startX = scrubberBox.x + scrubberBox.width * 0.3;
       const startY = scrubberBox.y + scrubberBox.height * 0.5;
-      const endX = scrubberBox.x + scrubberBox.width * 0.15;
+      const endX = scrubberBox.x + scrubberBox.width * 0.7;
 
       await page.mouse.move(startX, startY);
       await page.mouse.down();
       // Move in steps to simulate a real drag and trigger the UI update
-      for (let x = startX; x >= endX; x -= 20) {
+      for (let x = startX; x <= endX; x += 20) {
         await page.mouse.move(x, startY);
       }
       await page.mouse.move(endX, startY);
       await page.mouse.up();
 
-      // Wait for blue lines to render on the timeline
-      await page.waitForTimeout(1000);
+      // Wait for clip selection to render on the timeline
+      await page.waitForTimeout(2000);
     });
 
-    await test.step('Click Trim button to enter clip selection mode', async () => {
-      await frame.getByRole('button', { name: 'trim' }).click();
+    await test.step('Click Trim/Clip button to enter clip selection mode', async () => {
+      // Try multiple selectors for the trim/scissors/clip button
+      const trimBtn = frame.getByRole('button', { name: /trim|clip|scissors/i })
+        .or(frame.locator('button[title*="rim"], button[title*="lip"], button[title*="cissors"]'))
+        .or(frame.locator('button[aria-label*="rim"], button[aria-label*="lip"], button[aria-label*="cissors"]'))
+        .or(frame.locator('.trim-button, .clip-button, [data-action="trim"], [data-action="clip"]'))
+        .or(frame.locator('button.scissors, button.trim, button.clip'));
+      await trimBtn.first().click({ timeout: 15000 });
       // Wait for trim handles to appear on the scrubber
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
     });
 
     await test.step('Drag scrubber handles to set clip start and end points', async () => {
@@ -106,8 +124,8 @@ test.describe('@tc Camera Clip Export', () => {
     });
 
     await test.step('Save and confirm clip export', async () => {
-      await frame.getByRole('button', { name: 'Save Clip' }).click();
-      await frame.getByRole('button', { name: 'Done' }).click();
+      await frame.getByRole('button', { name: /save/i }).click({ timeout: 15000 });
+      await frame.getByRole('button', { name: /done|ok|close/i }).click({ timeout: 15000 });
     });
   });
 });

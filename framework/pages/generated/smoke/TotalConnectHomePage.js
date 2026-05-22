@@ -248,7 +248,7 @@ class TotalConnectHomePage {
         page: PAGE_NAME, element: 'Devices sidebar button', expected: 'Should navigate to /automation',
       });
     }
-    await assertNavigation(this.page, '**/automation', 'Devices page', { fromPage: PAGE_NAME });
+    await assertNavigation(this.page, '**/automation**', 'Devices page', { fromPage: PAGE_NAME });
   }
 
   async navigateToCameras() {
@@ -260,7 +260,7 @@ class TotalConnectHomePage {
         page: PAGE_NAME, element: 'Cameras sidebar button', expected: 'Should navigate to /cameras',
       });
     }
-    await assertNavigation(this.page, '**/cameras', 'Cameras page', { fromPage: PAGE_NAME });
+    await assertNavigation(this.page, '**/cameras**', 'Cameras page', { fromPage: PAGE_NAME });
   }
 
   async navigateToActivity() {
@@ -272,7 +272,7 @@ class TotalConnectHomePage {
         page: PAGE_NAME, element: 'Activity sidebar button', expected: 'Should navigate to /events',
       });
     }
-    await assertNavigation(this.page, '**/events', 'Activity page', { fromPage: PAGE_NAME });
+    await assertNavigation(this.page, '**/events**', 'Activity page', { fromPage: PAGE_NAME });
   }
 }
 

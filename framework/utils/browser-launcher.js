@@ -110,26 +110,37 @@ async function launchBrowser(options = {}) {
 
     console.log(`[BrowserLauncher] Connected to LambdaTest successfully`);
   } else {
-    // ─── Local Execution (default — unchanged behavior) ─────────────────────
+    // ─── Local Execution (default — plain browser, no viewport/resolution override) ───
     const config = getConfig();
 
     const launchOptions = {
       headless: options.headless !== undefined ? options.headless : config.headless,
       channel: options.channel || config.channel,
       slowMo: options.slowMo !== undefined ? options.slowMo : config.slowMo,
-      args: ['--start-maximized'],
     };
 
-    console.log(`[BrowserLauncher] Launching ${launchOptions.channel} | headless=${launchOptions.headless} | slowMo=${launchOptions.slowMo} | maximized`);
+    console.log(`[BrowserLauncher] Launching ${launchOptions.channel} | headless=${launchOptions.headless} | slowMo=${launchOptions.slowMo}`);
 
     browser = await chromium.launch(launchOptions);
   }
 
-  // Local: viewport null = use full maximized window. Lambda: explicit resolution (viewport:null not supported on cloud CDP)
+  // Viewport:
+  // LAMBDA: 1920x1080 matching the cloud VM resolution for full-screen execution.
+  // LOCAL: default (no override) — browser opens at normal size.
   const contextOptions = platform === 'lambda'
     ? { viewport: { width: 1920, height: 1080 } }
-    : { viewport: null };
+    : {};
   const context = await browser.newContext(contextOptions);
+
+  // Set default timeouts on context — config's `use:` timeouts do NOT apply to
+  // manually-created contexts, only to Playwright fixture pages.
+  if (platform === 'lambda') {
+    context.setDefaultNavigationTimeout(60000);
+    context.setDefaultTimeout(45000);
+  } else {
+    context.setDefaultNavigationTimeout(90000);
+    context.setDefaultTimeout(30000);
+  }
 
   // Pre-inject cookie consent cookies to bypass the "We Value Your Privacy" banner.
   // Covers both TrustArc and OneTrust implementations.
