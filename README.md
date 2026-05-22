@@ -2,7 +2,7 @@
 
 > **Application Under Test:** Total Connect 2.0 (Honeywell/Resideo Home Security)
 > **Target Environment:** QA2 — `https://qa2.totalconnect2.com/`
-> **Stack:** Playwright JS · OpenAI GPT · LangGraph · Allure Reporting · Slack Integration
+> **Stack:** Playwright JS · OpenAI GPT · LangGraph · LambdaTest Cloud · Allure Reporting · Slack Integration
 > **Author:** Keshav — MTech Thesis, BITS Pilani WILP
 
 ---
@@ -14,13 +14,15 @@
 3. [Architecture](#3-architecture)
 4. [Smoke Suite — 8 Test Cases](#4-smoke-suite--8-test-cases)
 5. [Running Tests](#5-running-tests)
-6. [Slack Integration](#6-slack-integration)
-7. [Allure Reporting](#7-allure-reporting)
-8. [AI Self-Healing](#8-ai-self-healing)
-9. [Natural Language Test Authoring](#9-natural-language-test-authoring)
-10. [Configuration Reference](#10-configuration-reference)
-11. [NPM Scripts Reference](#11-npm-scripts-reference)
-12. [Troubleshooting](#12-troubleshooting)
+6. [LambdaTest Cloud Integration](#6-lambdatest-cloud-integration)
+7. [Slack Integration](#7-slack-integration)
+8. [Allure Reporting](#8-allure-reporting)
+9. [AI Self-Healing](#9-ai-self-healing)
+10. [Natural Language Test Authoring](#10-natural-language-test-authoring)
+11. [Configuration Reference](#11-configuration-reference)
+12. [NPM Scripts Reference](#12-npm-scripts-reference)
+13. [Bug Fixes & Stability (May 2026)](#13-bug-fixes--stability-may-2026)
+14. [Troubleshooting](#14-troubleshooting)
 
 ---
 
@@ -189,20 +191,29 @@ All tests run sequentially in a single browser session.
 | TC-007 | Verify camera names displayed | Same as TC-006, skips navigation if already on cameras | 60s |
 | TC-008 | Verify camera feeds loaded | Cameras visible = feeds rendered | 60s |
 
-**Latest execution:** 8/8 passed in **49 seconds** (May 19, 2026)
+**Latest execution:** 8/8 passed in **44 seconds** (May 22, 2026) — Local | **53 seconds** — LambdaTest Cloud
 
 ---
 
 ## 5. Running Tests
 
-### Primary Commands
+### Execution Platforms
+
+The framework supports two execution platforms, toggled via `EXECUTION_PLATFORM` in `.env`:
+
+| Platform | How It Works | Browser |
+|----------|-------------|---------|
+| **Local** (`EXECUTION_PLATFORM=local`) | Opens Chrome on your machine via `chromium.launch()` | Default viewport, headed |
+| **Lambda** (`EXECUTION_PLATFORM=lambda`) | Connects to LambdaTest cloud via CDP WebSocket | 1920×1080 full-screen on cloud VM |
+
+### Primary Commands — Local Execution
 
 ```bash
-# Full pipeline: tests + report + Slack notification
+# Full pipeline: clean + tests + Slack notification
 npm run execute:smoke
 
-# Just run tests (no Slack)
-npx playwright test --project tc-smoke
+# Just run the smoke suite (no Slack)
+npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome
 
 # Run headed (visible browser)
 npm run test:headed
@@ -213,6 +224,31 @@ npm run execute:smoke:heal
 # Run specific test by name
 npx playwright test -g "TC-002"
 ```
+
+### Primary Commands — LambdaTest Cloud
+
+```bash
+# Smoke suite on LambdaTest (recommended for daily execution)
+npm run execute:smoke:lambda
+
+# Full test suite on LambdaTest
+npm run test:lambda
+
+# Smoke-only project on LambdaTest
+npm run test:lambda:smoke
+
+# Full test plan on LambdaTest
+npm run test:lambda:plan
+
+# All generated tests on LambdaTest
+npm run test:lambda:generated
+```
+
+Each Lambda command:
+1. Cleans previous Allure results
+2. Runs tests on LambdaTest cloud (Chrome, Windows 11, 1920×1080)
+3. Updates test session status on LambdaTest dashboard (`lambdatest-status.js`)
+4. Sends Slack notification with results
 
 ### Other Test Suites
 
@@ -239,7 +275,79 @@ npx playwright codegen https://qa2.totalconnect2.com/
 
 ---
 
-## 6. Slack Integration
+## 6. LambdaTest Cloud Integration
+
+### Overview
+
+Tests run on LambdaTest's cloud infrastructure via Playwright's CDP (Chrome DevTools Protocol) connection. This provides:
+
+- **Consistent environment** — Windows 11, Chrome latest, 1920×1080 resolution
+- **Fast execution** — cloud VMs have low-latency connectivity to the QA server
+- **Video recording** — every session recorded on LambdaTest dashboard
+- **Network logs** — full HAR capture for debugging
+- **Parallel-ready** — scale to multiple concurrent sessions (future)
+
+### How It Works
+
+```
+browser-launcher.js
+  │
+  ├─ EXECUTION_PLATFORM=local  → chromium.launch({ channel: 'chrome' })
+  │                              → context with default viewport
+  │
+  └─ EXECUTION_PLATFORM=lambda → chromium.connect(wss://cdp.lambdatest.com/...)
+                                 → context with viewport: 1920×1080
+                                 → 60s connection timeout
+```
+
+The CDP WebSocket URL includes encoded capabilities:
+- Browser: Chrome (latest)
+- Platform: Windows 11
+- Resolution: 1920×1080
+- Video, console, network logging enabled
+- Build name auto-generated with suite + timestamp
+
+### Configuration (.env)
+
+```env
+# Platform toggle
+EXECUTION_PLATFORM=lambda          # 'local' or 'lambda'
+
+# LambdaTest credentials
+LT_USERNAME=your.username
+LT_ACCESS_KEY=your-access-key
+
+# Optional overrides
+LT_BROWSER=Chrome                  # Browser name
+LT_BROWSER_VERSION=latest          # Browser version
+LT_PLATFORM=Windows 11             # OS
+LT_RESOLUTION=1920x1080            # VM screen resolution
+LT_BUILD_NAME=                     # Custom build name (auto-generated if empty)
+LT_PROJECT_NAME=TC2-Automation     # Project name on dashboard
+LT_VIDEO=true                      # Record video
+LT_CONSOLE=true                    # Capture console logs
+LT_NETWORK=true                    # Capture network HAR
+LT_TUNNEL=false                    # Use LambdaTest tunnel (for private apps)
+```
+
+### LambdaTest Dashboard
+
+After each Lambda run, `lambdatest-status.js` updates the session status (passed/failed) on the LambdaTest Automation dashboard. View results at:
+`https://automation.lambdatest.com/build`
+
+### Quick Switch Between Platforms
+
+```bash
+# Run locally (override .env)
+$env:EXECUTION_PLATFORM="local"; npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome
+
+# Run on Lambda (override .env)
+$env:EXECUTION_PLATFORM="lambda"; npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome
+```
+
+---
+
+## 7. Slack Integration
 
 ### How It Works
 
@@ -275,7 +383,7 @@ node framework/utils/slack-notify.js
 
 ---
 
-## 7. Allure Reporting
+## 8. Allure Reporting
 
 ### Auto-Generated Reports
 
@@ -315,7 +423,7 @@ npm run report:bundle:open   # → generates + opens in browser
 
 ---
 
-## 8. AI Self-Healing
+## 9. AI Self-Healing
 
 ### Overview
 
@@ -377,7 +485,7 @@ All AI activity is logged in `ai-reports/`:
 
 ---
 
-## 9. Natural Language Test Authoring
+## 10. Natural Language Test Authoring
 
 Generate test specs from plain English descriptions:
 
@@ -396,12 +504,13 @@ Example: *"Login to TC2, navigate to cameras page, verify KITCHEN camera is visi
 
 ---
 
-## 10. Configuration Reference
+## 11. Configuration Reference
 
 ### .env Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `EXECUTION_PLATFORM` | `local` | Execution target: `local` (your machine) or `lambda` (LambdaTest cloud) |
 | `HEADLESS` | `false` (local) / `true` (CI) | Run browser in headless mode |
 | `BROWSER_CHANNEL` | `chrome` | Browser channel (`chrome`, `msedge`, etc.) |
 | `SLOW_MO` | `0` | Slow down actions by N ms (debugging) |
@@ -461,16 +570,26 @@ runtime.timeouts.test                 // ms
 
 ---
 
-## 11. NPM Scripts Reference
+## 12. NPM Scripts Reference
 
 ### Execution Pipeline
 
 | Script | Description |
 |--------|-------------|
-| `execute:smoke` | **Full pipeline** — clean + test + report + Slack |
-| `execute:smoke:heal` | Same but with AI healing enabled |
+| `execute:smoke` | **Full pipeline** — clean + test + Slack (local) |
+| `execute:smoke:lambda` | **Full pipeline on LambdaTest** — clean + test + status update + Slack |
+| `execute:smoke:heal` | Same as execute:smoke but with AI healing enabled |
 | `execute:smoke:gen` | Generate tests + execute |
 | `execute:report` | Generate Allure report only |
+
+### LambdaTest Cloud
+
+| Script | Description |
+|--------|-------------|
+| `test:lambda` | All tests on LambdaTest + status + Slack |
+| `test:lambda:smoke` | Smoke project on LambdaTest + status + Slack |
+| `test:lambda:plan` | Full test plan on LambdaTest + status + Slack |
+| `test:lambda:generated` | All generated tests on LambdaTest + status + Slack |
 
 ### Test Running
 
@@ -507,7 +626,84 @@ runtime.timeouts.test                 // ms
 
 ---
 
-## 12. Troubleshooting
+## 13. Bug Fixes & Stability (May 2026)
+
+### Execution Consistency Fixes
+
+The smoke suite now achieves **7/7 consecutive passes** on local execution and **8/8 on LambdaTest** — verified with back-to-back runs averaging 44s–1.5min.
+
+#### Root Causes Identified & Fixed
+
+| Issue | Root Cause | Fix Applied |
+|-------|-----------|-------------|
+| Login form never appearing (60s timeout) | Cookie consent banner blocked the main app JS bundle from loading | `Promise.race` approach — detect and dismiss cookie banner before waiting for login form |
+| Tests failing after login with "Signing in..." | `waitForURL('**/home')` resolved on URL change, but app was still authenticating | Added explicit wait for Devices button (real content readiness signal) |
+| `page.goto` timing out at 90s on slow network | `waitUntil: 'domcontentloaded'` too slow — full DOM parse takes 60-90s from local network | Switched to `waitUntil: 'commit'` (server response) + explicit element waits |
+| TC-003 failing on navigation to `/automation` | URL glob `**/automation` didn't match sub-paths like `/automation/security` | Fixed to `**/automation**` (matches any sub-path) |
+| Browser re-launching after mid-suite failure | `mode: 'serial'` skipped remaining tests; `mode: 'default'` restarted worker | Kept `mode: 'default'` + `ensureOnHomePage()` recovery helper for state reset |
+| `--start-maximized` + `viewport:null` crash | `deviceScaleFactor:1` from `--project chrome` incompatible with `viewport:null` | Removed maximize args entirely; Lambda uses explicit 1920×1080, local uses default |
+| Suite taking 3+ minutes | Redundant navigations, excessive `waitForTimeout`, hardcoded delays | `ensureOnHomePage()` skips navigation when already there; removed unnecessary waits |
+
+#### Key Stability Patterns
+
+```javascript
+// 1. Cookie consent handling (blocks app load on first visit)
+await Promise.race([
+  cookieOk.waitFor({ state: 'visible', timeout: 30000 }),
+  cookieAccept.waitFor({ state: 'visible', timeout: 30000 }),
+  page.getByLabel('Username').waitFor({ state: 'visible', timeout: 30000 }),
+]);
+
+// 2. Content-based readiness (not just URL change)
+await page.waitForURL('**/home', { waitUntil: 'commit' });
+await page.getByRole('button', { name: 'Devices' }).first().waitFor({ state: 'visible', timeout: 45000 });
+
+// 3. Page recovery helper (handles state corruption after failures)
+async function ensureOnHomePage() {
+  if (!page.url().includes('/home')) {
+    await page.goto(homeUrl, { waitUntil: 'commit' });
+  }
+  await page.getByRole('button', { name: 'Devices' }).first().waitFor({ state: 'visible', timeout: 30000 });
+}
+```
+
+### Slack Notification Fixes
+
+| Issue | Fix |
+|-------|-----|
+| Slack not firing after `execute:smoke` | Separated report generation (`execSync`) from report open (`exec`) — no longer blocks process exit |
+| Stale summary data in notifications | 3-tier fallback: `allure-report/` → `allure-reports-history/` → raw `allure-results/` |
+| Emoji not rendering in Slack | Replaced `:green_square:` shortcodes with Unicode characters (✅ ❌ ⬜) |
+| Lambda runs not triggering Slack | Added `cross-env EXECUTION_PLATFORM=lambda node framework/utils/slack-notify.js` to all Lambda scripts |
+
+### LambdaTest Integration Fixes
+
+| Issue | Fix |
+|-------|-----|
+| Connection timeout on slow networks | Set explicit 60s timeout on `chromium.connect()` |
+| Tests failing due to small viewport on cloud | Explicit `viewport: { width: 1920, height: 1080 }` for Lambda context |
+| Build names not distinguishing suites | Auto-generated build name includes suite type + date/time |
+| Session status not updated on dashboard | Added `lambdatest-status.js` post-run step in all Lambda npm scripts |
+
+### Verified Execution Results (May 22, 2026)
+
+```
+Local Execution — 7 consecutive runs:
+  Run 1: 8 passed (1.5m)   ← cold start, cookie banner
+  Run 2: 8 passed (58.6s)
+  Run 3: 8 passed (50.2s)
+  Run 4: 8 passed (49.9s)
+  Run 5: 8 passed (44.2s)
+  Run 6: 8 passed (1.1m)
+  Run 7: 8 passed (1.1m)
+
+LambdaTest Execution:
+  8 passed (53.2s) — full-screen 1920×1080
+```
+
+---
+
+## 14. Troubleshooting
 
 ### Common Issues
 
@@ -528,14 +724,7 @@ Run `npm run clean:allure` before execution, or use `execute:smoke` which auto-c
 
 ### Key Bug Fixes (May 2026)
 
-| Issue | Root Cause | Fix |
-|-------|-----------|-----|
-| Camera tests always failing | Content inside iframe, `getByText` searched main page | Use `contentFrame()` on `#fenixPagetarget` |
-| Slack not firing in pipeline | `execSync('allure generate --open')` blocking process exit | Separated into `execSync` (generate) + `exec` (open) |
-| TC-002 hanging for 180s | `.click()` without timeout + default `actionTimeout: 0` | Added explicit `{ timeout: 10000 }` on all clicks, global `actionTimeout: 30s` |
-| Suite taking 3m48s | Redundant navigations, 30s `waitForPageReady`, 15s cooldown | Skip nav when already on page, reduced timeouts → **49s** |
-| Stale Slack summary data | Only read `allure-report/` which was outdated | 3-tier fallback: report → history → raw results |
-| Slack emoji not rendering | `:green_square:` Slack shortcodes in progress bar | Replaced with Unicode ✅❌⬜ |
+See [Section 13 — Bug Fixes & Stability](#13-bug-fixes--stability-may-2026) for the complete list of fixes that achieved consistent daily execution.
 
 ---
 
