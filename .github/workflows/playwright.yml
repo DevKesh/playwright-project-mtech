@@ -25,6 +25,14 @@ on:
         required: false
         default: true
         type: boolean
+      platform:
+        description: 'Execution platform'
+        required: false
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - lambda
 
 # Cancel in-progress runs for the same branch
 concurrency:
@@ -53,6 +61,7 @@ jobs:
       run: npm ci
 
     - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' }}
       run: npx playwright install --with-deps chrome
 
     - name: Clean previous results
@@ -80,6 +89,9 @@ jobs:
         CI: 'true'
         TC_USERNAME: ${{ secrets.TC_USERNAME }}
         TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
+        EXECUTION_PLATFORM: ${{ github.event.inputs.platform || 'local' }}
+        LT_USERNAME: ${{ secrets.LT_USERNAME }}
+        LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
 
     - name: Upload test artifacts
       if: ${{ !cancelled() }}
@@ -113,6 +125,7 @@ jobs:
       run: npm ci
 
     - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' }}
       run: npx playwright install --with-deps chrome
 
     - name: Download test results from Stage 1
@@ -144,6 +157,9 @@ jobs:
         TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
         AI_HEALING_LOCATOR: 'true'
         AI_HEALING_ANALYSIS: 'true'
+        EXECUTION_PLATFORM: ${{ github.event.inputs.platform || 'local' }}
+        LT_USERNAME: ${{ secrets.LT_USERNAME }}
+        LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
 
     - name: Upload healed results
       if: ${{ !cancelled() }}
