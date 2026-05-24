@@ -55,7 +55,7 @@
     "ci:smoke:lambda": "npm run clean:allure && cross-env EXECUTION_PLATFORM=lambda npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && npm run ci:report && node framework/utils/slack-notify.js",
     "ci:smoke:lambda:heal": "npm run clean:allure && cross-env AI_HEALING_ENABLED=true EXECUTION_PLATFORM=lambda npx playwright test tests/generated/smoke/smoke-suite.spec.js --project chrome --retries 1 && cross-env EXECUTION_PLATFORM=lambda node framework/utils/lambdatest-status.js && npm run ci:report && node framework/utils/slack-notify.js",
     "ci:full": "npm run clean:allure && npm run ci:test && npm run ci:report && node framework/utils/slack-notify.js",
-    "ci:report": "npx allure generate allure-results -o allure-report --clean",
+    "ci:report": "npx allure generate -o allure-report allure-results",
     "demo:explore": "node framework/ai/scripts/explore-and-generate.js",
     "demo:explore:login": "node framework/ai/scripts/explore-and-generate.js --login",
     "demo:test": "npx playwright test tests/generated/ --project chrome",

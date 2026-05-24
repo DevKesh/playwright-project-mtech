@@ -239,7 +239,9 @@ jobs:
         fi
 
     - name: Generate Allure Report
-      run: npx allure generate allure-results -o allure-report --clean
+      run: |
+        rm -rf allure-report
+        npx allure generate -o allure-report allure-results
 
     - name: Save Allure history for next run
       uses: actions/upload-artifact@v4

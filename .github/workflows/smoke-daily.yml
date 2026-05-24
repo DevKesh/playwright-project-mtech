@@ -158,7 +158,9 @@ jobs:
         path: .
 
     - name: Generate Allure report
-      run: npx allure generate ./allure-results -o ./allure-report --clean
+      run: |
+        rm -rf allure-report
+        npx allure generate -o ./allure-report ./allure-results
 
     - name: Bundle portable report
       run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
