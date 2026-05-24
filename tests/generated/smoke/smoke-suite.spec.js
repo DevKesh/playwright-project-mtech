@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { launchBrowser } = require('../../../framework/utils/browser-launcher');
+const { createLoginSession } = require('../../../framework/utils/login-session');
 const { testDataConfig } = require('../../../framework/config/test-data.config');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
 const { TotalConnectHomePage } = require('../../../framework/pages/generated/smoke/TotalConnectHomePage');
@@ -38,10 +38,10 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   }
 
   test.beforeAll(async () => {
-    // Give the login flow enough time — goto + SPA render + login + redirect can be slow
     test.setTimeout(180000);
 
-    const session = await launchBrowser();
+    // Single function call handles: launch browser → cookie consent → login → wait for home
+    const session = await createLoginSession();
     browser = session.browser;
     context = session.context;
     page = session.page;
@@ -57,41 +57,10 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     devicesPage = new DevicesPage(page);
     camerasPage = new CamerasPage(page);
     activityPage = new ActivityPage(page);
-
-    // Login once for the entire suite
-    await page.goto(testDataConfig.targetApp.loginUrl, { waitUntil: 'commit' });
-    // Cookie consent may block the app from loading — wait for it and dismiss
-    const cookieOk = page.locator('#truste-consent-button');
-    const cookieAccept = page.getByRole('button', { name: 'ACCEPT ALL' });
-    try {
-      await Promise.race([
-        cookieOk.waitFor({ state: 'visible', timeout: 30000 }),
-        cookieAccept.waitFor({ state: 'visible', timeout: 30000 }),
-        page.getByLabel('Username').waitFor({ state: 'visible', timeout: 30000 }),
-      ]);
-      // Dismiss whichever cookie banner appeared
-      if (await cookieAccept.isVisible().catch(() => false)) await cookieAccept.click();
-      else if (await cookieOk.isVisible().catch(() => false)) await cookieOk.click();
-    } catch {
-      // None appeared in 30s — continue anyway
-    }
-    // Wait for SPA to render the login form
-    await page.getByLabel('Username').waitFor({ state: 'visible', timeout: 60000 });
-    await loginPage.login(
-      testDataConfig.targetApp.credentials.email,
-      testDataConfig.targetApp.credentials.password
-    );
-    await page.waitForURL('**/home', { timeout: 45000, waitUntil: 'commit' });
-    // Wait for home page to fully render (not just URL change — app shows "Signing in..." first)
-    await page.getByRole('button', { name: 'Devices' }).first().waitFor({ state: 'visible', timeout: 45000 });
-    await homePage.dismissCookiePopup();
-    await homePage.closeDonePopup();
   });
 
   test.afterAll(async () => {
-    if (browser) {
-      await browser.close();
-    }
+    if (browser) await browser.close();
   });
 
   test('TC-001: Verify home page is loaded after login', async () => {
