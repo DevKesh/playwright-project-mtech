@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e6]:
+    - form [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - generic: Username *
+          - textbox "Username *" [active] [ref=e12]: tmsqa@1
+        - generic [ref=e14]:
+          - generic: Password *
+          - generic:
+            - generic:
+              - generic:
+                - textbox "Password *" [ref=e15]: Password@3
+                - button "SHOW" [ref=e17] [cursor=pointer]
+        - button "Sign In" [ref=e18] [cursor=pointer]
+        - link "Problems signing in?" [ref=e19] [cursor=pointer]:
+          - /url: problemsigningin
+    - button "TEST DRIVE" [ref=e20] [cursor=pointer]
+    - paragraph [ref=e22]: Take us for a spin! Click TEST DRIVE for an interactive demo of security, video, video doorbell, automation, geofence arming reminders and more.
+    - button "Copyright © 2026 Resideo Technologies, Inc." [ref=e23] [cursor=pointer]:
+      - paragraph [ref=e24]: Copyright © 2026 Resideo Technologies, Inc.
+  - dialog "Your choices regarding the use of cookies on this site" [ref=e28]:
+    - generic [ref=e31]:
+      - generic "Cookie Information We value your privacy This site uses cookies and related technologies for site operation and analytics, as described in our privacy notice. You may choose to consent to our use of these technologies or reject non-essential technologies. Decline All Accept All" [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - heading "Cookie Information" [level=1] [ref=e36]
+            - generic [ref=e37]:
+              - heading "We value your privacy" [level=1] [ref=e38]
+              - paragraph [ref=e39]: This site uses cookies and related technologies for site operation and analytics, as described in our privacy notice. You may choose to consent to our use of these technologies or reject non-essential technologies.
+              - generic [ref=e40]:
+                - button "Decline All" [ref=e41] [cursor=pointer]
+                - button "Accept All" [ref=e42] [cursor=pointer]
+          - generic [ref=e43]:
+            - generic [ref=e45]:
+              - heading "Required Cookies" [level=3] [ref=e48]
+              - button "View" [ref=e49] [cursor=pointer]: Required Cookies
+              - radiogroup "Switch" [ref=e50]:
+                - generic [ref=e52]: Active
+            - generic [ref=e54]:
+              - heading "Functional Cookies" [level=3] [ref=e57]
+              - button "View" [ref=e58] [cursor=pointer]: Functional Cookies
+              - radiogroup "Switch" [ref=e59]:
+                - generic [ref=e61]: "No"
+                - generic [ref=e63]: Active
+          - button "Confirm my choices" [ref=e65]:
+            - generic [ref=e66]: Confirm my choices
+      - link "Privacy Policy" [ref=e69] [cursor=pointer]:
+        - /url: https://www.resideo.com/us/en/corporate/legal/eula/english-us/
+        - img
+        - text: Privacy Policy
+```
