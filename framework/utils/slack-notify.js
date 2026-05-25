@@ -26,17 +26,22 @@ function loadSummary() {
     const data = JSON.parse(fs.readFileSync(summaryV3, 'utf8'));
     if (data.stats) {
       // Normalize Allure 3.x format to standard statistic shape
-      console.log('[SlackNotify] Using Allure 3.x summary.json');
+      // Allure 3.x only includes non-zero fields in stats, so compute failed/skipped from total
+      const passed = data.stats.passed || 0;
+      const failed = data.stats.failed || 0;
+      const broken = data.stats.broken || 0;
+      const skipped = data.stats.skipped || 0;
+      const total = data.stats.total || 0;
+      // If stats only has total & passed, derive skipped/failed from the gap
+      const accounted = passed + failed + broken + skipped;
+      const gap = total - accounted;
+      const finalSkipped = gap > 0 ? skipped + gap : skipped;
+
+      console.log(`[SlackNotify] Allure 3.x summary — total:${total} passed:${passed} failed:${failed} skipped:${finalSkipped} status:${data.status || 'n/a'}`);
       return {
-        statistic: {
-          passed: data.stats.passed || 0,
-          failed: data.stats.failed || 0,
-          broken: data.stats.broken || 0,
-          skipped: data.stats.skipped || 0,
-          unknown: data.stats.unknown || 0,
-          total: data.stats.total || 0
-        },
-        time: { duration: data.duration || 0 }
+        statistic: { passed, failed, broken, skipped: finalSkipped, unknown: 0, total },
+        time: { duration: data.duration || 0 },
+        reportStatus: data.status  // 'passed' | 'failed' — direct Allure verdict
       };
     }
   } catch { /* not found */ }
@@ -100,9 +105,17 @@ function loadSummary() {
 }
 
 function buildMessage(summary) {
-  // Determine outcome from Allure summary (source of truth) — falls back to env var
-  const summaryPassed = summary && summary.statistic && summary.statistic.failed === 0 && summary.statistic.total > 0;
-  const outcome = summaryPassed ? 'success' : (process.env.TEST_OUTCOME || 'unknown');
+  // Determine outcome — use Allure 3.x 'status' field first (most reliable),
+  // then check stats, then fall back to env var
+  let outcome;
+  if (summary && summary.reportStatus) {
+    // Allure 3.x provides an explicit 'passed' or 'failed' status
+    outcome = summary.reportStatus === 'passed' ? 'success' : 'failure';
+  } else if (summary && summary.statistic) {
+    outcome = (summary.statistic.failed === 0 && summary.statistic.total > 0 && summary.statistic.passed === summary.statistic.total) ? 'success' : 'failure';
+  } else {
+    outcome = process.env.TEST_OUTCOME || 'unknown';
+  }
   const passed = outcome === 'success';
   const color = passed ? '#2eb886' : '#e01e5a';
   const icon = passed ? ':large_green_circle:' : ':red_circle:';
