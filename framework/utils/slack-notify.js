@@ -100,7 +100,9 @@ function loadSummary() {
 }
 
 function buildMessage(summary) {
-  const outcome = process.env.TEST_OUTCOME || (summary && summary.statistic && summary.statistic.failed === 0 ? 'success' : 'unknown');
+  // Determine outcome from Allure summary (source of truth) — falls back to env var
+  const summaryPassed = summary && summary.statistic && summary.statistic.failed === 0 && summary.statistic.total > 0;
+  const outcome = summaryPassed ? 'success' : (process.env.TEST_OUTCOME || 'unknown');
   const passed = outcome === 'success';
   const color = passed ? '#2eb886' : '#e01e5a';
   const icon = passed ? ':large_green_circle:' : ':red_circle:';
