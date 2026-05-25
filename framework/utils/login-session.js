@@ -54,23 +54,36 @@ async function createLoginSession(options = {}) {
   const username = options.username || testDataConfig.targetApp.credentials.email;
   const password = options.password || testDataConfig.targetApp.credentials.password;
 
-  // 1. Navigate to login page (commit = fastest, server responded)
-  await page.goto(loginUrl, { waitUntil: 'commit' });
+  // 1. Navigate to login page
+  await page.goto(loginUrl, { waitUntil: 'domcontentloaded' });
 
-  // 2. Handle cookie consent — may block the app JS bundle from loading
+  // 2. Handle cookie consent — may block the login form interaction
+  //    Wait for page to stabilize so third-party consent scripts can load
   const cookieOk = page.locator('#truste-consent-button');
   const cookieAccept = page.getByRole('button', { name: 'ACCEPT ALL' });
+  const confirmChoices = page.getByRole('button', { name: 'CONFIRM MY CHOICES' });
+  const usernameField = page.getByLabel('Username');
   try {
+    // Wait for EITHER consent banner OR login form to appear
     await Promise.race([
       cookieOk.waitFor({ state: 'visible', timeout: 30000 }),
       cookieAccept.waitFor({ state: 'visible', timeout: 30000 }),
-      page.getByLabel('Username').waitFor({ state: 'visible', timeout: 30000 }),
+      confirmChoices.waitFor({ state: 'visible', timeout: 30000 }),
+      usernameField.waitFor({ state: 'visible', timeout: 30000 }),
     ]);
+    // Small delay to let banner fully render (CDN-loaded scripts)
+    await page.waitForTimeout(1000);
+    // Dismiss cookie banner if visible
     if (await cookieAccept.isVisible().catch(() => false)) await cookieAccept.click();
+    else if (await confirmChoices.isVisible().catch(() => false)) await confirmChoices.click();
     else if (await cookieOk.isVisible().catch(() => false)) await cookieOk.click();
   } catch {
     // Neither appeared in 30s — continue
   }
+
+  // 2b. Verify banner is gone before proceeding
+  await cookieAccept.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+  await confirmChoices.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
 
   // 3. Wait for login form to render
   await page.getByLabel('Username').waitFor({ state: 'visible', timeout: 60000 });
