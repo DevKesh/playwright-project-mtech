@@ -1,1 +1,1 @@
-{"id":"ccea1cc98123d8e6206b047e8fc0e630","fullName":"smoke-suite.spec.js:143:3","name":"TC-005: Navigate to Activity page and verify log","status":"passed","testResultsByEnv":{"default":"0f3d260f6f72a3020206ad8e81e9c9e7"}}
+{"id":"ccea1cc98123d8e6206b047e8fc0e630","fullName":"smoke-suite.spec.js:143:3","name":"TC-005: Navigate to Activity page and verify log","status":"skipped","testResultsByEnv":{"default":"4f11a9b82f281425fcfbda231ba35bb2"}}
