@@ -1,4 +1,0 @@
-[BrowserLauncher] Connecting to LambdaTest Cloud...
-[BrowserLauncher] Build: TC2-2026-05-25 | Project: TC2-Automation
-[BrowserLauncher] Connected to LambdaTest successfully
-[LoginSession] Authenticated and home page ready
