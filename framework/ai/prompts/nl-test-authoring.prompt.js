@@ -59,7 +59,13 @@ IMPORTANT app-specific facts for Total Connect 2.0 (qa2.totalconnect2.com):
 - After login, the app redirects to /home — NOT /dashboard. There is NO "Dashboard" text or URL anywhere in this app.
 - Do NOT generate a "wait for dashboard" step. After clicking login, the next step should handle whatever comes after (e.g., dismiss cookie popup).
 - The login button submits the form and the page transitions to /home automatically.
-- Post-login pages are: /home (Security), /automation (Devices), /cameras, /events (Activity), /smartscenes (Scenes).`;
+- Post-login pages are: /home (Security), /automation (Devices), /cameras, /events (Activity), /smartscenes (Scenes).
+
+CRITICAL RULES — do NOT violate:
+- NEVER generate "assert_url" or "wait" steps with URL patterns UNLESS the user EXPLICITLY mentions verifying/checking a URL in their instructions.
+- NEVER assume endpoint paths. Only use URLs the user explicitly provides.
+- Only generate actions and assertions that are directly stated or clearly implied by the instructions.
+- Do NOT pad the plan with extra validation steps the user did not ask for.`;
 
   const testDataRef = testDataConfig
     ? `\n\nAvailable test data configuration (use references to these paths instead of hardcoding values):\n${JSON.stringify(testDataConfig, null, 2)}`
