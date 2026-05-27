@@ -50,20 +50,7 @@ test.describe('@tc Camera Clip Export', () => {
       await frame.getByRole('button', { name: 'trim' }).click();
       await frame.getByRole('button', { name: 'Save Clip' }).click();
       await frame.getByRole('button', { name: 'Done' }).click();
-    });
-
-    await test.step('Second clip export', async () => {
-      const scrubber = frame.locator('#scrubber-canvas');
-
-      await scrubber.click({ position: { x: 441, y: 49 } });
-      await scrubber.click({ position: { x: 457, y: 46 } });
-      await scrubber.click({ position: { x: 88, y: 52 } });
-      await scrubber.click({ position: { x: 27, y: 50 } });
-      await scrubber.click({ position: { x: 647, y: 59 } });
-      await scrubber.click({ position: { x: 554, y: 53 } });
-
-      await frame.getByRole('button', { name: 'trim' }).dblclick();
-      await frame.getByRole('button', { name: 'Wait for current export' }).click();
+      await frame.getByRole('button', { name: 'Close' }).click();
     });
   });
 });

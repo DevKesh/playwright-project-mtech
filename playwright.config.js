@@ -139,6 +139,7 @@ export default defineConfig({
 
     /* Capture screenshot only on failure (Allure attaches them automatically). */
     screenshot: 'only-on-failure',
+    
 
     /* Video & trace: OFF on LambdaTest (LT records video natively on their dashboard;
        attempting to download trace/video over WebSocket causes teardown timeouts).
