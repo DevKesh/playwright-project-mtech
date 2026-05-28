@@ -1,1 +1,1 @@
-[{"name":"os_platform","values":["linux"]},{"name":"os_release","values":["6.17.0-1015-azure"]},{"name":"node_version","values":["v24.16.0"]},{"name":"framework","values":["Playwright"]},{"name":"app_url","values":["https://qa2.totalconnect2.com/"]}]
+[{"name":"os_platform","values":["linux"]},{"name":"os_release","values":["6.17.0-1013-azure"]},{"name":"node_version","values":["v24.15.0"]},{"name":"framework","values":["Playwright"]},{"name":"app_url","values":["https://qa2.totalconnect2.com/"]}]
