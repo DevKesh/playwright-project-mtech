@@ -178,14 +178,25 @@ jobs:
 
     - name: Download results
       uses: actions/download-artifact@v4
+      continue-on-error: true
       with:
         pattern: smoke-results*
         merge-multiple: true
         path: .
 
+    - name: Check allure-results
+      run: |
+        COUNT=$(find allure-results -name "*.json" 2>/dev/null | wc -l || echo 0)
+        echo "ALLURE_RESULT_COUNT=$COUNT" >> $GITHUB_ENV
+        echo "Allure result files: $COUNT"
+        if [ "$COUNT" -eq 0 ]; then
+          echo "::warning::No allure result files found — tests may not have produced output"
+        fi
+
     - name: Generate Allure report
       run: |
         rm -rf allure-report
+        mkdir -p allure-results
         npx allure generate -o ./allure-report ./allure-results
 
     - name: Bundle portable report

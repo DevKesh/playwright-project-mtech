@@ -105,10 +105,18 @@ function loadSummary() {
 }
 
 function buildMessage(summary) {
+  // Guard: when total=0, Allure 3.x emits status:'passed' (vacuous truth — no failures = passed).
+  // Never trust reportStatus when there are no results; fall back to TEST_OUTCOME env var instead.
+  const totalTests = summary?.statistic?.total || 0;
+
   // Determine outcome — use Allure 3.x 'status' field first (most reliable),
   // then check stats, then fall back to env var
   let outcome;
-  if (summary && summary.reportStatus) {
+  if (totalTests === 0) {
+    // No results: treat as failure unless TEST_OUTCOME explicitly says success
+    outcome = process.env.TEST_OUTCOME === 'success' ? 'success' : 'failure';
+    console.log(`[SlackNotify] total=0 — ignoring Allure status, using TEST_OUTCOME: "${outcome}"`);
+  } else if (summary && summary.reportStatus) {
     // Allure 3.x provides an explicit 'passed' or 'failed' status
     outcome = summary.reportStatus === 'passed' ? 'success' : 'failure';
   } else if (summary && summary.statistic) {
