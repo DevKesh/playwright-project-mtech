@@ -156,6 +156,8 @@ export default defineConfig({
   projects: [
     {
       name: 'chrome',
+      /* Exclude smoke suite — it has its own dedicated tc-smoke project to avoid double-counting */
+      testIgnore: '**/smoke/smoke-suite.spec.js',
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
 
@@ -177,6 +179,8 @@ export default defineConfig({
     {
       name: 'tc-plan',
       testDir: './tests/generated',
+      /* Exclude smoke suite — tc-smoke project owns it; tc-plan picks up other @tc-plan specs */
+      testIgnore: '**/smoke/smoke-suite.spec.js',
       grep: /@tc-plan/,
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
