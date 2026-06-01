@@ -20,6 +20,24 @@ const path = require('path');
 const runtime = require('../config/runtime.config');
 
 function loadSummary() {
+  // Try 0: Env vars injected by workflow from the generated Allure report (highest priority —
+  // guaranteed to match exactly what the Allure report displays)
+  if (process.env.ALLURE_TOTAL !== undefined) {
+    const passed  = parseInt(process.env.ALLURE_PASSED,  10) || 0;
+    const failed  = parseInt(process.env.ALLURE_FAILED,  10) || 0;
+    const broken  = parseInt(process.env.ALLURE_BROKEN,  10) || 0;
+    const skipped = parseInt(process.env.ALLURE_SKIPPED, 10) || 0;
+    const total   = parseInt(process.env.ALLURE_TOTAL,   10) || 0;
+    const duration = parseInt(process.env.ALLURE_DURATION, 10) || 0;
+    const reportStatus = process.env.ALLURE_STATUS || undefined;
+    console.log(`[SlackNotify] Using env-var stats (from workflow) — total:${total} passed:${passed} failed:${failed} broken:${broken} skipped:${skipped}`);
+    return {
+      statistic: { passed, failed, broken, skipped, unknown: 0, total },
+      time: { duration },
+      reportStatus,
+    };
+  }
+
   // Try 1: Allure 3.x — summary.json at report root
   const summaryV3 = path.resolve(process.cwd(), 'allure-report', 'summary.json');
   try {
@@ -105,10 +123,18 @@ function loadSummary() {
 }
 
 function buildMessage(summary) {
+  // Pre-compute total so we can guard against empty reports
+  const totalFromSummary = summary?.statistic?.total || 0;
+
   // Determine outcome — use Allure 3.x 'status' field first (most reliable),
-  // then check stats, then fall back to env var
+  // then check stats, then fall back to env var.
+  // IMPORTANT: when total === 0, Allure 3.x still emits status:'passed' (vacuous truth).
+  // In that case, always defer to TEST_OUTCOME so we don't report "ALL TESTS PASSED" with 0 results.
   let outcome;
-  if (summary && summary.reportStatus) {
+  if (totalFromSummary === 0) {
+    outcome = process.env.TEST_OUTCOME || 'unknown';
+    console.log(`[SlackNotify] total=0 in summary — deferring to TEST_OUTCOME env var: "${outcome}"`);
+  } else if (summary && summary.reportStatus) {
     // Allure 3.x provides an explicit 'passed' or 'failed' status
     outcome = summary.reportStatus === 'passed' ? 'success' : 'failure';
   } else if (summary && summary.statistic) {

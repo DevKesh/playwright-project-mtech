@@ -296,6 +296,32 @@ jobs:
         retention-days: 30
 
     # Slack notification
+    - name: Extract Allure stats
+      if: always()
+      run: |
+        node -e "
+          const fs = require('fs');
+          let d = null;
+          if (fs.existsSync('allure-report/summary.json')) {
+            d = JSON.parse(fs.readFileSync('allure-report/summary.json','utf8'));
+          } else if (fs.existsSync('allure-report/widgets/summary.json')) {
+            d = JSON.parse(fs.readFileSync('allure-report/widgets/summary.json','utf8'));
+          }
+          if (!d) { console.log('No summary found'); process.exit(0); }
+          const s = d.stats || d.statistic || {};
+          const out = [
+            'ALLURE_TOTAL='   + (s.total   || 0),
+            'ALLURE_PASSED='  + (s.passed  || 0),
+            'ALLURE_FAILED='  + (s.failed  || 0),
+            'ALLURE_BROKEN='  + (s.broken  || 0),
+            'ALLURE_SKIPPED=' + (s.skipped || 0),
+            'ALLURE_DURATION='+ (d.duration || d.time && d.time.duration || 0),
+            'ALLURE_STATUS='  + (d.status || ''),
+          ].join('\n');
+          console.log('Allure stats:\n' + out);
+          fs.appendFileSync(process.env.GITHUB_ENV, out + '\n');
+        "
+
     - name: Notify Slack
       if: always()
       run: node framework/utils/slack-notify.js
