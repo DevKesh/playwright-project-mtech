@@ -143,9 +143,10 @@ export default defineConfig({
 
     /* Video & trace: OFF on LambdaTest (LT records video natively on their dashboard;
        attempting to download trace/video over WebSocket causes teardown timeouts).
+       OFF in CI too — screenshots cover failure capture and avoids FFmpeg download.
        Locally: retain on failure for debugging. */
-    video: isLambda ? 'off' : 'retain-on-failure',
-    trace: isLambda ? 'off' : 'retain-on-failure',
+    video: (isLambda || process.env.CI) ? 'off' : 'retain-on-failure',
+    trace: (isLambda || process.env.CI) ? 'off' : 'retain-on-failure',
 
     /* Safety net: no single action (click, fill, etc.) should hang more than 30s (45s on cloud) */
     actionTimeout: isLambda ? 45000 : 30000,

@@ -60,9 +60,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install Playwright browsers
+    - name: Cache Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' }}
+      uses: actions/cache@v4
+      id: playwright-cache-test
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-test.outputs.cache-hit != 'true' }}
       run: npx playwright install --with-deps chrome
+
+    - name: Install browser system deps (cache hit)
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-test.outputs.cache-hit == 'true' }}
+      run: npx playwright install-deps chrome
 
     - name: Clean previous results
       run: |
@@ -124,9 +136,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install Playwright browsers
+    - name: Cache Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' }}
+      uses: actions/cache@v4
+      id: playwright-cache-heal
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit != 'true' }}
       run: npx playwright install --with-deps chrome
+
+    - name: Install browser system deps (cache hit)
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit == 'true' }}
+      run: npx playwright install-deps chrome
 
     - name: Download test results from Stage 1
       uses: actions/download-artifact@v4

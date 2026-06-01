@@ -37,7 +37,7 @@ env:
 jobs:
   smoke:
     name: Smoke Tests
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: ${{ github.event.inputs.runner || 'ubuntu-latest' }}
     outputs:
       test_outcome: ${{ steps.run_tests.outcome }}
@@ -52,9 +52,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install Playwright browsers
+    - name: Cache Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' }}
+      uses: actions/cache@v4
+      id: playwright-cache-smoke
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-smoke.outputs.cache-hit != 'true' }}
       run: npx playwright install --with-deps chrome
+
+    - name: Install browser system deps (cache hit)
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-smoke.outputs.cache-hit == 'true' }}
+      run: npx playwright install-deps chrome
 
     - name: Clean previous results
       run: |
@@ -87,7 +99,7 @@ jobs:
     name: AI Self-Healing (on failure)
     needs: smoke
     if: needs.smoke.outputs.test_outcome == 'failure'
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ${{ github.event.inputs.runner || 'ubuntu-latest' }}
     steps:
     - uses: actions/checkout@v4
@@ -100,9 +112,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install Playwright browsers
+    - name: Cache Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' }}
+      uses: actions/cache@v4
+      id: playwright-cache-heal
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Install Playwright browsers
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit != 'true' }}
       run: npx playwright install --with-deps chrome
+
+    - name: Install browser system deps (cache hit)
+      if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit == 'true' }}
+      run: npx playwright install-deps chrome
 
     - name: Download test results
       uses: actions/download-artifact@v4
