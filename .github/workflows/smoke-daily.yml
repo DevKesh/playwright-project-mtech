@@ -154,19 +154,10 @@ jobs:
 
     - name: Download results
       uses: actions/download-artifact@v4
-      continue-on-error: true
       with:
         pattern: smoke-results*
         merge-multiple: true
         path: .
-
-    - name: Verify allure-results
-      run: |
-        COUNT=$(ls allure-results/*.json 2>/dev/null | wc -l || echo 0)
-        echo "Allure result files found: $COUNT"
-        if [ "$COUNT" -eq 0 ]; then
-          echo "::warning::No allure-results found — test run may not have produced output"
-        fi
 
     - name: Generate Allure report
       run: |
@@ -191,32 +182,6 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./allure-report
-
-    - name: Extract Allure stats
-      if: always()
-      run: |
-        node -e "
-          const fs = require('fs');
-          let d = null;
-          if (fs.existsSync('allure-report/summary.json')) {
-            d = JSON.parse(fs.readFileSync('allure-report/summary.json','utf8'));
-          } else if (fs.existsSync('allure-report/widgets/summary.json')) {
-            d = JSON.parse(fs.readFileSync('allure-report/widgets/summary.json','utf8'));
-          }
-          if (!d) { console.log('No summary found'); process.exit(0); }
-          const s = d.stats || d.statistic || {};
-          const out = [
-            'ALLURE_TOTAL='   + (s.total   || 0),
-            'ALLURE_PASSED='  + (s.passed  || 0),
-            'ALLURE_FAILED='  + (s.failed  || 0),
-            'ALLURE_BROKEN='  + (s.broken  || 0),
-            'ALLURE_SKIPPED=' + (s.skipped || 0),
-            'ALLURE_DURATION='+ (d.duration || d.time && d.time.duration || 0),
-            'ALLURE_STATUS='  + (d.status || ''),
-          ].join('\n');
-          console.log('Allure stats:\n' + out);
-          fs.appendFileSync(process.env.GITHUB_ENV, out + '\n');
-        "
 
     - name: Notify Slack
       if: always()
