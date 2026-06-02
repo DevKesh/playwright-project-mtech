@@ -48,37 +48,12 @@ class AllureAutoReporter {
       console.log(`[AllureAutoReporter] ✔ Report saved: ${reportDir}`);
       console.log(`[AllureAutoReporter]   Status: ${result.status} | Duration: ${this._formatDuration(result.duration)}`);
 
-      // Also generate/refresh the standard allure-report/ for slack-notify to read
-      const stdReport = path.resolve(process.cwd(), 'allure-report');
-      if (fs.existsSync(stdReport)) fs.rmSync(stdReport, { recursive: true, force: true });
-      execSync(
-        `npx allure generate ./${this.resultsDir} -o allure-report`,
-        { stdio: 'pipe', cwd: process.cwd() }
-      );
-
       // Open report in browser WITHOUT blocking (so slack-notify can run after)
       if (runtime.reporting.openAfterRun) {
         const { exec } = require('child_process');
         exec(`npx allure open "${reportDir}"`, (err) => {
           if (err) console.error('[AllureAutoReporter] Could not open report:', err.message);
         });
-      }
-
-      // Send Slack notification if enabled (fires regardless of how tests were invoked)
-      if (runtime.reporting.slackEnabled) {
-        const slackScript = path.resolve(__dirname, '../utils/slack-notify.js');
-        try {
-          execSync(`node "${slackScript}"`, {
-            stdio: 'inherit',
-            cwd: process.cwd(),
-            env: {
-              ...process.env,
-              TEST_OUTCOME: result.status === 'passed' ? 'success' : 'failure',
-            },
-          });
-        } catch (slackErr) {
-          console.error('[AllureAutoReporter] Slack notification failed:', slackErr.message);
-        }
       }
     } catch (err) {
       console.error('[AllureAutoReporter] ✖ Failed to generate Allure report:', err.message);

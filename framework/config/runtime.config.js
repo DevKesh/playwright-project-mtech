@@ -67,10 +67,10 @@ module.exports = {
       ? process.env.OPEN_REPORT === 'true'
       : !isCI,
 
-    /** Send Slack notification — enabled automatically when webhook URL is present */
+    /** Send Slack notification */
     slackEnabled: process.env.SLACK_ENABLED !== undefined
       ? process.env.SLACK_ENABLED === 'true'
-      : !!(process.env.SLACK_WEBHOOK_URL),
+      : isCI,
 
     /** Slack webhook URL */
     slackWebhookUrl: process.env.SLACK_WEBHOOK_URL || '',
