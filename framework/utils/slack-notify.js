@@ -136,7 +136,12 @@ function buildMessage(summary) {
 
   // Execution platform detection
   const isLambda = runtime.lambda && runtime.lambda.isLambda;
-  const platformLabel = isLambda ? ':cloud: LambdaTest Cloud' : ':computer: Local';
+  const isCI = process.env.CI === 'true';
+  const platformLabel = isLambda
+    ? ':cloud: LambdaTest Cloud'
+    : isCI
+      ? ':github: GitHub Actions (CI)'
+      : ':computer: Local';
   const ltBuild = isLambda ? (runtime.lambda.buildName || process.env.LT_BUILD_NAME || '') : '';
 
   // Build stats

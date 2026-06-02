@@ -206,12 +206,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     permissions:
-      pages: write
-      id-token: write
-      contents: read
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
     steps:
     - uses: actions/checkout@v4
 
@@ -285,25 +280,17 @@ jobs:
           cp -r ./stage2-results/ai-reports/* allure-report/ai-reports/ 2>/dev/null || true
         fi
 
-    # Publish to GitHub Pages
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Upload to GitHub Pages
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: allure-report
-
+    # Publish to GitHub Pages (gh-pages branch)
     - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./allure-report
 
     - name: Report URL
       run: |
-        echo "┌──────────────────────────────────────────────────────────┐"
-        echo "│  Allure Report Published!                                │"
-        echo "│  URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ │"
-        echo "└──────────────────────────────────────────────────────────┘"
+        echo "Allure Report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
 
     # Generate portable single-file report
     - name: Bundle portable report
