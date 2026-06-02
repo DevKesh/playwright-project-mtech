@@ -62,7 +62,7 @@ jobs:
 
     - name: Install Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-smoke.outputs.cache-hit != 'true' }}
-      run: npx playwright install --with-deps chrome
+      run: npx playwright install chrome && npx playwright install-deps chrome
 
     - name: Install browser system deps (cache hit)
       if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-smoke.outputs.cache-hit == 'true' }}
@@ -122,7 +122,7 @@ jobs:
 
     - name: Install Playwright browsers
       if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit != 'true' }}
-      run: npx playwright install --with-deps chrome
+      run: npx playwright install chrome && npx playwright install-deps chrome
 
     - name: Install browser system deps (cache hit)
       if: ${{ github.event.inputs.platform != 'lambda' && steps.playwright-cache-heal.outputs.cache-hit == 'true' }}
@@ -227,3 +227,4 @@ jobs:
         REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         TEST_OUTCOME: ${{ needs.smoke.outputs.test_outcome }}
         HEAL_ENABLED: ${{ needs.heal.result != 'skipped' && 'true' || 'false' }}
+
