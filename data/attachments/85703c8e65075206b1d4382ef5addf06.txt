@@ -2,4 +2,3 @@
 [BrowserLauncher] Build: TC2-2026-06-02 | Project: TC2-Automation
 [BrowserLauncher] Connected to LambdaTest successfully
 [LoginSession] Authenticated and home page ready
-[ensureDisarmed] Partitions are already disarmed. Deselecting and proceeding.
