@@ -1,0 +1,3 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[ensureDisarmed] Partitions are already disarmed. Deselecting and proceeding.
