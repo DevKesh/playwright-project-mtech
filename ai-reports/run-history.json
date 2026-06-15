@@ -1,0 +1,72 @@
+[
+  {
+    "runId": "run-1781507508215",
+    "overallStatus": "failed",
+    "tests": [
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
+        "status": "passed",
+        "duration": 35,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-002: Arm Home and Disarm partitions",
+        "status": "failed",
+        "duration": 33393,
+        "error": "Error: \n┌─────────────────────────────────────────────────────────\n│ ⏱️ TIMEOUT ERROR (Slow Load / Element Not Found)\n├─────────────────────────────────────────────────────────\n│ Action:   Verify \"Partition status \"Armed Home\"\" is visible\n│ Page:     HomePage\n│ Element:  Partition status \"Armed Home\"\n│ Expected: Element should be visible on the page\n│ Platform: Local\n│ Original: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n└─────────────────────────────────────────────────────────\n"
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-002: Arm Home and Disarm partitions",
+        "status": "failed",
+        "duration": 15094,
+        "error": "Error: \n┌─────────────────────────────────────────────────────────\n│ ⏱️ TIMEOUT ERROR (Slow Load / Element Not Found)\n├─────────────────────────────────────────────────────────\n│ Action:   Wait for partition controls to load\n│ Page:     HomePage\n│ Element:  SELECT ALL toggle\n│ Expected: Partition section should render within 15s\n│ Platform: Local\n│ Original: locator.waitFor: Timeout 15000ms exceeded.\n└─────────────────────────────────────────────────────────\n"
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-003: Navigate to Devices page",
+        "status": "passed",
+        "duration": 2697,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-004: Navigate to Cameras page",
+        "status": "passed",
+        "duration": 1365,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-005: Navigate to Activity page and verify log",
+        "status": "passed",
+        "duration": 1485,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+        "status": "passed",
+        "duration": 1058,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+        "status": "passed",
+        "duration": 34,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+        "status": "passed",
+        "duration": 84,
+        "error": null
+      }
+    ],
+    "timestamp": "2026-06-15T07:13:12.947Z"
+  }
+]
