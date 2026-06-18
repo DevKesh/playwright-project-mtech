@@ -1,1 +1,0 @@
-[BrowserLauncher] Launching chrome | headless=true | slowMo=0
