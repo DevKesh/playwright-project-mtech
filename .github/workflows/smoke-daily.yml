@@ -120,11 +120,26 @@ jobs:
       if: ${{ github.event.inputs.platform != 'lambda' }}
       run: npx playwright install-deps chrome
 
-    - name: Download test results
+    # Download prior artifact into a side folder ONLY for ai-reports/ context.
+    # We must NOT let stale allure-results/ leak into the workspace, otherwise
+    # the re-run appends UUID-named results on top of the old ones and the
+    # final report shows duplicates of both old failures and new healed runs.
+    - name: Download prior test results (side folder)
       uses: actions/download-artifact@v4
       with:
         name: smoke-results
-        path: .
+        path: ./prior-results
+      continue-on-error: true
+
+    - name: Reset workspace results before heal run
+      run: |
+        rm -rf allure-results test-results
+        mkdir -p allure-results
+        # Preserve ai-reports/ history (heal reporter appends to it)
+        if [ -d "./prior-results/ai-reports" ]; then
+          mkdir -p ai-reports
+          cp -r ./prior-results/ai-reports/* ai-reports/ 2>/dev/null || true
+        fi
 
     - name: Re-run with AI healing
       id: heal_run
@@ -168,13 +183,37 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Download results
+    # Download both artifacts to SEPARATE folders so we can pick the right one.
+    # Healed run is a full re-execution (--retries 1), so it represents the
+    # latest verdict and must REPLACE the original — never merge with it
+    # (allure JSON files use UUIDs so a merge would duplicate every test).
+    - name: Download original smoke results
       uses: actions/download-artifact@v4
       continue-on-error: true
       with:
-        pattern: smoke-results*
-        merge-multiple: true
-        path: .
+        name: smoke-results
+        path: ./original-results
+
+    - name: Download healed smoke results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: smoke-results-healed
+        path: ./healed-results
+
+    - name: Select final allure-results (healed overrides original)
+      run: |
+        rm -rf allure-results
+        mkdir -p allure-results
+        if [ -d "./healed-results/allure-results" ] && [ -n "$(ls -A ./healed-results/allure-results 2>/dev/null)" ]; then
+          echo "::notice::Using HEALED results for report"
+          cp -r ./healed-results/allure-results/. allure-results/ 2>/dev/null || true
+        elif [ -d "./original-results/allure-results" ] && [ -n "$(ls -A ./original-results/allure-results 2>/dev/null)" ]; then
+          echo "::notice::Using ORIGINAL results for report (heal did not run)"
+          cp -r ./original-results/allure-results/. allure-results/ 2>/dev/null || true
+        else
+          echo "::warning::No allure-results found in either artifact"
+        fi
 
     - name: Check allure-results
       run: |
@@ -203,12 +242,41 @@ jobs:
           allure-report-portable.html
         retention-days: 30
 
+    # Stage the report for versioned publish:
+    #   publish/runs/<run_id>/  — permanent per-run report (Slack links here)
+    #   publish/latest/         — rolling pointer to the latest report
+    #   publish/index.html      — redirects root → /latest/
+    # With keep_files: true on the deploy, older runs remain accessible forever.
+    - name: Stage report for versioned publish
+      if: github.ref == 'refs/heads/main'
+      run: |
+        rm -rf publish
+        mkdir -p "publish/runs/${{ github.run_id }}"
+        mkdir -p publish/latest
+        cp -r allure-report/. "publish/runs/${{ github.run_id }}/"
+        cp -r allure-report/. publish/latest/
+        cat > publish/index.html <<'HTML'
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=./latest/">
+            <title>Allure Report — redirecting…</title>
+          </head>
+          <body>
+            <p>Redirecting to the <a href="./latest/">latest Allure report</a>.</p>
+          </body>
+        </html>
+        HTML
+        echo "Staged: $(find publish -maxdepth 2 -type d)"
+
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./allure-report
+        publish_dir: ./publish
+        keep_files: true
+        commit_message: "deploy: run ${{ github.run_id }} (${{ github.sha }})"
 
     - name: Notify Slack
       if: always()
@@ -216,7 +284,8 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        # Per-run permanent URL — does NOT change when later runs deploy.
+        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/runs/${{ github.run_id }}/
         TEST_OUTCOME: ${{ needs.smoke.outputs.test_outcome }}
         HEAL_ENABLED: ${{ needs.heal.result != 'skipped' && 'true' || 'false' }}
 
