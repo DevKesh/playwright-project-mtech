@@ -1,0 +1,364 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - generic [ref=e86]:
+        - generic [ref=e88]:
+          - alert [ref=e89]: New activities available
+          - button [ref=e90] [cursor=pointer]: View
+        - generic [ref=e94]:
+          - heading [level=2] [ref=e95]:
+            - generic [ref=e97]:
+              - text: Devices
+              - generic [ref=e98]:
+                - button [ref=e100] [cursor=pointer]
+                - button [ref=e102] [cursor=pointer]
+                - button [ref=e104] [cursor=pointer]
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - generic [ref=e107]: Switches
+              - generic [ref=e115]:
+                - generic [ref=e116]:
+                  - generic [ref=e117]: Device 1
+                  - generic [ref=e118]: "Off"
+                - generic [ref=e123]:
+                  - button [ref=e125] [cursor=pointer]:
+                    - img
+                  - button [ref=e127] [cursor=pointer]:
+                    - img
+              - generic [ref=e137]:
+                - generic [ref=e138]:
+                  - generic [ref=e139]: Device 2
+                  - generic [ref=e140]: Closed
+                - generic [ref=e145]:
+                  - generic [ref=e146]:
+                    - button:
+                      - img
+                  - button [ref=e148] [cursor=pointer]:
+                    - img
+            - generic [ref=e152]:
+              - generic [ref=e153]: Locks
+              - generic [ref=e155]:
+                - generic [ref=e161]:
+                  - generic [ref=e163]: Device 240
+                  - generic [ref=e165]:
+                    - text: Device Offline
+                    - img [ref=e166]:
+                      - img
+                    - img [ref=e169] [cursor=pointer]:
+                      - img
+                - generic [ref=e177]:
+                  - generic [ref=e179]: Device 241
+                  - generic [ref=e181]:
+                    - text: Device Offline
+                    - img [ref=e182]:
+                      - img
+                    - img [ref=e185] [cursor=pointer]:
+                      - img
+              - generic [ref=e194]:
+                - generic [ref=e196]: Poorni’s Lock
+                - generic [ref=e198]:
+                  - generic [ref=e199]: Device offline Check your device
+                  - img [ref=e200]:
+                    - img
+            - generic [ref=e203]:
+              - generic [ref=e204]: Garage Doors
+              - generic [ref=e206]:
+                - generic [ref=e212]:
+                  - generic [ref=e213]:
+                    - generic [ref=e214]: E0FFF1225A3A-Overhead7PROD
+                    - generic [ref=e215]: Opened
+                  - generic [ref=e220]:
+                    - button [ref=e222] [cursor=pointer]:
+                      - img
+                    - generic [ref=e223]:
+                      - button:
+                        - img
+                - generic [ref=e232]:
+                  - generic [ref=e233]:
+                    - generic [ref=e234]: Garage Door 4
+                    - generic [ref=e235]: Opened
+                  - generic [ref=e240]:
+                    - button [ref=e242] [cursor=pointer]:
+                      - img
+                    - generic [ref=e243]:
+                      - button:
+                        - img
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - generic [ref=e255]: Garage Door 5
+                  - generic [ref=e256]: Opened
+                - generic [ref=e261]:
+                  - button [ref=e263] [cursor=pointer]:
+                    - img
+                  - generic [ref=e264]:
+                    - button:
+                      - img
+            - generic [ref=e268]:
+              - generic [ref=e269]: Thermostats
+              - generic [ref=e273]:
+                - generic [ref=e275]:
+                  - generic [ref=e276]:
+                    - generic [ref=e278]: Manju Carrier Stat
+                    - button [ref=e281] [cursor=pointer]:
+                      - img
+                  - generic [ref=e283]:
+                    - generic [ref=e286]:
+                      - generic [ref=e287]:
+                        - generic [ref=e288]:
+                          - generic [ref=e289]: 75 ˚
+                          - generic [ref=e290]: Indoor Temp
+                        - generic [ref=e291]:
+                          - generic [ref=e292]: 72%
+                          - generic [ref=e293]: Humidity
+                      - generic [ref=e294]:
+                        - generic [ref=e296]:
+                          - generic [ref=e297]: 52˚
+                          - img [ref=e298]:
+                            - img
+                          - generic [ref=e299]: 77%
+                        - img [ref=e301]:
+                          - img
+                    - generic [ref=e303]:
+                      - generic [ref=e306]:
+                        - generic [ref=e308]:
+                          - generic [ref=e311]:
+                            - generic [ref=e312]: Floor1
+                            - generic [ref=e313]: Indoor Temp 75 ˚
+                          - generic [ref=e319]:
+                            - generic [ref=e322]:
+                              - generic [ref=e323]:
+                                - generic [ref=e325]: Cool to
+                                - generic [ref=e326]:
+                                  - button [ref=e328] [cursor=pointer]:
+                                    - img [ref=e329]:
+                                      - img
+                                  - generic [ref=e331]: "76"
+                                  - button [ref=e333] [cursor=pointer]:
+                                    - img [ref=e334]:
+                                      - img
+                              - generic [ref=e336]:
+                                - generic [ref=e338]: Heat to
+                                - generic [ref=e339]:
+                                  - button [ref=e341] [cursor=pointer]:
+                                    - img [ref=e342]:
+                                      - img
+                                  - generic [ref=e344]: "55"
+                                  - button [ref=e346] [cursor=pointer]:
+                                    - img [ref=e347]:
+                                      - img
+                            - paragraph [ref=e349]: Indefinitely
+                            - generic [ref=e350]:
+                              - link [ref=e351] [cursor=pointer]:
+                                - /url: "#"
+                                - text: RESUME SCHEDULE
+                              - link [ref=e352] [cursor=pointer]:
+                                - /url: "#"
+                                - text: UNTIL NEXT SCHEDULED PROFILE
+                        - text: ▼
+                      - generic [ref=e357]:
+                        - generic [ref=e359]:
+                          - generic [ref=e362]:
+                            - generic [ref=e363]: Simbha12
+                            - generic [ref=e364]: Indoor Temp 71 ˚
+                          - generic [ref=e370]:
+                            - generic [ref=e373]:
+                              - generic [ref=e374]:
+                                - generic [ref=e376]: Cool to
+                                - generic [ref=e377]:
+                                  - button [ref=e379] [cursor=pointer]:
+                                    - img [ref=e380]:
+                                      - img
+                                  - generic [ref=e382]: "61"
+                                  - button [ref=e384] [cursor=pointer]:
+                                    - img [ref=e385]:
+                                      - img
+                              - generic [ref=e387]:
+                                - generic [ref=e389]: Heat to
+                                - generic [ref=e390]:
+                                  - button [ref=e392] [cursor=pointer]:
+                                    - img [ref=e393]:
+                                      - img
+                                  - generic [ref=e395]: "54"
+                                  - button [ref=e397] [cursor=pointer]:
+                                    - img [ref=e398]:
+                                      - img
+                            - paragraph [ref=e400]: Indefinitely
+                            - generic [ref=e401]:
+                              - link [ref=e402] [cursor=pointer]:
+                                - /url: "#"
+                                - text: RESUME SCHEDULE
+                              - link [ref=e403] [cursor=pointer]:
+                                - /url: "#"
+                                - text: UNTIL NEXT SCHEDULED PROFILE
+                        - text: ▼
+                      - generic [ref=e408]:
+                        - generic [ref=e410]:
+                          - generic [ref=e413]:
+                            - generic [ref=e414]: Floor3
+                            - generic [ref=e415]: Indoor Temp 72 ˚
+                          - generic [ref=e421]:
+                            - generic [ref=e424]:
+                              - generic [ref=e425]:
+                                - generic [ref=e427]: Cool to
+                                - generic [ref=e428]:
+                                  - button [ref=e430] [cursor=pointer]:
+                                    - img [ref=e431]:
+                                      - img
+                                  - generic [ref=e433]: "77"
+                                  - button [ref=e435] [cursor=pointer]:
+                                    - img [ref=e436]:
+                                      - img
+                              - generic [ref=e438]:
+                                - generic [ref=e440]: Heat to
+                                - generic [ref=e441]:
+                                  - button [ref=e443] [cursor=pointer]:
+                                    - img [ref=e444]:
+                                      - img
+                                  - generic [ref=e446]: "73"
+                                  - button [ref=e448] [cursor=pointer]:
+                                    - img [ref=e449]:
+                                      - img
+                            - paragraph [ref=e451]: Indefinitely
+                            - generic [ref=e452]:
+                              - link [ref=e453] [cursor=pointer]:
+                                - /url: "#"
+                                - text: RESUME SCHEDULE
+                              - link [ref=e454] [cursor=pointer]:
+                                - /url: "#"
+                                - text: UNTIL NEXT SCHEDULED PROFILE
+                        - text: ▼
+                      - generic [ref=e459]:
+                        - generic [ref=e461]:
+                          - generic [ref=e464]:
+                            - generic [ref=e465]: Floor4
+                            - generic [ref=e466]: Indoor Temp 73 ˚
+                          - generic [ref=e472]:
+                            - generic [ref=e475]:
+                              - generic [ref=e476]:
+                                - generic [ref=e478]: Cool to
+                                - generic [ref=e479]:
+                                  - button [ref=e481] [cursor=pointer]:
+                                    - img [ref=e482]:
+                                      - img
+                                  - generic [ref=e484]: "64"
+                                  - button [ref=e486] [cursor=pointer]:
+                                    - img [ref=e487]:
+                                      - img
+                              - generic [ref=e489]:
+                                - generic [ref=e491]: Heat to
+                                - generic [ref=e492]:
+                                  - button [ref=e494] [cursor=pointer]:
+                                    - img [ref=e495]:
+                                      - img
+                                  - generic [ref=e497]: "62"
+                                  - button [ref=e499] [cursor=pointer]:
+                                    - img [ref=e500]:
+                                      - img
+                            - paragraph [ref=e502]: Indefinitely
+                            - generic [ref=e503]:
+                              - link [ref=e504] [cursor=pointer]:
+                                - /url: "#"
+                                - text: RESUME SCHEDULE
+                              - link [ref=e505] [cursor=pointer]:
+                                - /url: "#"
+                                - text: UNTIL NEXT SCHEDULED PROFILE
+                        - text: ▼
+                - text: ▼
+  - dialog "Security NotificationsReceive notifications ..." [ref=e509]:
+    - generic [ref=e511]:
+      - img [ref=e514]
+      - generic [ref=e515]:
+        - heading "Security Notifications" [level=5] [ref=e516]
+        - paragraph [ref=e517]: Receive notifications when security system activities occur. You can enable or disable this feature at any time in the settings menu.
+        - generic [ref=e518]:
+          - generic [ref=e519]: Receive Notifications
+          - checkbox "Switch No Ink" [ref=e521] [cursor=pointer]
+      - generic [ref=e525]:
+        - button "LATER" [ref=e526] [cursor=pointer]
+        - button "DONE" [active] [ref=e527] [cursor=pointer]
+```

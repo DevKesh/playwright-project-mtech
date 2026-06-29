@@ -1,0 +1,429 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - generic [ref=e92]: Security
+          - button [ref=e95] [cursor=pointer]
+          - button [ref=e98] [cursor=pointer]
+        - generic [ref=e99]:
+          - generic [ref=e102]:
+            - tablist [ref=e103]:
+              - tab [selected] [ref=e104]: Security
+              - tab [ref=e105] [cursor=pointer]: Partitions
+              - tab [ref=e106] [cursor=pointer]: Sensors
+            - generic [ref=e108]:
+              - generic [ref=e109] [cursor=pointer]: Security
+              - generic [ref=e110] [cursor=pointer]: Partitions
+              - generic [ref=e111] [cursor=pointer]: Sensors
+          - tabpanel [ref=e113]:
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - list [ref=e121]:
+                  - listitem [ref=e122]:
+                    - generic [ref=e123]:
+                      - paragraph [ref=e125]: 2 of 2 Partitions Disarmed
+                      - checkbox [ref=e128] [cursor=pointer]:
+                        - generic [ref=e130]: SELECT ALL
+                - list [ref=e132]:
+                  - listitem [ref=e133]:
+                    - generic [ref=e134]:
+                      - generic [ref=e136]:
+                        - paragraph [ref=e137]: P1 - Partition 1
+                        - paragraph [ref=e138]: Disarmed
+                      - checkbox [ref=e142] [cursor=pointer]
+                - list [ref=e145]:
+                  - listitem [ref=e146]:
+                    - generic [ref=e147]:
+                      - generic [ref=e149]:
+                        - paragraph [ref=e150]: P2 - Partition-02
+                        - paragraph [ref=e151]: Disarmed
+                      - checkbox [ref=e155] [cursor=pointer]
+              - generic [ref=e159]:
+                - button [ref=e161] [cursor=pointer]:
+                  - generic [ref=e163]: Arm Away All
+                - button [ref=e165] [cursor=pointer]:
+                  - generic [ref=e167]: Arm Home All
+        - generic [ref=e168]:
+          - generic [ref=e169]: Today's Activities
+          - generic [ref=e172]:
+            - generic [ref=e173]: Monday, June 29
+            - generic [ref=e176]:
+              - listitem [ref=e180]:
+                - generic [ref=e181] [cursor=pointer]:
+                  - button [ref=e182]
+                  - generic [ref=e185]:
+                    - generic [ref=e186]:
+                      - generic [ref=e187]: 12:01:58
+                      - generic [ref=e188]: IST
+                    - generic [ref=e190]: Vx3 automation - A Person was detected.
+                  - button [ref=e192]
+              - listitem [ref=e198]:
+                - generic [ref=e199] [cursor=pointer]:
+                  - button [ref=e200]
+                  - generic [ref=e203]:
+                    - generic [ref=e204]:
+                      - generic [ref=e205]: 12:01:49
+                      - generic [ref=e206]: IST
+                    - generic [ref=e208]: Vx1 automation - A Person was detected.
+                  - button [ref=e210]
+              - listitem [ref=e216]:
+                - generic [ref=e217] [cursor=pointer]:
+                  - button [ref=e218]
+                  - generic [ref=e221]:
+                    - generic [ref=e222]:
+                      - generic [ref=e223]: 12:01:21
+                      - generic [ref=e224]: IST
+                    - generic [ref=e226]: Vx1 automation - A Person was detected.
+                  - button [ref=e228]
+              - listitem [ref=e234]:
+                - generic [ref=e235] [cursor=pointer]:
+                  - button [ref=e236]
+                  - generic [ref=e239]:
+                    - generic [ref=e240]:
+                      - generic [ref=e241]: 11:54:52
+                      - generic [ref=e242]: IST
+                    - generic [ref=e244]: Vx5 automation - A Person was detected.
+                  - button [ref=e246]
+              - listitem [ref=e252]:
+                - generic [ref=e253] [cursor=pointer]:
+                  - button [ref=e254]
+                  - generic [ref=e257]:
+                    - generic [ref=e258]:
+                      - generic [ref=e259]: 11:54:50
+                      - generic [ref=e260]: IST
+                    - generic [ref=e262]: Vx1 automation - A Person was detected.
+                  - button [ref=e264]
+              - listitem [ref=e270]:
+                - generic [ref=e271] [cursor=pointer]:
+                  - button [ref=e272]
+                  - generic [ref=e275]:
+                    - generic [ref=e276]:
+                      - generic [ref=e277]: 11:49:53
+                      - generic [ref=e278]: IST
+                    - generic [ref=e280]: Disarmed-P2 Partition-02
+                    - generic [ref=e281]: Pratibha K
+                  - button [ref=e283]
+              - listitem [ref=e289]:
+                - generic [ref=e290] [cursor=pointer]:
+                  - button [ref=e291]
+                  - generic [ref=e294]:
+                    - generic [ref=e295]:
+                      - generic [ref=e296]: 11:49:53
+                      - generic [ref=e297]: IST
+                    - generic [ref=e299]: Disarmed-P1 Partition 1
+                    - generic [ref=e300]: Pratibha K
+                  - button [ref=e302]
+              - listitem [ref=e308]:
+                - generic [ref=e309] [cursor=pointer]:
+                  - button [ref=e310]
+                  - generic [ref=e313]:
+                    - generic [ref=e314]:
+                      - generic [ref=e315]: 11:49:45
+                      - generic [ref=e316]: IST
+                    - generic [ref=e318]: Vx1 automation video doorbell recording on-demand.
+                  - button [ref=e320]
+              - listitem [ref=e326]:
+                - generic [ref=e327] [cursor=pointer]:
+                  - button [ref=e328]
+                  - generic [ref=e331]:
+                    - generic [ref=e332]:
+                      - generic [ref=e333]: 11:49:45
+                      - generic [ref=e334]: IST
+                    - generic [ref=e336]: Vx3 automation recording on-demand.
+                  - button [ref=e338]
+              - listitem [ref=e344]:
+                - generic [ref=e345] [cursor=pointer]:
+                  - button [ref=e346]
+                  - generic [ref=e349]:
+                    - generic [ref=e350]:
+                      - generic [ref=e351]: 11:49:45
+                      - generic [ref=e352]: IST
+                    - generic [ref=e354]: Vx5 automation recording on-demand.
+                  - button [ref=e356]
+              - listitem [ref=e362]:
+                - generic [ref=e363] [cursor=pointer]:
+                  - button [ref=e364]
+                  - generic [ref=e367]:
+                    - generic [ref=e368]:
+                      - generic [ref=e369]: 11:49:44
+                      - generic [ref=e370]: IST
+                    - generic [ref=e372]: Armed Home-P2 Partition-02
+                    - generic [ref=e373]: Pratibha K
+                  - button [ref=e375]
+              - listitem [ref=e381]:
+                - generic [ref=e382] [cursor=pointer]:
+                  - button [ref=e383]
+                  - generic [ref=e386]:
+                    - generic [ref=e387]:
+                      - generic [ref=e388]: 11:49:44
+                      - generic [ref=e389]: IST
+                    - generic [ref=e391]: Armed Home-P1 Partition 1
+                    - generic [ref=e392]: Pratibha K
+                  - button [ref=e394]
+              - listitem [ref=e400]:
+                - generic [ref=e401] [cursor=pointer]:
+                  - button [ref=e402]
+                  - generic [ref=e405]:
+                    - generic [ref=e406]:
+                      - generic [ref=e407]: 11:48:10
+                      - generic [ref=e408]: IST
+                    - generic [ref=e410]: Vx1 automation - A Person was detected.
+                  - button [ref=e412]
+              - listitem [ref=e418]:
+                - generic [ref=e419] [cursor=pointer]:
+                  - button [ref=e420]
+                  - generic [ref=e423]:
+                    - generic [ref=e424]:
+                      - generic [ref=e425]: 11:44:36
+                      - generic [ref=e426]: IST
+                    - generic [ref=e428]: Vx5 automation - A Person was detected.
+                  - button [ref=e430]
+              - listitem [ref=e436]:
+                - generic [ref=e437] [cursor=pointer]:
+                  - button [ref=e438]
+                  - generic [ref=e441]:
+                    - generic [ref=e442]:
+                      - generic [ref=e443]: 11:44:35
+                      - generic [ref=e444]: IST
+                    - generic [ref=e446]: Vx1 automation - A Person was detected.
+                  - button [ref=e448]
+              - listitem [ref=e454]:
+                - generic [ref=e455] [cursor=pointer]:
+                  - button [ref=e456]
+                  - generic [ref=e459]:
+                    - generic [ref=e460]:
+                      - generic [ref=e461]: 11:39:00
+                      - generic [ref=e462]: IST
+                    - generic [ref=e464]: Vx1 automation - A Person was detected.
+                  - button [ref=e466]
+              - listitem [ref=e472]:
+                - generic [ref=e473] [cursor=pointer]:
+                  - button [ref=e474]
+                  - generic [ref=e477]:
+                    - generic [ref=e478]:
+                      - generic [ref=e479]: 11:33:11
+                      - generic [ref=e480]: IST
+                    - generic [ref=e482]: Vx5 automation - A Person was detected.
+                  - button [ref=e484]
+              - listitem [ref=e490]:
+                - generic [ref=e491] [cursor=pointer]:
+                  - button [ref=e492]
+                  - generic [ref=e495]:
+                    - generic [ref=e496]:
+                      - generic [ref=e497]: 11:33:10
+                      - generic [ref=e498]: IST
+                    - generic [ref=e500]: Vx1 automation - A Person was detected.
+                  - button [ref=e502]
+              - listitem [ref=e508]:
+                - generic [ref=e509] [cursor=pointer]:
+                  - button [ref=e510]
+                  - generic [ref=e513]:
+                    - generic [ref=e514]:
+                      - generic [ref=e515]: 11:32:27
+                      - generic [ref=e516]: IST
+                    - generic [ref=e518]: Vx1 automation - A Person was detected.
+                  - button [ref=e520]
+              - listitem [ref=e526]:
+                - generic [ref=e527] [cursor=pointer]:
+                  - button [ref=e528]
+                  - generic [ref=e531]:
+                    - generic [ref=e532]:
+                      - generic [ref=e533]: 11:29:36
+                      - generic [ref=e534]: IST
+                    - generic [ref=e536]: Vx5 automation - A Person was detected.
+                  - button [ref=e538]
+              - listitem [ref=e544]:
+                - generic [ref=e545] [cursor=pointer]:
+                  - button [ref=e546]
+                  - generic [ref=e549]:
+                    - generic [ref=e550]:
+                      - generic [ref=e551]: 11:28:23
+                      - generic [ref=e552]: IST
+                    - generic [ref=e554]: Vx5 automation - A Person was detected.
+                  - button [ref=e556]
+              - listitem [ref=e562]:
+                - generic [ref=e563] [cursor=pointer]:
+                  - button [ref=e564]
+                  - generic [ref=e567]:
+                    - generic [ref=e568]:
+                      - generic [ref=e569]: 11:28:21
+                      - generic [ref=e570]: IST
+                    - generic [ref=e572]: Vx1 automation - A Person was detected.
+                  - button [ref=e574]
+              - listitem [ref=e580]:
+                - generic [ref=e581] [cursor=pointer]:
+                  - button [ref=e582]
+                  - generic [ref=e585]:
+                    - generic [ref=e586]:
+                      - generic [ref=e587]: 11:28:21
+                      - generic [ref=e588]: IST
+                    - generic [ref=e590]: Vx3 automation - A Person was detected.
+                  - button [ref=e592]
+              - listitem [ref=e598]:
+                - generic [ref=e599] [cursor=pointer]:
+                  - button [ref=e600]
+                  - generic [ref=e603]:
+                    - generic [ref=e604]:
+                      - generic [ref=e605]: 11:27:55
+                      - generic [ref=e606]: IST
+                    - generic [ref=e608]: Vx5 automation - A Person was detected.
+                  - button [ref=e610]
+              - listitem [ref=e616]:
+                - generic [ref=e617] [cursor=pointer]:
+                  - button [ref=e618]
+                  - generic [ref=e621]:
+                    - generic [ref=e622]:
+                      - generic [ref=e623]: 11:27:53
+                      - generic [ref=e624]: IST
+                    - generic [ref=e626]: Vx1 automation - A Person was detected.
+                  - button [ref=e628]
+        - button [ref=e632] [cursor=pointer]:
+          - paragraph [ref=e633]: View all activities
+        - generic [ref=e637]:
+          - generic [ref=e638]: Huslia, Texas
+          - generic [ref=e639]:
+            - generic [ref=e640]:
+              - generic [ref=e641]: Cloudy
+              - generic [ref=e642]:
+                - img [ref=e644]:
+                  - img
+                - generic [ref=e645]:
+                  - generic [ref=e646]: 52˚
+                  - paragraph [ref=e647]: 77% Humidity
+                - generic [ref=e649]:
+                  - button [disabled] [ref=e650]: ˚F
+                  - paragraph [ref=e651]: "|"
+                  - button [ref=e652] [cursor=pointer]: ˚C
+            - link [ref=e654] [cursor=pointer]:
+              - /url: http://www.accuweather.com/
+              - img [ref=e655]
+          - generic [ref=e657]:
+            - generic [ref=e658]:
+              - generic [ref=e659]: Mon
+              - img [ref=e661]:
+                - img
+              - generic [ref=e662]: 61˚
+              - generic [ref=e663]: 47˚
+            - generic [ref=e664]:
+              - generic [ref=e665]: Tue
+              - img [ref=e667]:
+                - img
+              - generic [ref=e668]: 63˚
+              - generic [ref=e669]: 46˚
+            - generic [ref=e670]:
+              - generic [ref=e671]: Wed
+              - img [ref=e673]:
+                - img
+              - generic [ref=e674]: 68˚
+              - generic [ref=e675]: 50˚
+            - generic [ref=e676]:
+              - generic [ref=e677]: Thu
+              - img [ref=e679]:
+                - img
+              - generic [ref=e680]: 70˚
+              - generic [ref=e681]: 51˚
+            - generic [ref=e682]:
+              - generic [ref=e683]: Fri
+              - img [ref=e685]:
+                - img
+              - generic [ref=e686]: 68˚
+              - generic [ref=e687]: 50˚
+  - dialog "Security NotificationsReceive notifications ..." [ref=e691]:
+    - generic [ref=e693]:
+      - img [ref=e696]
+      - generic [ref=e697]:
+        - heading "Security Notifications" [level=5] [ref=e698]
+        - paragraph [ref=e699]: Receive notifications when security system activities occur. You can enable or disable this feature at any time in the settings menu.
+        - generic [ref=e700]:
+          - generic [ref=e701]: Receive Notifications
+          - checkbox "Switch No Ink" [ref=e703] [cursor=pointer]
+      - generic [ref=e707]:
+        - button "LATER" [ref=e708] [cursor=pointer]
+        - button "DONE" [active] [ref=e709] [cursor=pointer]
+```
