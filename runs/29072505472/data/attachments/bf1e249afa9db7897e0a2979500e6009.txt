@@ -1,0 +1,4 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[CamerasPage] Found 2 cameras: KITCHEN, DOMECB5
+[TC-006] Found 2 camera elements on the page
