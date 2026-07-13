@@ -1,0 +1,144 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - iframe [ref=e91]:
+        - generic [ref=f1e5]:
+          - generic [ref=f1e9]:
+            - generic [ref=f1e12]: Camera Activities
+            - separator [ref=f1e13]
+            - generic [ref=f1e14]:
+              - generic:
+                - generic:
+                  - button "volume_on":
+                    - img "volume_on"
+                - generic:
+                  - generic:
+                    - button "fast rewind":
+                      - img "fast rewind"
+                    - button "replay":
+                      - img "replay"
+                    - button "play":
+                      - img "play"
+                    - button "forward":
+                      - img "forward"
+                    - button "fast forward":
+                      - img "fast forward"
+                - generic:
+                  - button "fullscreen":
+                    - img "fullscreen"
+            - separator [ref=f1e17]
+            - generic [ref=f1e25]:
+              - text: All Events
+              - combobox "All Events" [ref=f1e26]:
+                - img [ref=f1e32] [cursor=pointer]
+            - generic [ref=f1e40]: No clips found
+          - generic [ref=f1e47]:
+            - generic [ref=f1e48]: Cameras
+            - generic [ref=f1e49]:
+              - generic [ref=f1e52]:
+                - generic [ref=f1e53]: "View:"
+                - generic [ref=f1e57]: "|"
+                - img "Reorder" [ref=f1e59] [cursor=pointer]
+              - generic [ref=f1e63]:
+                - generic [ref=f1e65]:
+                  - img "Search" [ref=f1e68]
+                  - combobox "Search" [ref=f1e70]
+                - generic [ref=f1e73]: 0 / 1000 character limit
+  - dialog "Security NotificationsReceive notifications ..." [ref=e95]:
+    - generic [ref=e97]:
+      - img [ref=e100]
+      - generic [ref=e101]:
+        - heading "Security Notifications" [level=5] [ref=e102]
+        - paragraph [ref=e103]: Receive notifications when security system activities occur. You can enable or disable this feature at any time in the settings menu.
+        - generic [ref=e104]:
+          - generic [ref=e105]: Receive Notifications
+          - checkbox "Switch No Ink" [ref=e107] [cursor=pointer]
+      - generic [ref=e111]:
+        - button "LATER" [ref=e112] [cursor=pointer]
+        - button "DONE" [active] [ref=e113] [cursor=pointer]
+```
