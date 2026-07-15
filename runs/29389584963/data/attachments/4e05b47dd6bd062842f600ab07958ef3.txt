@@ -1,0 +1,6 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[ensureDisarmed] Partitions are armed. Clicking DISARM...
+[ensureDisarmed] Disarm confirmed — ARM HOME button now visible.
+[ensureDisarmed] Waiting 5s for security system cooldown...
+[ensureDisarmed] Cooldown complete. Ready for test.

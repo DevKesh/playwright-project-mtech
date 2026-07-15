@@ -1,0 +1,2 @@
+[CamerasPage] Found 2 cameras: KITCHEN, DOMECB5
+[TC-006] Found 2 camera elements on the page
