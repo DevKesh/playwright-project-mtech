@@ -1,0 +1,2 @@
+[CamerasPage] Found 1 cameras: KITCHEN
+[TC-007] Found 1 camera name labels on the page
