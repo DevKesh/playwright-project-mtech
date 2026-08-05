@@ -1,0 +1,2 @@
+[CamerasPage] Found 1 cameras: KITCHEN
+[TC-006] Found 1 camera elements on the page
