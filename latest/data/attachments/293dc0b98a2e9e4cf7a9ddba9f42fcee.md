@@ -1,0 +1,375 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e6]:
+  - generic [ref=e9]:
+    - button "select locations menu" [ref=e12] [cursor=pointer]:
+      - generic [ref=e13]: BANGALORE
+    - button [ref=e16] [cursor=pointer]
+  - generic [ref=e17]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic [ref=e18]:
+              - button [ref=e19] [cursor=pointer]
+              - generic [ref=e20]: Menu
+            - list [ref=e23]:
+              - button "Security" [ref=e24] [cursor=pointer]:
+                - button "Security" [ref=e25]:
+                  - img [ref=e26]:
+                    - img "icon/arming/ic_arm home"
+                  - generic [ref=e27]: Security
+              - button "Devices" [ref=e28] [cursor=pointer]:
+                - button "Devices" [ref=e29]:
+                  - img [ref=e30]:
+                    - img "icon/ic_devices"
+                  - generic [ref=e31]: Devices
+              - button "Cameras" [ref=e32] [cursor=pointer]:
+                - button "Cameras" [active] [ref=e33]:
+                  - img [ref=e35]:
+                    - img "ic_video_white"
+                  - generic [ref=e36]: Cameras
+              - button "Activity" [ref=e37] [cursor=pointer]:
+                - button "Activity" [ref=e38]:
+                  - img [ref=e39]:
+                    - img "icon/ic_calendar"
+                  - generic [ref=e40]: Activity
+              - button "Scenes" [ref=e41] [cursor=pointer]:
+                - button "Scenes" [ref=e42]:
+                  - img [ref=e43]:
+                    - img "icon/ic_scenes"
+                  - generic [ref=e44]: Scenes
+              - button "My Profile" [ref=e45] [cursor=pointer]:
+                - button "My Profile" [ref=e47]:
+                  - img [ref=e48]:
+                    - img "icon/ic_user"
+                  - generic [ref=e49]: My Profile
+              - button "Locations" [ref=e50] [cursor=pointer]:
+                - button "Locations" [ref=e51]:
+                  - img [ref=e52]:
+                    - img "icon/ic_locations"
+                  - generic [ref=e53]: Locations
+              - button "Security Professional" [ref=e54] [cursor=pointer]:
+                - button "Security Professional" [ref=e55]:
+                  - img [ref=e56]:
+                    - img "icon/ic_dealer truck"
+                  - generic [ref=e57]: Security Professional
+              - button "Users Arrow Down" [ref=e58] [cursor=pointer]:
+                - button "Users Arrow Down" [ref=e59]:
+                  - img [ref=e60]:
+                    - img "icon/ic_users"
+                  - generic [ref=e61]: Users
+                  - img "Arrow Down" [ref=e62]:
+                    - img "icon/ic_arrow_down"
+              - button "Notifications Arrow Down" [ref=e63] [cursor=pointer]:
+                - button "Notifications Arrow Down" [ref=e64]:
+                  - img [ref=e65]:
+                    - img "icon/ic_notification"
+                  - generic [ref=e66]: Notifications
+                  - img "Arrow Down" [ref=e67]:
+                    - img "icon/ic_arrow_down"
+              - button "Help" [ref=e68] [cursor=pointer]:
+                - generic [ref=e69]:
+                  - img [ref=e70]:
+                    - img "icon/ic_help"
+                  - generic [ref=e71]: Help
+              - button "Rate Us" [ref=e72] [cursor=pointer]:
+                - button "Rate Us" [ref=e73]:
+                  - img [ref=e74]:
+                    - img "icon/ic_star"
+                  - generic [ref=e75]: Rate Us
+              - button "About" [ref=e76] [cursor=pointer]:
+                - button "About" [ref=e77]:
+                  - img [ref=e78]:
+                    - img "icon/ic_info"
+                  - generic [ref=e79]: About
+              - button "Sign Out" [ref=e80] [cursor=pointer]:
+                - button "Sign Out" [ref=e82]:
+                  - img [ref=e83]:
+                    - img "icon/ic_log-out"
+                  - generic [ref=e84]: Sign Out
+    - iframe [ref=e91]:
+      - generic [ref=f2e5]:
+        - generic [ref=f2e9]:
+          - generic [ref=f2e10]:
+            - generic [ref=f2e12]: Camera Activities
+            - generic [ref=f2e14]: vx3 new cam - Person Detected
+          - separator [ref=f2e15]
+          - generic [ref=f2e16]:
+            - generic [ref=f2e20]: Your browser does not support the video tag.
+            - generic [ref=f2e21]:
+              - button "volume_on" [ref=f2e23] [cursor=pointer]:
+                - img "volume_on" [ref=f2e24]
+              - generic [ref=f2e26]:
+                - button "fast rewind" [ref=f2e27] [cursor=pointer]:
+                  - img "fast rewind" [ref=f2e28]
+                - button "replay" [ref=f2e29] [cursor=pointer]:
+                  - img "replay" [ref=f2e30]
+                - button "play" [ref=f2e31] [cursor=pointer]:
+                  - img "play" [ref=f2e32]
+                - button "forward" [ref=f2e33] [cursor=pointer]:
+                  - img "forward" [ref=f2e34]
+                - button "fast forward" [ref=f2e35] [cursor=pointer]:
+                  - img "fast forward" [ref=f2e36]
+              - button "fullscreen" [ref=f2e38] [cursor=pointer]:
+                - img "fullscreen" [ref=f2e39]
+          - separator [ref=f2e40]
+          - generic [ref=f2e48]:
+            - text: All Events
+            - combobox "All Events" [ref=f2e49]:
+              - img [ref=f2e55] [cursor=pointer]
+          - generic [ref=f2e60]:
+            - generic [ref=f2e63]:
+              - generic [ref=f2e64]: Saturday, August 29
+              - separator [ref=f2e65]
+              - generic [ref=f2e67] [cursor=pointer]:
+                - generic [ref=f2e68]:
+                  - generic [ref=f2e69]:
+                    - img "thumbnail-0" [ref=f2e72]
+                    - generic [ref=f2e73]:
+                      - generic [ref=f2e74]: 10:23:56 AM IST
+                      - generic [ref=f2e75]: Person Detected
+                      - generic [ref=f2e76]: vx3 new cam
+                  - button "play" [ref=f2e79]:
+                    - img "play" [ref=f2e80]
+                - separator [ref=f2e83]
+              - generic [ref=f2e85] [cursor=pointer]:
+                - generic [ref=f2e86]:
+                  - generic [ref=f2e87]:
+                    - img "thumbnail-1" [ref=f2e90]
+                    - generic [ref=f2e91]:
+                      - generic [ref=f2e92]: 10:23:44 AM IST
+                      - generic [ref=f2e93]: Motion Detected
+                      - generic [ref=f2e94]: vx5 reg test QA
+                  - button "play" [ref=f2e97]:
+                    - img "play" [ref=f2e98]
+                - separator [ref=f2e101]
+              - generic [ref=f2e103] [cursor=pointer]:
+                - generic [ref=f2e104]:
+                  - generic [ref=f2e105]:
+                    - img "thumbnail-2" [ref=f2e108]
+                    - generic [ref=f2e109]:
+                      - generic [ref=f2e110]: 10:23:16 AM IST
+                      - generic [ref=f2e111]: Person Detected
+                      - generic [ref=f2e112]: vx5 reg test QA
+                  - button "play" [ref=f2e115]:
+                    - img "play" [ref=f2e116]
+                - separator [ref=f2e119]
+              - generic [ref=f2e121] [cursor=pointer]:
+                - generic [ref=f2e122]:
+                  - generic [ref=f2e123]:
+                    - img "thumbnail-3" [ref=f2e126]
+                    - generic [ref=f2e127]:
+                      - generic [ref=f2e128]: 10:23:15 AM IST
+                      - generic [ref=f2e129]: Person Detected
+                      - generic [ref=f2e130]: vx3 new cam
+                  - button "play" [ref=f2e133]:
+                    - img "play" [ref=f2e134]
+                - separator [ref=f2e137]
+              - generic [ref=f2e139] [cursor=pointer]:
+                - generic [ref=f2e140]:
+                  - generic [ref=f2e141]:
+                    - img "thumbnail-4" [ref=f2e144]
+                    - generic [ref=f2e145]:
+                      - generic [ref=f2e146]: 08:51:24 AM IST
+                      - generic [ref=f2e147]: Person Detected
+                      - generic [ref=f2e148]: Dome QA 02
+                  - button "play" [ref=f2e151]:
+                    - img "play" [ref=f2e152]
+                - separator [ref=f2e155]
+              - generic [ref=f2e157] [cursor=pointer]:
+                - generic [ref=f2e158]:
+                  - generic [ref=f2e159]:
+                    - img "thumbnail-5" [ref=f2e162]
+                    - generic [ref=f2e163]:
+                      - generic [ref=f2e164]: 08:51:24 AM IST
+                      - generic [ref=f2e165]: Person Detected
+                      - generic [ref=f2e166]: turret 03
+                  - button "play" [ref=f2e169]:
+                    - img "play" [ref=f2e170]
+                - separator [ref=f2e173]
+              - generic [ref=f2e175] [cursor=pointer]:
+                - generic [ref=f2e176]:
+                  - generic [ref=f2e177]:
+                    - img "thumbnail-6" [ref=f2e180]
+                    - generic [ref=f2e181]:
+                      - generic [ref=f2e182]: 08:05:28 AM IST
+                      - generic [ref=f2e183]: Person Detected
+                      - generic [ref=f2e184]: vx3 new cam
+                  - button "play" [ref=f2e187]:
+                    - img "play" [ref=f2e188]
+                - separator [ref=f2e191]
+              - generic [ref=f2e193] [cursor=pointer]:
+                - generic [ref=f2e194]:
+                  - generic [ref=f2e195]:
+                    - img "thumbnail-7" [ref=f2e198]
+                    - generic [ref=f2e199]:
+                      - generic [ref=f2e200]: 08:05:28 AM IST
+                      - generic [ref=f2e201]: Motion Detected
+                      - generic [ref=f2e202]: vx5 reg test QA
+                  - button "play" [ref=f2e205]:
+                    - img "play" [ref=f2e206]
+                - separator [ref=f2e209]
+              - generic [ref=f2e211] [cursor=pointer]:
+                - generic [ref=f2e212]:
+                  - generic [ref=f2e213]:
+                    - img "thumbnail-8" [ref=f2e216]
+                    - generic [ref=f2e217]:
+                      - generic [ref=f2e218]: 08:03:18 AM IST
+                      - generic [ref=f2e219]: Person Detected
+                      - generic [ref=f2e220]: vx3 new cam
+                  - button "play" [ref=f2e223]:
+                    - img "play" [ref=f2e224]
+                - separator [ref=f2e227]
+              - generic [ref=f2e229] [cursor=pointer]:
+                - generic [ref=f2e230]:
+                  - generic [ref=f2e231]:
+                    - img "thumbnail-9" [ref=f2e234]
+                    - generic [ref=f2e235]:
+                      - generic [ref=f2e236]: 08:03:18 AM IST
+                      - generic [ref=f2e237]: Motion Detected
+                      - generic [ref=f2e238]: vx5 reg test QA
+                  - button "play" [ref=f2e241]:
+                    - img "play" [ref=f2e242]
+                - separator [ref=f2e245]
+              - generic [ref=f2e247] [cursor=pointer]:
+                - generic [ref=f2e248]:
+                  - generic [ref=f2e249]:
+                    - img "thumbnail-10" [ref=f2e252]
+                    - generic [ref=f2e253]:
+                      - generic [ref=f2e254]: 07:25:13 AM IST
+                      - generic [ref=f2e255]: Person Detected
+                      - generic [ref=f2e256]: turret 03
+                  - button "play" [ref=f2e259]:
+                    - img "play" [ref=f2e260]
+                - separator [ref=f2e263]
+              - generic [ref=f2e265] [cursor=pointer]:
+                - generic [ref=f2e266]:
+                  - generic [ref=f2e267]:
+                    - img "thumbnail-11" [ref=f2e270]
+                    - generic [ref=f2e271]:
+                      - generic [ref=f2e272]: 07:25:12 AM IST
+                      - generic [ref=f2e273]: Person Detected
+                      - generic [ref=f2e274]: Dome QA 02
+                  - button "play" [ref=f2e277]:
+                    - img "play" [ref=f2e278]
+                - separator [ref=f2e281]
+              - generic [ref=f2e283] [cursor=pointer]:
+                - generic [ref=f2e284]:
+                  - generic [ref=f2e285]:
+                    - img "thumbnail-12" [ref=f2e288]
+                    - generic [ref=f2e289]:
+                      - generic [ref=f2e290]: 06:34:20 AM IST
+                      - generic [ref=f2e291]: Person Detected
+                      - generic [ref=f2e292]: turret 03
+                  - button "play" [ref=f2e295]:
+                    - img "play" [ref=f2e296]
+                - separator [ref=f2e299]
+              - generic [ref=f2e301] [cursor=pointer]:
+                - generic [ref=f2e302]:
+                  - generic [ref=f2e303]:
+                    - img "thumbnail-13" [ref=f2e306]
+                    - generic [ref=f2e307]:
+                      - generic [ref=f2e308]: 06:34:19 AM IST
+                      - generic [ref=f2e309]: Person Detected
+                      - generic [ref=f2e310]: Dome QA 02
+                  - button "play" [ref=f2e313]:
+                    - img "play" [ref=f2e314]
+                - separator [ref=f2e317]
+              - generic [ref=f2e319] [cursor=pointer]:
+                - generic [ref=f2e320]:
+                  - generic [ref=f2e321]:
+                    - img "thumbnail-14" [ref=f2e324]
+                    - generic [ref=f2e325]:
+                      - generic [ref=f2e326]: 06:30:10 AM IST
+                      - generic [ref=f2e327]: Person Detected
+                      - generic [ref=f2e328]: turret 03
+                  - button "play" [ref=f2e331]:
+                    - img "play" [ref=f2e332]
+                - separator [ref=f2e335]
+              - generic [ref=f2e337] [cursor=pointer]:
+                - generic [ref=f2e338]:
+                  - generic [ref=f2e339]:
+                    - img "thumbnail-15" [ref=f2e342]
+                    - generic [ref=f2e343]:
+                      - generic [ref=f2e344]: 06:30:09 AM IST
+                      - generic [ref=f2e345]: Person Detected
+                      - generic [ref=f2e346]: Dome QA 02
+                  - button "play" [ref=f2e349]:
+                    - img "play" [ref=f2e350]
+                - separator [ref=f2e353]
+              - generic [ref=f2e355] [cursor=pointer]:
+                - generic [ref=f2e356]:
+                  - generic [ref=f2e357]:
+                    - img "thumbnail-16" [ref=f2e360]
+                    - generic [ref=f2e361]:
+                      - generic [ref=f2e362]: 02:33:42 AM IST
+                      - generic [ref=f2e363]: Person Detected
+                      - generic [ref=f2e364]: Dome QA 02
+                  - button "play" [ref=f2e367]:
+                    - img "play" [ref=f2e368]
+                - separator [ref=f2e371]
+              - generic [ref=f2e373] [cursor=pointer]:
+                - generic [ref=f2e374]:
+                  - generic [ref=f2e375]:
+                    - img "thumbnail-17" [ref=f2e378]
+                    - generic [ref=f2e379]:
+                      - generic [ref=f2e380]: 02:33:42 AM IST
+                      - generic [ref=f2e381]: Person Detected
+                      - generic [ref=f2e382]: turret 03
+                  - button "play" [ref=f2e385]:
+                    - img "play" [ref=f2e386]
+                - separator [ref=f2e389]
+              - generic [ref=f2e391] [cursor=pointer]:
+                - generic [ref=f2e392]:
+                  - generic [ref=f2e393]:
+                    - img "thumbnail-18" [ref=f2e396]
+                    - generic [ref=f2e397]:
+                      - generic [ref=f2e398]: 02:14:33 AM IST
+                      - generic [ref=f2e399]: Person Detected
+                      - generic [ref=f2e400]: vx3 new cam
+                  - button "play" [ref=f2e403]:
+                    - img "play" [ref=f2e404]
+                - separator [ref=f2e407]
+              - generic [ref=f2e409] [cursor=pointer]:
+                - generic [ref=f2e410]:
+                  - generic [ref=f2e411]:
+                    - img "thumbnail-19" [ref=f2e414]
+                    - generic [ref=f2e415]:
+                      - generic [ref=f2e416]: 02:14:31 AM IST
+                      - generic [ref=f2e417]: Motion Detected
+                      - generic [ref=f2e418]: vx5 reg test QA
+                  - button "play" [ref=f2e421]:
+                    - img "play" [ref=f2e422]
+                - separator [ref=f2e425]
+            - generic [ref=f2e428]:
+              - button "forward" [disabled]:
+                - img "forward"
+              - button "1" [ref=f2e429] [cursor=pointer]:
+                - generic [ref=f2e430]: "1"
+              - button "2" [ref=f2e433] [cursor=pointer]:
+                - generic [ref=f2e434]: "2"
+              - button "3" [ref=f2e437] [cursor=pointer]:
+                - generic [ref=f2e438]: "3"
+              - button "4" [ref=f2e441] [cursor=pointer]:
+                - generic [ref=f2e442]: "4"
+              - button "..." [disabled]:
+                - generic: ...
+              - button "395" [ref=f2e445] [cursor=pointer]:
+                - generic [ref=f2e446]: "395"
+              - button "forward" [ref=f2e449] [cursor=pointer]:
+                - img "forward" [ref=f2e450]
+        - generic [ref=f2e456]:
+          - generic [ref=f2e457]: Cameras
+          - generic [ref=f2e458]:
+            - generic [ref=f2e461]:
+              - generic [ref=f2e462]: "View:"
+              - generic [ref=f2e466]: "|"
+              - img "Reorder" [ref=f2e468] [cursor=pointer]
+            - generic [ref=f2e472]:
+              - generic [ref=f2e474]:
+                - img "Search" [ref=f2e477]
+                - combobox "Search" [ref=f2e479]
+              - generic [ref=f2e482]: 0 / 1000 character limit
+```
