@@ -1,0 +1,99 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e6]:
+  - generic [ref=e9]:
+    - button "select locations menu" [ref=e12] [cursor=pointer]:
+      - generic [ref=e13]: BANGALORE
+    - button [ref=e16] [cursor=pointer]
+  - generic [ref=e17]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic [ref=e18]:
+              - button [ref=e19] [cursor=pointer]
+              - generic [ref=e20]: Menu
+            - list [ref=e23]:
+              - button "Security" [ref=e24] [cursor=pointer]:
+                - button "Security" [ref=e25]:
+                  - img [ref=e26]:
+                    - img "icon/arming/ic_arm home"
+                  - generic [ref=e27]: Security
+              - button "Devices" [ref=e28] [cursor=pointer]:
+                - button "Devices" [active] [ref=e29]:
+                  - img [ref=e31]:
+                    - img "icon/ic_devices"
+                  - generic [ref=e32]: Devices
+              - button "Cameras" [ref=e33] [cursor=pointer]:
+                - button "Cameras" [ref=e34]:
+                  - img [ref=e35]:
+                    - img "ic_video_white"
+                  - generic [ref=e36]: Cameras
+              - button "Activity" [ref=e37] [cursor=pointer]:
+                - button "Activity" [ref=e38]:
+                  - img [ref=e39]:
+                    - img "icon/ic_calendar"
+                  - generic [ref=e40]: Activity
+              - button "Scenes" [ref=e41] [cursor=pointer]:
+                - button "Scenes" [ref=e42]:
+                  - img [ref=e43]:
+                    - img "icon/ic_scenes"
+                  - generic [ref=e44]: Scenes
+              - button "My Profile" [ref=e45] [cursor=pointer]:
+                - button "My Profile" [ref=e47]:
+                  - img [ref=e48]:
+                    - img "icon/ic_user"
+                  - generic [ref=e49]: My Profile
+              - button "Locations" [ref=e50] [cursor=pointer]:
+                - button "Locations" [ref=e51]:
+                  - img [ref=e52]:
+                    - img "icon/ic_locations"
+                  - generic [ref=e53]: Locations
+              - button "Security Professional" [ref=e54] [cursor=pointer]:
+                - button "Security Professional" [ref=e55]:
+                  - img [ref=e56]:
+                    - img "icon/ic_dealer truck"
+                  - generic [ref=e57]: Security Professional
+              - button "Users Arrow Down" [ref=e58] [cursor=pointer]:
+                - button "Users Arrow Down" [ref=e59]:
+                  - img [ref=e60]:
+                    - img "icon/ic_users"
+                  - generic [ref=e61]: Users
+                  - img "Arrow Down" [ref=e62]:
+                    - img "icon/ic_arrow_down"
+              - button "Notifications Arrow Down" [ref=e63] [cursor=pointer]:
+                - button "Notifications Arrow Down" [ref=e64]:
+                  - img [ref=e65]:
+                    - img "icon/ic_notification"
+                  - generic [ref=e66]: Notifications
+                  - img "Arrow Down" [ref=e67]:
+                    - img "icon/ic_arrow_down"
+              - button "Help" [ref=e68] [cursor=pointer]:
+                - generic [ref=e69]:
+                  - img [ref=e70]:
+                    - img "icon/ic_help"
+                  - generic [ref=e71]: Help
+              - button "Rate Us" [ref=e72] [cursor=pointer]:
+                - button "Rate Us" [ref=e73]:
+                  - img [ref=e74]:
+                    - img "icon/ic_star"
+                  - generic [ref=e75]: Rate Us
+              - button "About" [ref=e76] [cursor=pointer]:
+                - button "About" [ref=e77]:
+                  - img [ref=e78]:
+                    - img "icon/ic_info"
+                  - generic [ref=e79]: About
+              - button "Sign Out" [ref=e80] [cursor=pointer]:
+                - button "Sign Out" [ref=e82]:
+                  - img [ref=e83]:
+                    - img "icon/ic_log-out"
+                  - generic [ref=e84]: Sign Out
+    - generic [ref=e90]:
+      - heading "Devices" [level=2] [ref=e91]:
+        - generic [ref=e93]: Devices
+      - generic [ref=e95]:
+        - progressbar [ref=e96]:
+          - img [ref=e97]
+        - generic [ref=e99]: Loading devices
+```
