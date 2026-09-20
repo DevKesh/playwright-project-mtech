@@ -1,0 +1,211 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - generic [ref=e92]: Security
+          - button [ref=e95] [cursor=pointer]
+          - button [ref=e98] [cursor=pointer]
+        - generic [ref=e99]:
+          - generic [ref=e102]:
+            - tablist [ref=e103]:
+              - tab [selected] [ref=e104]: Security
+              - tab [ref=e105] [cursor=pointer]: Partitions
+              - tab [ref=e106] [cursor=pointer]: Sensors
+            - generic [ref=e108]:
+              - generic [ref=e109] [cursor=pointer]: Security
+              - generic [ref=e110] [cursor=pointer]: Partitions
+              - generic [ref=e111] [cursor=pointer]: Sensors
+          - tabpanel [ref=e113]:
+            - generic [ref=e120]:
+              - list [ref=e121]:
+                - listitem [ref=e122]:
+                  - paragraph [ref=e125]: 1 of 2 Partitions Disarmed
+              - list [ref=e127]:
+                - listitem [ref=e128]:
+                  - generic [ref=e129]:
+                    - generic [ref=e131]:
+                      - paragraph [ref=e132]: P1 - Partition 1
+                      - paragraph [ref=e133]: Armed Home
+                    - checkbox [ref=e137] [cursor=pointer]
+              - list [ref=e140]:
+                - listitem [ref=e141]:
+                  - generic [ref=e142]:
+                    - generic [ref=e144]:
+                      - paragraph [ref=e145]: P2 - Partition-02
+                      - paragraph [ref=e146]: Disarmed
+                    - checkbox [ref=e150] [cursor=pointer]
+        - generic [ref=e153]:
+          - generic [ref=e154]: Today's Activities
+          - generic [ref=e157]:
+            - generic [ref=e158]: Sunday, September 20
+            - generic [ref=e161]:
+              - listitem [ref=e165]:
+                - generic [ref=e166] [cursor=pointer]:
+                  - button [ref=e167]
+                  - generic [ref=e170]:
+                    - generic [ref=e171]:
+                      - generic [ref=e172]: 7:50:42
+                      - generic [ref=e173]: AM
+                      - generic [ref=e174]: IST
+                    - generic [ref=e176]: Turret QA - Motion was detected.
+                  - button [ref=e178]
+              - listitem [ref=e184]:
+                - generic [ref=e185] [cursor=pointer]:
+                  - button [ref=e186]
+                  - generic [ref=e189]:
+                    - generic [ref=e190]:
+                      - generic [ref=e191]: 2:11:19
+                      - generic [ref=e192]: AM
+                      - generic [ref=e193]: IST
+                    - generic [ref=e195]: vx3 new cam - A Person was detected.
+                  - button [ref=e197]
+        - button [ref=e201] [cursor=pointer]:
+          - paragraph [ref=e202]: View all activities
+        - generic [ref=e206]:
+          - generic [ref=e207]: Huslia, Texas
+          - generic [ref=e208]:
+            - generic [ref=e209]:
+              - generic [ref=e210]: Rain
+              - generic [ref=e211]:
+                - img [ref=e213]:
+                  - img
+                - generic [ref=e214]:
+                  - generic [ref=e215]: 40˚
+                  - paragraph [ref=e216]: 95% Humidity
+                - generic [ref=e218]:
+                  - button [disabled] [ref=e219]: ˚F
+                  - paragraph [ref=e220]: "|"
+                  - button [ref=e221] [cursor=pointer]: ˚C
+            - link [ref=e223] [cursor=pointer]:
+              - /url: http://www.accuweather.com/
+              - img [ref=e224]
+          - generic [ref=e226]:
+            - generic [ref=e227]:
+              - generic [ref=e228]: Sun
+              - img [ref=e230]:
+                - img
+              - generic [ref=e231]: 45˚
+              - generic [ref=e232]: 26˚
+            - generic [ref=e233]:
+              - generic [ref=e234]: Mon
+              - img [ref=e236]:
+                - img
+              - generic [ref=e237]: 44˚
+              - generic [ref=e238]: 31˚
+            - generic [ref=e239]:
+              - generic [ref=e240]: Tue
+              - img [ref=e242]:
+                - img
+              - generic [ref=e243]: 44˚
+              - generic [ref=e244]: 32˚
+            - generic [ref=e245]:
+              - generic [ref=e246]: Wed
+              - img [ref=e248]:
+                - img
+              - generic [ref=e249]: 45˚
+              - generic [ref=e250]: 31˚
+            - generic [ref=e251]:
+              - generic [ref=e252]: Thu
+              - img [ref=e254]:
+                - img
+              - generic [ref=e255]: 47˚
+              - generic [ref=e256]: 37˚
+  - dialog "Security NotificationsReceive notifications ..." [ref=e260]:
+    - generic [ref=e262]:
+      - img [ref=e265]
+      - generic [ref=e266]:
+        - heading "Security Notifications" [level=5] [ref=e267]
+        - paragraph [ref=e268]: Receive notifications when security system activities occur. You can enable or disable this feature at any time in the settings menu.
+        - generic [ref=e269]:
+          - generic [ref=e270]: Receive Notifications
+          - checkbox "Switch No Ink" [ref=e272] [cursor=pointer]
+      - generic [ref=e276]:
+        - button "LATER" [ref=e277] [cursor=pointer]
+        - button "DONE" [active] [ref=e278] [cursor=pointer]
+```
