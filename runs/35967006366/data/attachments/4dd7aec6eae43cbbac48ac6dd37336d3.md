@@ -1,0 +1,542 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e6]:
+  - generic [ref=e9]:
+    - button "select locations menu" [ref=e12] [cursor=pointer]:
+      - generic [ref=e13]: BANGALORE
+    - button [ref=e16] [cursor=pointer]
+  - generic [ref=e17]:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic [ref=e18]:
+              - button [ref=e19] [cursor=pointer]
+              - generic [ref=e20]: Menu
+            - list [ref=e23]:
+              - button "Security" [ref=e24] [cursor=pointer]:
+                - button "Security" [ref=e25]:
+                  - img [ref=e26]:
+                    - img "icon/arming/ic_arm home"
+                  - generic [ref=e27]: Security
+              - button "Devices" [ref=e28] [cursor=pointer]:
+                - button "Devices" [ref=e29]:
+                  - img [ref=e30]:
+                    - img "icon/ic_devices"
+                  - generic [ref=e31]: Devices
+              - button "Cameras" [ref=e32] [cursor=pointer]:
+                - button "Cameras" [active] [ref=e33]:
+                  - img [ref=e35]:
+                    - img "ic_video_white"
+                  - generic [ref=e36]: Cameras
+              - button "Activity" [ref=e37] [cursor=pointer]:
+                - button "Activity" [ref=e38]:
+                  - img [ref=e39]:
+                    - img "icon/ic_calendar"
+                  - generic [ref=e40]: Activity
+              - button "Scenes" [ref=e41] [cursor=pointer]:
+                - button "Scenes" [ref=e42]:
+                  - img [ref=e43]:
+                    - img "icon/ic_scenes"
+                  - generic [ref=e44]: Scenes
+              - button "My Profile" [ref=e45] [cursor=pointer]:
+                - button "My Profile" [ref=e47]:
+                  - img [ref=e48]:
+                    - img "icon/ic_user"
+                  - generic [ref=e49]: My Profile
+              - button "Locations" [ref=e50] [cursor=pointer]:
+                - button "Locations" [ref=e51]:
+                  - img [ref=e52]:
+                    - img "icon/ic_locations"
+                  - generic [ref=e53]: Locations
+              - button "Security Professional" [ref=e54] [cursor=pointer]:
+                - button "Security Professional" [ref=e55]:
+                  - img [ref=e56]:
+                    - img "icon/ic_dealer truck"
+                  - generic [ref=e57]: Security Professional
+              - button "Users Arrow Down" [ref=e58] [cursor=pointer]:
+                - button "Users Arrow Down" [ref=e59]:
+                  - img [ref=e60]:
+                    - img "icon/ic_users"
+                  - generic [ref=e61]: Users
+                  - img "Arrow Down" [ref=e62]:
+                    - img "icon/ic_arrow_down"
+              - button "Notifications Arrow Down" [ref=e63] [cursor=pointer]:
+                - button "Notifications Arrow Down" [ref=e64]:
+                  - img [ref=e65]:
+                    - img "icon/ic_notification"
+                  - generic [ref=e66]: Notifications
+                  - img "Arrow Down" [ref=e67]:
+                    - img "icon/ic_arrow_down"
+              - button "Help" [ref=e68] [cursor=pointer]:
+                - generic [ref=e69]:
+                  - img [ref=e70]:
+                    - img "icon/ic_help"
+                  - generic [ref=e71]: Help
+              - button "Rate Us" [ref=e72] [cursor=pointer]:
+                - button "Rate Us" [ref=e73]:
+                  - img [ref=e74]:
+                    - img "icon/ic_star"
+                  - generic [ref=e75]: Rate Us
+              - button "About" [ref=e76] [cursor=pointer]:
+                - button "About" [ref=e77]:
+                  - img [ref=e78]:
+                    - img "icon/ic_info"
+                  - generic [ref=e79]: About
+              - button "Sign Out" [ref=e80] [cursor=pointer]:
+                - button "Sign Out" [ref=e82]:
+                  - img [ref=e83]:
+                    - img "icon/ic_log-out"
+                  - generic [ref=e84]: Sign Out
+    - iframe [ref=e91]:
+      - generic [ref=f1e5]:
+        - generic [ref=f1e9]:
+          - generic [ref=f1e10]:
+            - generic [ref=f1e12]: Camera Activities
+            - generic [ref=f1e14]: Turret QA - Motion Detected
+          - separator [ref=f1e15]
+          - generic [ref=f1e16]:
+            - generic [ref=f1e20]: Your browser does not support the video tag.
+            - generic [ref=f1e21]:
+              - button "volume_on" [ref=f1e23] [cursor=pointer]:
+                - img "volume_on" [ref=f1e24]
+              - generic [ref=f1e26]:
+                - button "fast rewind" [ref=f1e27] [cursor=pointer]:
+                  - img "fast rewind" [ref=f1e28]
+                - button "replay" [ref=f1e29] [cursor=pointer]:
+                  - img "replay" [ref=f1e30]
+                - button "play" [ref=f1e31] [cursor=pointer]:
+                  - img "play" [ref=f1e32]
+                - button "forward" [ref=f1e33] [cursor=pointer]:
+                  - img "forward" [ref=f1e34]
+                - button "fast forward" [ref=f1e35] [cursor=pointer]:
+                  - img "fast forward" [ref=f1e36]
+              - button "fullscreen" [ref=f1e38] [cursor=pointer]:
+                - img "fullscreen" [ref=f1e39]
+          - separator [ref=f1e40]
+          - generic [ref=f1e48]:
+            - text: All Events
+            - combobox "All Events" [ref=f1e49]:
+              - img [ref=f1e55] [cursor=pointer]
+          - generic [ref=f1e60]:
+            - generic [ref=f1e63]:
+              - generic [ref=f1e64]: Thursday, September 24
+              - separator [ref=f1e65]
+              - generic [ref=f1e67] [cursor=pointer]:
+                - generic [ref=f1e68]:
+                  - generic [ref=f1e69]:
+                    - img "thumbnail-0" [ref=f1e72]
+                    - generic [ref=f1e73]:
+                      - generic [ref=f1e74]: 12:30:40 PM IST
+                      - generic [ref=f1e75]: Motion Detected
+                      - generic [ref=f1e76]: Turret QA
+                  - button "play" [ref=f1e79]:
+                    - img "play" [ref=f1e80]
+                - separator [ref=f1e83]
+              - generic [ref=f1e85] [cursor=pointer]:
+                - generic [ref=f1e86]:
+                  - generic [ref=f1e87]:
+                    - img "thumbnail-1" [ref=f1e90]
+                    - generic [ref=f1e91]:
+                      - generic [ref=f1e92]: 12:26:50 PM IST
+                      - generic [ref=f1e93]: Motion Detected
+                      - generic [ref=f1e94]: Turret QA
+                  - button "play" [ref=f1e97]:
+                    - img "play" [ref=f1e98]
+                - separator [ref=f1e101]
+              - generic [ref=f1e103] [cursor=pointer]:
+                - generic [ref=f1e104]:
+                  - generic [ref=f1e105]:
+                    - img "thumbnail-2" [ref=f1e108]
+                    - generic [ref=f1e109]:
+                      - generic [ref=f1e110]: 12:14:55 PM IST
+                      - generic [ref=f1e111]: Motion Detected
+                      - generic [ref=f1e112]: Turret QA
+                  - button "play" [ref=f1e115]:
+                    - img "play" [ref=f1e116]
+                - separator [ref=f1e119]
+              - generic [ref=f1e121] [cursor=pointer]:
+                - generic [ref=f1e122]:
+                  - generic [ref=f1e123]:
+                    - img "thumbnail-3" [ref=f1e126]
+                    - generic [ref=f1e127]:
+                      - generic [ref=f1e128]: 12:13:44 PM IST
+                      - generic [ref=f1e129]: Motion Detected
+                      - generic [ref=f1e130]: Turret QA
+                  - button "play" [ref=f1e133]:
+                    - img "play" [ref=f1e134]
+                - separator [ref=f1e137]
+              - generic [ref=f1e139] [cursor=pointer]:
+                - generic [ref=f1e140]:
+                  - generic [ref=f1e141]:
+                    - img "thumbnail-4" [ref=f1e144]
+                    - generic [ref=f1e145]:
+                      - generic [ref=f1e146]: 12:12:47 PM IST
+                      - generic [ref=f1e147]: Motion Detected
+                      - generic [ref=f1e148]: Turret QA
+                  - button "play" [ref=f1e151]:
+                    - img "play" [ref=f1e152]
+                - separator [ref=f1e155]
+              - generic [ref=f1e157] [cursor=pointer]:
+                - generic [ref=f1e158]:
+                  - generic [ref=f1e159]:
+                    - img "thumbnail-5" [ref=f1e162]
+                    - generic [ref=f1e163]:
+                      - generic [ref=f1e164]: 12:11:57 PM IST
+                      - generic [ref=f1e165]: Motion Detected
+                      - generic [ref=f1e166]: Turret QA
+                  - button "play" [ref=f1e169]:
+                    - img "play" [ref=f1e170]
+                - separator [ref=f1e173]
+              - generic [ref=f1e175] [cursor=pointer]:
+                - generic [ref=f1e176]:
+                  - generic [ref=f1e177]:
+                    - img "thumbnail-6" [ref=f1e180]
+                    - generic [ref=f1e181]:
+                      - generic [ref=f1e182]: 12:03:58 PM IST
+                      - generic [ref=f1e183]: Motion Detected
+                      - generic [ref=f1e184]: Turret QA
+                  - button "play" [ref=f1e187]:
+                    - img "play" [ref=f1e188]
+                - separator [ref=f1e191]
+              - generic [ref=f1e193] [cursor=pointer]:
+                - generic [ref=f1e194]:
+                  - generic [ref=f1e195]:
+                    - img "thumbnail-7" [ref=f1e198]
+                    - generic [ref=f1e199]:
+                      - generic [ref=f1e200]: 12:00:11 PM IST
+                      - generic [ref=f1e201]: Motion Detected
+                      - generic [ref=f1e202]: Turret QA
+                  - button "play" [ref=f1e205]:
+                    - img "play" [ref=f1e206]
+                - separator [ref=f1e209]
+              - generic [ref=f1e211] [cursor=pointer]:
+                - generic [ref=f1e212]:
+                  - generic [ref=f1e213]:
+                    - img "thumbnail-8" [ref=f1e216]
+                    - generic [ref=f1e217]:
+                      - generic [ref=f1e218]: 11:58:33 AM IST
+                      - generic [ref=f1e219]: Motion Detected
+                      - generic [ref=f1e220]: Turret QA
+                  - button "play" [ref=f1e223]:
+                    - img "play" [ref=f1e224]
+                - separator [ref=f1e227]
+              - generic [ref=f1e229] [cursor=pointer]:
+                - generic [ref=f1e230]:
+                  - generic [ref=f1e231]:
+                    - img "thumbnail-9" [ref=f1e234]
+                    - generic [ref=f1e235]:
+                      - generic [ref=f1e236]: 11:50:19 AM IST
+                      - generic [ref=f1e237]: Motion Detected
+                      - generic [ref=f1e238]: Turret QA
+                  - button "play" [ref=f1e241]:
+                    - img "play" [ref=f1e242]
+                - separator [ref=f1e245]
+              - generic [ref=f1e247] [cursor=pointer]:
+                - generic [ref=f1e248]:
+                  - generic [ref=f1e249]:
+                    - img "thumbnail-10" [ref=f1e252]
+                    - generic [ref=f1e253]:
+                      - generic [ref=f1e254]: 11:49:22 AM IST
+                      - generic [ref=f1e255]: Motion Detected
+                      - generic [ref=f1e256]: Turret QA
+                  - button "play" [ref=f1e259]:
+                    - img "play" [ref=f1e260]
+                - separator [ref=f1e263]
+              - generic [ref=f1e265] [cursor=pointer]:
+                - generic [ref=f1e266]:
+                  - generic [ref=f1e267]:
+                    - img "thumbnail-11" [ref=f1e270]
+                    - generic [ref=f1e271]:
+                      - generic [ref=f1e272]: 11:48:14 AM IST
+                      - generic [ref=f1e273]: Motion Detected
+                      - generic [ref=f1e274]: Turret QA
+                  - button "play" [ref=f1e277]:
+                    - img "play" [ref=f1e278]
+                - separator [ref=f1e281]
+              - generic [ref=f1e283] [cursor=pointer]:
+                - generic [ref=f1e284]:
+                  - generic [ref=f1e285]:
+                    - img "thumbnail-12" [ref=f1e288]
+                    - generic [ref=f1e289]:
+                      - generic [ref=f1e290]: 11:47:26 AM IST
+                      - generic [ref=f1e291]: Motion Detected
+                      - generic [ref=f1e292]: Turret QA
+                  - button "play" [ref=f1e295]:
+                    - img "play" [ref=f1e296]
+                - separator [ref=f1e299]
+              - generic [ref=f1e301] [cursor=pointer]:
+                - generic [ref=f1e302]:
+                  - generic [ref=f1e303]:
+                    - img "thumbnail-13" [ref=f1e306]
+                    - generic [ref=f1e307]:
+                      - generic [ref=f1e308]: 11:43:02 AM IST
+                      - generic [ref=f1e309]: Motion Detected
+                      - generic [ref=f1e310]: Turret QA
+                  - button "play" [ref=f1e313]:
+                    - img "play" [ref=f1e314]
+                - separator [ref=f1e317]
+              - generic [ref=f1e319] [cursor=pointer]:
+                - generic [ref=f1e320]:
+                  - generic [ref=f1e321]:
+                    - img "thumbnail-14" [ref=f1e324]
+                    - generic [ref=f1e325]:
+                      - generic [ref=f1e326]: 11:38:23 AM IST
+                      - generic [ref=f1e327]: Motion Detected
+                      - generic [ref=f1e328]: Turret QA
+                  - button "play" [ref=f1e331]:
+                    - img "play" [ref=f1e332]
+                - separator [ref=f1e335]
+              - generic [ref=f1e337] [cursor=pointer]:
+                - generic [ref=f1e338]:
+                  - generic [ref=f1e339]:
+                    - img "thumbnail-15" [ref=f1e342]
+                    - generic [ref=f1e343]:
+                      - generic [ref=f1e344]: 11:36:20 AM IST
+                      - generic [ref=f1e345]: Motion Detected
+                      - generic [ref=f1e346]: Turret QA
+                  - button "play" [ref=f1e349]:
+                    - img "play" [ref=f1e350]
+                - separator [ref=f1e353]
+              - generic [ref=f1e355] [cursor=pointer]:
+                - generic [ref=f1e356]:
+                  - generic [ref=f1e357]:
+                    - img "thumbnail-16" [ref=f1e360]
+                    - generic [ref=f1e361]:
+                      - generic [ref=f1e362]: 11:27:02 AM IST
+                      - generic [ref=f1e363]: Motion Detected
+                      - generic [ref=f1e364]: Turret QA
+                  - button "play" [ref=f1e367]:
+                    - img "play" [ref=f1e368]
+                - separator [ref=f1e371]
+              - generic [ref=f1e373] [cursor=pointer]:
+                - generic [ref=f1e374]:
+                  - generic [ref=f1e375]:
+                    - img "thumbnail-17" [ref=f1e378]
+                    - generic [ref=f1e379]:
+                      - generic [ref=f1e380]: 11:17:44 AM IST
+                      - generic [ref=f1e381]: Motion Detected
+                      - generic [ref=f1e382]: Turret QA
+                  - button "play" [ref=f1e385]:
+                    - img "play" [ref=f1e386]
+                - separator [ref=f1e389]
+              - generic [ref=f1e391] [cursor=pointer]:
+                - generic [ref=f1e392]:
+                  - generic [ref=f1e393]:
+                    - img "thumbnail-18" [ref=f1e396]
+                    - generic [ref=f1e397]:
+                      - generic [ref=f1e398]: 11:06:42 AM IST
+                      - generic [ref=f1e399]: Motion Detected
+                      - generic [ref=f1e400]: Turret QA
+                  - button "play" [ref=f1e403]:
+                    - img "play" [ref=f1e404]
+                - separator [ref=f1e407]
+              - generic [ref=f1e409] [cursor=pointer]:
+                - generic [ref=f1e410]:
+                  - generic [ref=f1e411]:
+                    - img "thumbnail-19" [ref=f1e414]
+                    - generic [ref=f1e415]:
+                      - generic [ref=f1e416]: 11:01:22 AM IST
+                      - generic [ref=f1e417]: Motion Detected
+                      - generic [ref=f1e418]: Turret QA
+                  - button "play" [ref=f1e421]:
+                    - img "play" [ref=f1e422]
+                - separator [ref=f1e425]
+            - generic [ref=f1e428]:
+              - button "forward" [disabled]:
+                - img "forward"
+              - button "1" [ref=f1e429] [cursor=pointer]:
+                - generic [ref=f1e430]: "1"
+              - button "2" [ref=f1e433] [cursor=pointer]:
+                - generic [ref=f1e434]: "2"
+              - button "3" [ref=f1e437] [cursor=pointer]:
+                - generic [ref=f1e438]: "3"
+              - button "4" [ref=f1e441] [cursor=pointer]:
+                - generic [ref=f1e442]: "4"
+              - button "..." [disabled]:
+                - generic: ...
+              - button "470" [ref=f1e445] [cursor=pointer]:
+                - generic [ref=f1e446]: "470"
+              - button "forward" [ref=f1e449] [cursor=pointer]:
+                - img "forward" [ref=f1e450]
+        - generic [ref=f1e455]:
+          - generic [ref=f1e456]:
+            - generic [ref=f1e457]: Cameras
+            - generic [ref=f1e458]:
+              - generic [ref=f1e461]:
+                - generic [ref=f1e462]: "View:"
+                - generic [ref=f1e466]: "|"
+                - img "Reorder" [ref=f1e468] [cursor=pointer]
+              - generic [ref=f1e472]:
+                - generic [ref=f1e474]:
+                  - img "Search" [ref=f1e477]
+                  - combobox "Search" [ref=f1e479]
+                - generic [ref=f1e482]: 0 / 1000 character limit
+          - generic [ref=f1e484]:
+            - generic [ref=f1e492]:
+              - generic [ref=f1e494]:
+                - link "LOBBY" [ref=f1e495] [cursor=pointer]:
+                  - /url: ""
+                  - generic [ref=f1e496]: LOBBY
+                - button "Settings" [ref=f1e497] [cursor=pointer]:
+                  - img "Settings" [ref=f1e498]
+              - generic [ref=f1e499]:
+                - button "fullscreen" [ref=f1e500] [cursor=pointer]:
+                  - img "fullscreen" [ref=f1e501]
+                - button "forward" [ref=f1e502] [cursor=pointer]:
+                  - img "forward" [ref=f1e503]
+                - button "fullscreen":
+                  - img "fullscreen"
+            - generic [ref=f1e506]:
+              - generic [ref=f1e508] [cursor=pointer]:
+                - img "no-live-video" [ref=f1e510]
+                - generic [ref=f1e511]: No live video
+              - generic [ref=f1e514]:
+                - generic [ref=f1e516]:
+                  - link "vx5 reg te..." [ref=f1e517] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e518]: vx5 reg te...
+                  - button "Settings" [ref=f1e519] [cursor=pointer]:
+                    - img "Settings" [ref=f1e520]
+                - generic [ref=f1e521]:
+                  - button "fullscreen" [ref=f1e522] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e523]
+                  - button "forward" [ref=f1e524] [cursor=pointer]:
+                    - img "forward" [ref=f1e525]
+            - generic [ref=f1e528]:
+              - generic [ref=f1e530] [cursor=pointer]:
+                - img "forward" [ref=f1e532]
+                - generic [ref=f1e533]: Privacy Mode
+              - generic [ref=f1e536]:
+                - generic [ref=f1e538]:
+                  - link "Dome QA 02" [ref=f1e539] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e540]: Dome QA 02
+                  - button "Settings" [ref=f1e541] [cursor=pointer]:
+                    - img "Settings" [ref=f1e542]
+                - generic [ref=f1e543]:
+                  - button "forward" [ref=f1e544] [cursor=pointer]:
+                    - img "forward" [ref=f1e545]
+                  - button "fullscreen":
+                    - img "fullscreen"
+            - generic [ref=f1e553]:
+              - generic [ref=f1e555]:
+                - link "Bullet QA ..." [ref=f1e556] [cursor=pointer]:
+                  - /url: ""
+                  - generic [ref=f1e557]: Bullet QA ...
+                - button "Settings" [ref=f1e558] [cursor=pointer]:
+                  - img "Settings" [ref=f1e559]
+              - generic [ref=f1e560]:
+                - button "fullscreen" [ref=f1e561] [cursor=pointer]:
+                  - img "fullscreen" [ref=f1e562]
+                - button "forward" [ref=f1e563] [cursor=pointer]:
+                  - img "forward" [ref=f1e564]
+                - button "fullscreen":
+                  - img "fullscreen"
+            - generic [ref=f1e567]:
+              - generic [ref=f1e571]:
+                - button "mute" [ref=f1e573] [cursor=pointer]:
+                  - img "mute" [ref=f1e574]
+                - button "stop" [ref=f1e576] [cursor=pointer]:
+                  - img "stop" [ref=f1e577]
+              - generic [ref=f1e579]:
+                - generic [ref=f1e581]:
+                  - link "Turret QA" [ref=f1e582] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e583]: Turret QA
+                  - button "Settings" [ref=f1e584] [cursor=pointer]:
+                    - img "Settings" [ref=f1e585]
+                - generic [ref=f1e586]:
+                  - button "fullscreen" [ref=f1e587] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e588]
+                  - button "forward" [ref=f1e589] [cursor=pointer]:
+                    - img "forward" [ref=f1e590]
+                  - button "fullscreen" [ref=f1e591] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e592]
+            - generic [ref=f1e595]:
+              - img "'thumbnail-' + index" [ref=f1e597]
+              - generic [ref=f1e598] [cursor=pointer]:
+                - img "forward" [ref=f1e600]
+                - generic [ref=f1e601]: Go Live
+              - generic [ref=f1e603]:
+                - generic [ref=f1e605]:
+                  - link "vx3 new ca..." [ref=f1e606] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e607]: vx3 new ca...
+                  - button "Settings" [ref=f1e608] [cursor=pointer]:
+                    - img "Settings" [ref=f1e609]
+                - generic [ref=f1e610]:
+                  - button "fullscreen" [ref=f1e611] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e612]
+                  - button "forward" [ref=f1e613] [cursor=pointer]:
+                    - img "forward" [ref=f1e614]
+                  - button "fullscreen":
+                    - img "fullscreen"
+            - generic [ref=f1e617]:
+              - generic [ref=f1e619] [cursor=pointer]:
+                - img "no-live-video" [ref=f1e621]
+                - generic [ref=f1e622]: No live video
+              - generic [ref=f1e625]:
+                - generic [ref=f1e627]:
+                  - link "vx5 reg te..." [ref=f1e628] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e629]: vx5 reg te...
+                  - button "Settings" [ref=f1e630] [cursor=pointer]:
+                    - img "Settings" [ref=f1e631]
+                - generic [ref=f1e632]:
+                  - button "fullscreen" [ref=f1e633] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e634]
+                  - button "forward" [ref=f1e635] [cursor=pointer]:
+                    - img "forward" [ref=f1e636]
+            - generic [ref=f1e639]:
+              - generic [ref=f1e643]:
+                - button "mute" [ref=f1e645] [cursor=pointer]:
+                  - img "mute" [ref=f1e646]
+                - button "stop" [ref=f1e648] [cursor=pointer]:
+                  - img "stop" [ref=f1e649]
+              - generic [ref=f1e651]:
+                - generic [ref=f1e653]:
+                  - link "turret 03" [ref=f1e654] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e655]: turret 03
+                  - button "Settings" [ref=f1e656] [cursor=pointer]:
+                    - img "Settings" [ref=f1e657]
+                - generic [ref=f1e658]:
+                  - button "fullscreen" [ref=f1e659] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e660]
+                  - button "forward" [ref=f1e661] [cursor=pointer]:
+                    - img "forward" [ref=f1e662]
+                  - button "fullscreen" [ref=f1e663] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e664]
+            - generic [ref=f1e667]:
+              - generic [ref=f1e671]:
+                - button "mute" [ref=f1e673] [cursor=pointer]:
+                  - img "mute" [ref=f1e674]
+                - button "stop" [ref=f1e676] [cursor=pointer]:
+                  - img "stop" [ref=f1e677]
+              - generic [ref=f1e679]:
+                - generic [ref=f1e681]:
+                  - link "BULLET QA ..." [ref=f1e682] [cursor=pointer]:
+                    - /url: ""
+                    - generic [ref=f1e683]: BULLET QA ...
+                  - button "Settings" [ref=f1e684] [cursor=pointer]:
+                    - img "Settings" [ref=f1e685]
+                - generic [ref=f1e686]:
+                  - button "fullscreen" [ref=f1e687] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e688]
+                  - button "forward" [ref=f1e689] [cursor=pointer]:
+                    - img "forward" [ref=f1e690]
+                  - button "fullscreen" [ref=f1e691] [cursor=pointer]:
+                    - img "fullscreen" [ref=f1e692]
+            - generic [ref=f1e695]:
+              - generic [ref=f1e697] [cursor=pointer]:
+                - img "forward" [ref=f1e699]
+                - generic [ref=f1e700]: Camera Offline
+              - generic [ref=f1e704]:
+                - link "DOME QA 01" [ref=f1e705] [cursor=pointer]:
+                  - /url: ""
+                  - generic [ref=f1e706]: DOME QA 01
+                - button "Settings" [ref=f1e707] [cursor=pointer]:
+                  - img "Settings" [ref=f1e708]
+```
