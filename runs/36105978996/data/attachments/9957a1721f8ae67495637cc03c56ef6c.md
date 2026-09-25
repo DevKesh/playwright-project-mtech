@@ -1,0 +1,304 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - generic [ref=e92]: Security
+          - button [ref=e95] [cursor=pointer]
+          - button [ref=e98] [cursor=pointer]
+        - generic [ref=e99]:
+          - generic [ref=e102]:
+            - tablist [ref=e103]:
+              - tab [selected] [ref=e104]: Security
+              - tab [ref=e105] [cursor=pointer]: Partitions
+              - tab [ref=e106] [cursor=pointer]: Sensors
+            - generic [ref=e108]:
+              - generic [ref=e109] [cursor=pointer]: Security
+              - generic [ref=e110] [cursor=pointer]: Partitions
+              - generic [ref=e111] [cursor=pointer]: Sensors
+          - tabpanel [ref=e113]:
+            - generic [ref=e117]:
+              - list [ref=e119]:
+                - listitem [ref=e120]:
+                  - generic [ref=e121]:
+                    - generic [ref=e122]:
+                      - img [ref=e123]:
+                        - img
+                      - text: AC Loss
+                    - generic [ref=e124]:
+                      - img [ref=e125]:
+                        - img
+                      - text: System low battery
+              - generic [ref=e128]:
+                - img [ref=e131]
+                - generic [ref=e133]: Communication Failure
+                - generic [ref=e135]: Your security panel is not currently in communication with the total connect servers.Please immediately contact your security dealer.
+                - button [ref=e137] [cursor=pointer]: Learn more
+        - generic [ref=e138]:
+          - generic [ref=e139]: Today's Activities
+          - generic [ref=e142]:
+            - generic [ref=e143]: Friday, September 25
+            - generic [ref=e146]:
+              - listitem [ref=e150]:
+                - generic [ref=e151] [cursor=pointer]:
+                  - button [ref=e152]
+                  - generic [ref=e155]:
+                    - generic [ref=e156]:
+                      - generic [ref=e157]: 12:25:14
+                      - generic [ref=e158]: PM
+                      - generic [ref=e159]: IST
+                    - generic [ref=e161]: Automation Sync Failed BANGALORE
+                    - generic [ref=e162]: Keshav QA
+                  - button [ref=e164]
+              - listitem [ref=e170]:
+                - generic [ref=e171] [cursor=pointer]:
+                  - button [ref=e172]
+                  - generic [ref=e175]:
+                    - generic [ref=e176]:
+                      - generic [ref=e177]: 12:23:12
+                      - generic [ref=e178]: PM
+                      - generic [ref=e179]: IST
+                    - generic [ref=e181]: Panel Sync Begins BANGALORE
+                    - generic [ref=e182]: Keshav QA
+                  - button [ref=e184]
+              - listitem [ref=e190]:
+                - generic [ref=e191] [cursor=pointer]:
+                  - button [ref=e192]
+                  - generic [ref=e195]:
+                    - generic [ref=e196]:
+                      - generic [ref=e197]: 12:16:17
+                      - generic [ref=e198]: PM
+                      - generic [ref=e199]: IST
+                    - generic [ref=e201]: dome enrollment test - SD card format completed
+                  - button [ref=e203]
+              - listitem [ref=e209]:
+                - generic [ref=e210] [cursor=pointer]:
+                  - button [ref=e211]
+                  - generic [ref=e214]:
+                    - generic [ref=e215]:
+                      - generic [ref=e216]: 12:16:17
+                      - generic [ref=e217]: PM
+                      - generic [ref=e218]: IST
+                    - generic [ref=e220]: dome enrollment test - SD card formatting success
+                  - button [ref=e222]
+              - listitem [ref=e228]:
+                - generic [ref=e229] [cursor=pointer]:
+                  - button [ref=e230]
+                  - generic [ref=e233]:
+                    - generic [ref=e234]:
+                      - generic [ref=e235]: 12:15:53
+                      - generic [ref=e236]: PM
+                      - generic [ref=e237]: IST
+                    - generic [ref=e239]: dome enrollment test - SD card formatting in progress
+                  - button [ref=e241]
+              - listitem [ref=e247]:
+                - generic [ref=e248] [cursor=pointer]:
+                  - button [ref=e249]
+                  - generic [ref=e252]:
+                    - generic [ref=e253]:
+                      - generic [ref=e254]: 12:15:31
+                      - generic [ref=e255]: PM
+                      - generic [ref=e256]: IST
+                    - generic [ref=e258]: dome enrollment test - A Person was detected.
+                  - button [ref=e260]
+              - listitem [ref=e266]:
+                - generic [ref=e267] [cursor=pointer]:
+                  - button [ref=e268]
+                  - generic [ref=e271]:
+                    - generic [ref=e272]:
+                      - generic [ref=e273]: 12:15:23
+                      - generic [ref=e274]: PM
+                      - generic [ref=e275]: IST
+                    - generic [ref=e277]: dome enrollment test - SD card formatting in progress
+                  - button [ref=e279]
+              - listitem [ref=e285]:
+                - generic [ref=e286] [cursor=pointer]:
+                  - button [ref=e287]
+                  - generic [ref=e290]:
+                    - generic [ref=e291]:
+                      - generic [ref=e292]: 12:14:53
+                      - generic [ref=e293]: PM
+                      - generic [ref=e294]: IST
+                    - generic [ref=e296]: dome enrollment test - SD card formatting in progress
+                  - button [ref=e298]
+              - listitem [ref=e304]:
+                - generic [ref=e305] [cursor=pointer]:
+                  - button [ref=e306]
+                  - generic [ref=e309]:
+                    - generic [ref=e310]:
+                      - generic [ref=e311]: 12:14:23
+                      - generic [ref=e312]: PM
+                      - generic [ref=e313]: IST
+                    - generic [ref=e315]: dome enrollment test - SD card formatting in progress
+                  - button [ref=e317]
+              - listitem [ref=e323]:
+                - generic [ref=e324] [cursor=pointer]:
+                  - button [ref=e325]
+                  - generic [ref=e328]:
+                    - generic [ref=e329]:
+                      - generic [ref=e330]: 12:14:11
+                      - generic [ref=e331]: PM
+                      - generic [ref=e332]: IST
+                    - generic [ref=e334]: dome enrollment test Online.
+                  - button [ref=e336]
+              - listitem [ref=e342]:
+                - generic [ref=e343] [cursor=pointer]:
+                  - button [ref=e344]
+                  - generic [ref=e347]:
+                    - generic [ref=e348]:
+                      - generic [ref=e349]: 12:14:10
+                      - generic [ref=e350]: PM
+                      - generic [ref=e351]: IST
+                    - generic [ref=e353]: dome enrollment test Online.
+                  - button [ref=e355]
+              - listitem [ref=e361]:
+                - generic [ref=e362] [cursor=pointer]:
+                  - button [ref=e363]
+                  - generic [ref=e366]:
+                    - generic [ref=e367]:
+                      - generic [ref=e368]: 12:13:55
+                      - generic [ref=e369]: PM
+                      - generic [ref=e370]: IST
+                    - generic [ref=e372]: dome enrollment test successfully registered.
+                  - button [ref=e374]
+        - button [ref=e378] [cursor=pointer]:
+          - paragraph [ref=e379]: View all activities
+        - generic [ref=e383]:
+          - generic [ref=e384]: Huslia, Texas
+          - generic [ref=e385]:
+            - generic [ref=e386]:
+              - generic [ref=e387]: Clear
+              - generic [ref=e388]:
+                - img [ref=e390]:
+                  - img
+                - generic [ref=e391]:
+                  - generic [ref=e392]: 40˚
+                  - paragraph [ref=e393]: 73% Humidity
+                - generic [ref=e395]:
+                  - button [disabled] [ref=e396]: ˚F
+                  - paragraph [ref=e397]: "|"
+                  - button [ref=e398] [cursor=pointer]: ˚C
+            - link [ref=e400] [cursor=pointer]:
+              - /url: http://www.accuweather.com/
+              - img [ref=e401]
+          - generic [ref=e403]:
+            - generic [ref=e404]:
+              - generic [ref=e405]: Fri
+              - img [ref=e407]:
+                - img
+              - generic [ref=e408]: 49˚
+              - generic [ref=e409]: 36˚
+            - generic [ref=e410]:
+              - generic [ref=e411]: Sat
+              - img [ref=e413]:
+                - img
+              - generic [ref=e414]: 51˚
+              - generic [ref=e415]: 37˚
+            - generic [ref=e416]:
+              - generic [ref=e417]: Sun
+              - img [ref=e419]:
+                - img
+              - generic [ref=e420]: 50˚
+              - generic [ref=e421]: 38˚
+            - generic [ref=e422]:
+              - generic [ref=e423]: Mon
+              - img [ref=e425]:
+                - img
+              - generic [ref=e426]: 46˚
+              - generic [ref=e427]: 35˚
+            - generic [ref=e428]:
+              - generic [ref=e429]: Tue
+              - img [ref=e431]:
+                - img
+              - generic [ref=e432]: 43˚
+              - generic [ref=e433]: 33˚
+  - dialog "Panel Sync RequiredYou ..." [ref=e436]:
+    - document [ref=e437]:
+      - paragraph [ref=e438]: Your security panel is out of sync with the Total Connect servers. Please click Sync Manually button to start the panel sync operation.
+    - button "Sync Manually" [active] [ref=e440] [cursor=pointer]
+```
