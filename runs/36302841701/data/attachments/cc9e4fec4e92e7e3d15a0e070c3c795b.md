@@ -1,0 +1,232 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e10]:
+      - button [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: BANGALORE
+      - button [ref=e17] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - button [ref=e20] [cursor=pointer]
+        - generic [ref=e21]: Menu
+      - list [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - button [ref=e26]:
+            - img [ref=e27]:
+              - img
+            - generic [ref=e28]: Security
+        - button [ref=e29] [cursor=pointer]:
+          - button [ref=e30]:
+            - img [ref=e31]:
+              - img
+            - generic [ref=e32]: Devices
+        - button [ref=e33] [cursor=pointer]:
+          - button [ref=e34]:
+            - img [ref=e35]:
+              - img
+            - generic [ref=e36]: Cameras
+        - button [ref=e37] [cursor=pointer]:
+          - button [ref=e38]:
+            - img [ref=e39]:
+              - img
+            - generic [ref=e40]: Activity
+        - button [ref=e41] [cursor=pointer]:
+          - button [ref=e42]:
+            - img [ref=e43]:
+              - img
+            - generic [ref=e44]: Scenes
+        - button [ref=e45] [cursor=pointer]:
+          - button [ref=e47]:
+            - img [ref=e48]:
+              - img
+            - generic [ref=e49]: My Profile
+        - button [ref=e50] [cursor=pointer]:
+          - button [ref=e51]:
+            - img [ref=e52]:
+              - img
+            - generic [ref=e53]: Locations
+        - button [ref=e54] [cursor=pointer]:
+          - button [ref=e55]:
+            - img [ref=e56]:
+              - img
+            - generic [ref=e57]: Security Professional
+        - button [ref=e58] [cursor=pointer]:
+          - button [ref=e59]:
+            - img [ref=e60]:
+              - img
+            - generic [ref=e61]: Users
+            - img [ref=e62]:
+              - img
+        - button [ref=e63] [cursor=pointer]:
+          - button [ref=e64]:
+            - img [ref=e65]:
+              - img
+            - generic [ref=e66]: Notifications
+            - img [ref=e67]:
+              - img
+        - button [ref=e68] [cursor=pointer]:
+          - generic [ref=e69]:
+            - img [ref=e70]:
+              - img
+            - generic [ref=e71]: Help
+        - button [ref=e72] [cursor=pointer]:
+          - button [ref=e73]:
+            - img [ref=e74]:
+              - img
+            - generic [ref=e75]: Rate Us
+        - button [ref=e76] [cursor=pointer]:
+          - button [ref=e77]:
+            - img [ref=e78]:
+              - img
+            - generic [ref=e79]: About
+        - button [ref=e80] [cursor=pointer]:
+          - button [ref=e82]:
+            - img [ref=e83]:
+              - img
+            - generic [ref=e84]: Sign Out
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - generic [ref=e92]: Security
+          - button [ref=e95] [cursor=pointer]
+          - button [ref=e98] [cursor=pointer]
+        - generic [ref=e99]:
+          - generic [ref=e102]:
+            - tablist [ref=e103]:
+              - tab [selected] [ref=e104]: Security
+              - tab [ref=e105] [cursor=pointer]: Partitions
+              - tab [ref=e106] [cursor=pointer]: Sensors
+            - generic [ref=e108]:
+              - generic [ref=e109] [cursor=pointer]: Security
+              - generic [ref=e110] [cursor=pointer]: Partitions
+              - generic [ref=e111] [cursor=pointer]: Sensors
+          - tabpanel [ref=e113]:
+            - generic [ref=e117]:
+              - list [ref=e119]:
+                - listitem [ref=e120]:
+                  - generic [ref=e121]:
+                    - generic [ref=e122]:
+                      - img [ref=e123]:
+                        - img
+                      - text: AC Loss
+                    - generic [ref=e124]:
+                      - img [ref=e125]:
+                        - img
+                      - text: System low battery
+              - generic [ref=e128]:
+                - img [ref=e131]
+                - generic [ref=e133]: Communication Failure
+                - generic [ref=e135]: Your security panel is not currently in communication with the total connect servers.Please immediately contact your security dealer.
+                - button [ref=e137] [cursor=pointer]: Learn more
+        - generic [ref=e138]:
+          - generic [ref=e139]: Today's Activities
+          - generic [ref=e142]:
+            - generic [ref=e143]: Sunday, September 27
+            - generic [ref=e146]:
+              - listitem [ref=e150]:
+                - generic [ref=e151] [cursor=pointer]:
+                  - button [ref=e152]
+                  - generic [ref=e155]:
+                    - generic [ref=e156]:
+                      - generic [ref=e157]: 9:14:12
+                      - generic [ref=e158]: AM
+                      - generic [ref=e159]: IST
+                    - generic [ref=e161]: LOBBY - A Person was detected.
+                  - button [ref=e163]
+              - listitem [ref=e169]:
+                - generic [ref=e170] [cursor=pointer]:
+                  - button [ref=e171]
+                  - generic [ref=e174]:
+                    - generic [ref=e175]:
+                      - generic [ref=e176]: 9:13:12
+                      - generic [ref=e177]: AM
+                      - generic [ref=e178]: IST
+                    - generic [ref=e180]: LOBBY - A Person was detected.
+                  - button [ref=e182]
+              - listitem [ref=e188]:
+                - generic [ref=e189] [cursor=pointer]:
+                  - button [ref=e190]
+                  - generic [ref=e193]:
+                    - generic [ref=e194]:
+                      - generic [ref=e195]: 6:32:37
+                      - generic [ref=e196]: AM
+                      - generic [ref=e197]: IST
+                    - generic [ref=e199]: LOBBY - A Person was detected.
+                  - button [ref=e201]
+              - listitem [ref=e207]:
+                - generic [ref=e208] [cursor=pointer]:
+                  - button [ref=e209]
+                  - generic [ref=e212]:
+                    - generic [ref=e213]:
+                      - generic [ref=e214]: 6:00:19
+                      - generic [ref=e215]: AM
+                      - generic [ref=e216]: IST
+                    - generic [ref=e218]: LOBBY - A Person was detected.
+                  - button [ref=e220]
+              - listitem [ref=e226]:
+                - generic [ref=e227] [cursor=pointer]:
+                  - button [ref=e228]
+                  - generic [ref=e231]:
+                    - generic [ref=e232]:
+                      - generic [ref=e233]: 2:34:59
+                      - generic [ref=e234]: AM
+                      - generic [ref=e235]: IST
+                    - generic [ref=e237]: LOBBY - A Person was detected.
+                  - button [ref=e239]
+        - button [ref=e243] [cursor=pointer]:
+          - paragraph [ref=e244]: View all activities
+        - generic [ref=e248]:
+          - generic [ref=e249]: Huslia, Texas
+          - generic [ref=e250]:
+            - generic [ref=e251]:
+              - generic [ref=e252]: Partly cloudy
+              - generic [ref=e253]:
+                - img [ref=e255]:
+                  - img
+                - generic [ref=e256]:
+                  - generic [ref=e257]: 44˚
+                  - paragraph [ref=e258]: 71% Humidity
+                - generic [ref=e260]:
+                  - button [disabled] [ref=e261]: ˚F
+                  - paragraph [ref=e262]: "|"
+                  - button [ref=e263] [cursor=pointer]: ˚C
+            - link [ref=e265] [cursor=pointer]:
+              - /url: http://www.accuweather.com/
+              - img [ref=e266]
+          - generic [ref=e268]:
+            - generic [ref=e269]:
+              - generic [ref=e270]: Sun
+              - img [ref=e272]:
+                - img
+              - generic [ref=e273]: 53˚
+              - generic [ref=e274]: 33˚
+            - generic [ref=e275]:
+              - generic [ref=e276]: Mon
+              - img [ref=e278]:
+                - img
+              - generic [ref=e279]: 45˚
+              - generic [ref=e280]: 32˚
+            - generic [ref=e281]:
+              - generic [ref=e282]: Tue
+              - img [ref=e284]:
+                - img
+              - generic [ref=e285]: 39˚
+              - generic [ref=e286]: 30˚
+            - generic [ref=e287]:
+              - generic [ref=e288]: Wed
+              - img [ref=e290]:
+                - img
+              - generic [ref=e291]: 39˚
+              - generic [ref=e292]: 28˚
+            - generic [ref=e293]:
+              - generic [ref=e294]: Thu
+              - img [ref=e296]:
+                - img
+              - generic [ref=e297]: 40˚
+              - generic [ref=e298]: 29˚
+  - dialog "Panel Sync RequiredYou ..." [ref=e301]:
+    - document [ref=e302]:
+      - paragraph [ref=e303]: Your security panel is out of sync with the Total Connect servers. Please click Sync Manually button to start the panel sync operation.
+    - button "Sync Manually" [active] [ref=e305] [cursor=pointer]
+```
