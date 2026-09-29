@@ -1,0 +1,4 @@
+[login-monitor] 2026-09-29T10:46:49.253Z Forgot Password 1/3 PASS (no reset requested)
+[login-monitor] 2026-09-29T10:46:49.871Z Forgot Password 2/3 PASS (no reset requested)
+[login-monitor] 2026-09-29T10:46:50.616Z Forgot Password 3/3 PASS (no reset requested)
+[login-monitor] 2026-09-29T10:46:50.617Z recoveryCycles=3/3 diagnostics=7

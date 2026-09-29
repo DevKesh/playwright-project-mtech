@@ -1,0 +1,15 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-09-29T10:46:23.058Z Login/logout 1/5 PASS (configured credentials)
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-09-29T10:46:29.114Z Login/logout 2/5 PASS (configured credentials)
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-09-29T10:46:35.244Z Login/logout 3/5 PASS (configured credentials)
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-09-29T10:46:41.007Z Login/logout 4/5 PASS (configured credentials)
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-09-29T10:46:46.785Z Login/logout 5/5 PASS (configured credentials)
