@@ -1,0 +1,128 @@
+name: Login and Forgot Password Tests
+
+on:
+  # One spec execution per explicit Run workflow action. No automatic triggers.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never overlap runs against the same authentication account.
+concurrency:
+  group: login-monitor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  login-and-recovery:
+    name: Five logins and three recovery checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      CI: 'true'
+      HEADLESS: 'true'
+      EXECUTION_PLATFORM: local
+      AI_HEALING_ENABLED: 'false'
+      LOGIN_MONITOR_ALLURE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        id: dependencies
+        run: npm ci
+
+      # Use hosted runner Chrome, matching the existing smoke workflow.
+      - name: Install browser system dependencies
+        run: npx playwright install-deps chrome
+
+      - name: Validate required secrets
+        env:
+          LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+          LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          node -e "const names = ['LOGIN_MONITOR_USERNAME', 'LOGIN_MONITOR_PASSWORD', 'SLACK_WEBHOOK_URL']; const missing = names.filter(name => !process.env[name]); if (missing.length) { console.error('Missing repository secrets: ' + missing.join(', ')); process.exit(1); }"
+
+      - name: Run both tests once (5 logins + 3 recovery cycles)
+        id: tests
+        continue-on-error: true
+        run: npm run test:login-pages:once
+        env:
+          LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+          LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
+
+      - name: Upload raw results and screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-monitor-results-${{ github.run_attempt }}
+          path: |
+            allure-results/login-monitor/
+            test-results/login-monitor/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Generate Allure report
+        id: report
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: |
+          mkdir -p allure-results/login-monitor
+          npx allure generate -o allure-report allure-results/login-monitor
+
+      - name: Bundle portable report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' }}
+        run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
+
+      - name: Upload Allure report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-monitor-allure-report-${{ github.run_attempt }}
+          path: |
+            allure-report/
+            allure-report-portable.html
+          retention-days: 30
+
+      # Keep authentication reports separate from the smoke suite's /latest/.
+      - name: Stage versioned report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' && github.ref == 'refs/heads/main' }}
+        run: |
+          mkdir -p "publish/login-monitor/runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+          mkdir -p publish/login-monitor/latest
+          cp -r allure-report/. "publish/login-monitor/runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
+          cp -r allure-report/. publish/login-monitor/latest/
+
+      - name: Publish Allure to GitHub Pages
+        id: publish
+        if: ${{ !cancelled() && steps.report.outcome == 'success' && github.ref == 'refs/heads/main' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish
+          keep_files: true
+          commit_message: 'deploy: login-monitor ${{ github.run_id }} attempt ${{ github.run_attempt }}'
+
+      - name: Notify existing Slack channel
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: node framework/utils/slack-notify.js
+        env:
+          SLACK_ENABLED: 'true'
+          SLACK_REQUIRED: 'true'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEST_SUITE_NAME: 'Login & Forgot Password (5 login/logout + 3 recovery cycles)'
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPORT_URL: ${{ steps.publish.outcome == 'success' && format('https://{0}.github.io/{1}/login-monitor/runs/{2}/{3}/', github.repository_owner, github.event.repository.name, github.run_id, github.run_attempt) || '' }}
+          TEST_OUTCOME: ${{ steps.tests.outcome || 'failure' }}
+          HEAL_ENABLED: 'false'
+
+      - name: Preserve test failure status
+        if: ${{ !cancelled() && steps.tests.outcome != 'success' }}
+        run: |
+          echo 'Authentication/recovery suite did not pass. See the report and preceding steps.'
+          exit 1

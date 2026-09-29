@@ -11,6 +11,8 @@
  * Optional env vars:
  *   TEST_OUTCOME     — 'success' | 'failure' (from GH Actions step outcome)
  *   HEAL_ENABLED     — whether AI healing was enabled
+ *   TEST_SUITE_NAME  — displayed suite name (defaults to Playwright Smoke Suite)
+ *   SLACK_REQUIRED   — fail instead of silently skipping a missing webhook
  */
 
 const https = require('https');
@@ -131,7 +133,10 @@ function buildMessage(summary) {
 
   const runUrl = process.env.GITHUB_RUN_URL || '';
   const reportUrl = process.env.REPORT_URL || '';
-  const healEnabled = process.env.HEAL_ENABLED === 'true' || runtime.ai.healingEnabled;
+  const suiteName = process.env.TEST_SUITE_NAME || 'Playwright Smoke Suite';
+  const healEnabled = process.env.HEAL_ENABLED !== undefined
+    ? process.env.HEAL_ENABLED === 'true'
+    : runtime.ai.healingEnabled;
   const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
   // Execution platform detection
@@ -183,7 +188,7 @@ function buildMessage(summary) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `${icon}  *${status}*\n_Playwright Smoke Suite_`,
+        text: `${icon}  *${status}*\n_${suiteName}_`,
       },
     },
     { type: 'divider' },
@@ -223,7 +228,7 @@ function buildMessage(summary) {
   blocks.push({
     type: 'context',
     elements: [
-      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Platform: ${isLambda ? 'LambdaTest' : 'Local'}  •  Browser: ${runtime.browser.channel}  •  Headless: ${runtime.browser.headless}_` },
+      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Platform: ${isLambda ? 'LambdaTest' : isCI ? 'GitHub Actions' : 'Local'}  •  Browser: ${runtime.browser.channel}  •  Headless: ${runtime.browser.headless}_` },
     ],
   });
 
@@ -282,6 +287,10 @@ async function main() {
 
   const webhookUrl = runtime.reporting.slackWebhookUrl || process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) {
+    if (process.env.SLACK_REQUIRED === 'true') {
+      console.error('[SlackNotify] SLACK_WEBHOOK_URL is required for this workflow.');
+      process.exit(1);
+    }
     console.log('[SlackNotify] SLACK_WEBHOOK_URL not set — skipping notification.');
     process.exit(0);
   }
@@ -298,4 +307,6 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) main();
+
+module.exports = { buildMessage };
