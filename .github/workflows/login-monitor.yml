@@ -1,8 +1,14 @@
 name: Login and Forgot Password Tests
 
 on:
-  # One spec execution per explicit Run workflow action. No automatic triggers.
+  # One finite Playwright invocation per manual run. No automatic triggers.
   workflow_dispatch:
+    inputs:
+      repetitions:
+        description: 'Executions of EACH test (integer 1-100; 20 means 40 total tests)'
+        required: true
+        type: number
+        default: 20
 
 permissions:
   contents: read
@@ -14,13 +20,13 @@ concurrency:
 
 jobs:
   login-and-recovery:
-    name: Five logins and three recovery checks
+    name: Login and recovery (${{ inputs.repetitions }} repetitions each)
     # All workflows writing gh-pages must share this job-level lock.
     concurrency:
       group: allure-gh-pages-${{ github.repository }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     permissions:
       contents: write
     env:
@@ -29,6 +35,7 @@ jobs:
       EXECUTION_PLATFORM: local
       AI_HEALING_ENABLED: 'false'
       LOGIN_MONITOR_ALLURE: 'true'
+      LOGIN_MONITOR_REPETITIONS: ${{ inputs.repetitions }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,10 +60,10 @@ jobs:
         run: |
           node -e "const names = ['LOGIN_MONITOR_USERNAME', 'LOGIN_MONITOR_PASSWORD', 'SLACK_WEBHOOK_URL']; const missing = names.filter(name => !process.env[name]); if (missing.length) { console.error('Missing repository secrets: ' + missing.join(', ')); process.exit(1); }"
 
-      - name: Run both tests once (5 logins + 3 recovery cycles)
+      - name: Run configured repetitions of both tests
         id: tests
         continue-on-error: true
-        run: npm run test:login-pages:once
+        run: npm run test:login-pages
         env:
           LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
           LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
@@ -119,7 +126,7 @@ jobs:
           SLACK_ENABLED: 'true'
           SLACK_REQUIRED: 'true'
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          TEST_SUITE_NAME: 'Login & Forgot Password (5 login/logout + 3 recovery cycles)'
+          TEST_SUITE_NAME: 'Login & Forgot Password (${{ inputs.repetitions }} repetitions each)'
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPORT_URL: ${{ steps.publish.outcome == 'success' && format('https://{0}.github.io/{1}/login-monitor/runs/{2}/{3}/', github.repository_owner, github.event.repository.name, github.run_id, github.run_attempt) || '' }}
           TEST_OUTCOME: ${{ steps.tests.outcome || 'failure' }}

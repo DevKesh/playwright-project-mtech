@@ -6,13 +6,19 @@ require('dotenv').config({ quiet: true });
 // CI (or explicit opt-in) writes isolated Allure results for the workflow to publish.
 process.env.EXECUTION_PLATFORM = 'local';
 const allureEnabled = process.env.CI === 'true' || process.env.LOGIN_MONITOR_ALLURE === 'true';
+const repetitions = Number(process.env.LOGIN_MONITOR_REPETITIONS ?? '20');
+if (!Number.isInteger(repetitions) || repetitions < 1 || repetitions > 100) {
+  throw new Error('LOGIN_MONITOR_REPETITIONS must be an integer between 1 and 100.');
+}
 module.exports = defineConfig({
   testDir: './tests/generated/nl-authored',
   testMatch: 'login-forgot-password-repeat.spec.js',
   fullyParallel: false,
   workers: 1,
-  // Exactly two tests per batch. The login test itself performs five real logins.
-  repeatEach: 1,
+  // Each test performs one flow; Playwright schedules independent repetitions.
+  repeatEach: repetitions,
+  // Leave time for report publication before the CI job's 120-minute limit.
+  globalTimeout: process.env.CI === 'true' ? 100 * 60 * 1000 : 0,
   retries: 0,
   maxFailures: 0,
   forbidOnly: !!process.env.CI,
@@ -29,8 +35,7 @@ module.exports = defineConfig({
       suiteTitle: true,
       environmentInfo: {
         suite: 'Login and Forgot Password',
-        login_logout_cycles: '5',
-        forgot_password_cycles: '3',
+        repetition_engine: 'Playwright repeatEach (one flow per test execution)',
         node_version: process.version,
       },
     }]] : []),
