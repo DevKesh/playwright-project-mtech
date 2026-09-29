@@ -1,0 +1,1 @@
+[{"name":"suite","values":["Login and Forgot Password"]},{"name":"login_logout_cycles","values":["5"]},{"name":"forgot_password_cycles","values":["3"]},{"name":"node_version","values":["v22.23.2"]}]
