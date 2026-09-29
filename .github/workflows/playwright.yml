@@ -208,6 +208,10 @@ jobs:
   # ────────────────────────────────────────────────────────
   report:
     name: Generate & Publish Reports
+    # Serialize gh-pages writes with the smoke and authentication workflows.
+    concurrency:
+      group: allure-gh-pages-${{ github.repository }}
+      cancel-in-progress: false
     needs: [test, heal]
     if: ${{ !cancelled() }}
     timeout-minutes: 10

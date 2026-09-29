@@ -166,6 +166,10 @@ jobs:
 
   report:
     name: Generate Report & Notify
+    # Serialize gh-pages writes with the general and authentication workflows.
+    concurrency:
+      group: allure-gh-pages-${{ github.repository }}
+      cancel-in-progress: false
     needs: [smoke, heal]
     if: always()
     timeout-minutes: 10

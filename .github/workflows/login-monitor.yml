@@ -15,6 +15,10 @@ concurrency:
 jobs:
   login-and-recovery:
     name: Five logins and three recovery checks
+    # All workflows writing gh-pages must share this job-level lock.
+    concurrency:
+      group: allure-gh-pages-${{ github.repository }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

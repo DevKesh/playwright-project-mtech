@@ -121,6 +121,9 @@ The local environment configuration is ignored by Git and must never be committe
 
 - CI enables the existing `allure-playwright` reporter; results are isolated under `allure-results/login-monitor/`.
 - Publishes with the same GitHub Pages action used by smoke tests, retaining existing reports.
+- All three publishing workflows share the `allure-gh-pages` job concurrency group,
+  preventing simultaneous `gh-pages` pushes and the resulting non-fast-forward rejection.
+  The authentication job may wait for an existing report job to finish before starting.
 - Permanent report: `https://devkesh.github.io/playwright-project-mtech/login-monitor/runs/<run-id>/<attempt>/`.
 - Latest authentication report: `https://devkesh.github.io/playwright-project-mtech/login-monitor/latest/`.
 - The existing Slack notifier sends the suite name, **two test results**, and a link to the per-run Allure report.
