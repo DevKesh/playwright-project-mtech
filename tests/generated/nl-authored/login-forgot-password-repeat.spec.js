@@ -140,6 +140,9 @@ test.describe('@nl-authored @login-monitor Forgot Password flow', () => {
 
     const loginPage = new LoginPage(page);
     const problemsLink = page.getByRole('link', { name: 'Problems signing in?', exact: true });
+    // Register before navigation so late CDN consent dialogs cannot block any
+    // recovery step, including Return To Sign In, in this fresh browser context.
+    await loginPage.dismissCookieConsent();
 
     const verifyLogin = async () => {
       await expect(loginPage.usernameInput).toBeVisible();
@@ -163,13 +166,6 @@ test.describe('@nl-authored @login-monitor Forgot Password flow', () => {
           expect(response.ok(), 'Login document must return a successful HTTP status').toBeTruthy();
           await expect(loginPage.usernameInput).toBeVisible();
           await loginPage.dismissCookieConsent();
-          // QA2 also uses a cookie dialog with an OK button.
-          const cookieDialog = page.getByRole('dialog').filter({ hasText: 'This website uses cookies.' });
-          const cookieOK = cookieDialog.getByRole('button', { name: 'OK', exact: true });
-          if (await cookieOK.isVisible()) {
-            await cookieOK.click();
-            await expect(cookieDialog).toBeHidden();
-          }
           await verifyLogin();
         });
 

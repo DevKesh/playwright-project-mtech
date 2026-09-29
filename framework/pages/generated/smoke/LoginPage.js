@@ -1,6 +1,9 @@
 // Full page object source code
 const { expect } = require('@playwright/test');
 
+// Multiple page objects may wrap the same page. Keep just one persistent handler.
+const consentHandlerPages = new WeakSet();
+
 class LoginPage {
   constructor(page) {
     this.page = page;
@@ -8,8 +11,14 @@ class LoginPage {
     this.passwordInput = page.getByLabel('Password');
     this.signInButton = page.getByRole('button', { name: 'Sign In' });
     // Cookie consent selectors — try multiple (OneTrust / TrustArc variants)
-    this.cookieAcceptAll = page.getByRole('button', { name: 'ACCEPT ALL' });
+    this.cookieAcceptAll = page.getByRole('button', { name: 'ACCEPT ALL', exact: true });
     this.cookieConsentButton = page.locator('#truste-consent-button');
+    this.cookieDismissButton = this.cookieAcceptAll
+      .or(page.getByRole('button', { name: 'CONFIRM MY CHOICES', exact: true }))
+      .or(this.cookieConsentButton)
+      .or(page.getByRole('dialog').filter({ hasText: 'This website uses cookies.' })
+        .getByRole('button', { name: 'OK', exact: true }))
+      .filter({ visible: true }).first();
   }
 
   async login(username, password) {
@@ -19,21 +28,19 @@ class LoginPage {
   }
 
   async dismissCookieConsent() {
-    try {
-      // Try the new "ACCEPT ALL" button first (OneTrust-style banner)
-      const acceptAll = this.cookieAcceptAll;
-      if (await acceptAll.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await acceptAll.click();
-        await acceptAll.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
-        return;
-      }
-      // Fallback: old TrustArc button
-      if (await this.cookieConsentButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await this.cookieConsentButton.click();
-      }
-    } catch {
-      // Banner not present — continue
+    if (!consentHandlerPages.has(this.page)) {
+      // Consent scripts load asynchronously, sometimes AFTER the login form.
+      // Playwright checks this handler before actions/assertions, including their
+      // actionability retries, and waits for the trigger to hide after dismissal.
+      // No times limit: a dialog can reappear during SPA recovery navigation.
+      await this.page.addLocatorHandler(this.cookieDismissButton, async button => {
+        await button.click();
+      });
+      consentHandlerPages.add(this.page);
     }
+    // Also handle an already-visible popup. Absence succeeds immediately; a popup
+    // that cannot be dismissed fails explicitly rather than being silently ignored.
+    await expect(this.cookieDismissButton).toBeHidden({ timeout: 10000 });
   }
 }
 

@@ -33,6 +33,12 @@ The default batch schedules **40 test executions: 20 login/logout + 20 recovery*
 
 Each repetition uses a fresh, unauthenticated fixture browser context and performs the following once:
 
+Consent handling is registered before navigation and remains active through the entire flow.
+Playwright dismisses late or recurring **Cookie Information** popups during actionability checks
+using **ACCEPT ALL**, **CONFIRM MY CHOICES**, the legacy TrustArc button, or the cookie-specific
+**OK** dialog. It waits for dismissal rather than forcing clicks through the overlay. An unrelated
+error dialog is not dismissed, and a consent popup that cannot close still fails the test.
+
 1. Load `/login`; require a successful document response.
 2. Verify visible, editable, empty username/password inputs and a disabled Sign In button.
 3. Follow **Problems signing in? → Forgot your password**.
