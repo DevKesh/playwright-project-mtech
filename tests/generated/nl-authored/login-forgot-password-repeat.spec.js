@@ -2,7 +2,6 @@ const { test, expect } = require('@playwright/test');
 const allure = require('allure-js-commons');
 const { createLoginSession } = require('../../../framework/utils/login-session');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
-const { TotalConnectHomePage } = require('../../../framework/pages/generated/smoke/TotalConnectHomePage');
 
 // Run using playwright.login-monitor.config.js to avoid smoke/Allure side effects.
 // These worker-scoped options must be at file level. Do not record credential entry.
@@ -44,12 +43,55 @@ test.describe('@nl-authored @login-monitor Configured login and logout', () => {
     await allure.parameter('iteration', String(iteration));
     await test.step(`Iteration ${iteration}: successful configured login, then Sign Out`, async () => {
       const { page } = session;
-      const homePage = new TotalConnectHomePage(page);
       const loginPage = new LoginPage(page);
+      // Keep this monitor independent of smoke-suite panel/navigation changes.
+      const devicesNav = page.getByRole('button', { name: 'Devices' }).first();
 
       try {
+        // Keep known post-login popups handled for the whole test, not just at
+        // one instant. Never register a generic OK/Confirm/Sync click handler.
+        const syncNotice = page.getByRole('dialog').filter({
+          hasText: 'Your security panel is out of sync',
+        }).filter({ visible: true }).first();
+        const done = page.getByRole('button', { name: 'DONE', exact: true })
+          .filter({ visible: true }).first();
+        const assertNoActionError = async () => {
+          const rejected = page.getByText('Unable to perform the action', { exact: false })
+            .filter({ visible: true });
+          if (await rejected.count()) {
+            throw new Error('Application reported an action failure; refusing to hide it by dismissing a popup.');
+          }
+        };
+        await page.addLocatorHandler(syncNotice, async () => {
+          await assertNoActionError();
+          await page.keyboard.press('Escape');
+          testInfo.annotations.push({
+            type: 'environment-warning',
+            description: `Iteration ${iteration}: dismissed panel out-of-sync notice with Escape; no sync requested.`,
+          });
+        });
+        await page.addLocatorHandler(done, async button => {
+          await assertNoActionError();
+          // Another modal can cover DONE, and logout can detach it between the
+          // visibility check and click. Handlers do not run recursively.
+          if (await syncNotice.isVisible()) {
+            await page.keyboard.press('Escape');
+            await syncNotice.waitFor({ state: 'hidden', timeout: 5000 });
+          }
+          if (await button.isVisible()) {
+            try {
+              await button.click({ timeout: 5000 });
+            } catch (error) {
+              // A disappearing popup needs no click; a still-blocking one is a failure.
+              if (await button.isVisible()) throw error;
+            }
+          }
+        });
+        // Also protect authenticated actions from late consent, without changing
+        // the shared login helper's proven setup sequence.
+        await loginPage.dismissCookieConsent();
         await test.step('Verify authenticated home page', async () => {
-          await expect(homePage.devicesNav).toBeVisible({ timeout: 45000 });
+          await expect(devicesNav).toBeVisible({ timeout: 45000 });
           await expect.poll(() => new URL(page.url()).pathname.replace(/\/$/, ''), {
             message: 'Successful login must reach the authenticated home page',
             timeout: 45000,
@@ -58,35 +100,26 @@ test.describe('@nl-authored @login-monitor Configured login and logout', () => {
         });
 
         await test.step('Sign out through the application and verify the login form', async () => {
-          await homePage.dismissCookiePopup();
-          await homePage.closeDonePopup();
-          // QA2's cookie dialog can lock document scrolling until accepted.
-          const cookieDialog = page.getByRole('dialog').filter({ hasText: 'This website uses cookies.' });
-          const cookieOK = cookieDialog.getByRole('button', { name: 'OK', exact: true });
-          if (await cookieOK.isVisible()) {
-            await cookieOK.click();
-            await expect(cookieDialog).toBeHidden();
-          }
-          // Panel-status checks finish asynchronously after /home appears.
-          // This notice locks scrolling; Escape dismisses it without syncing the panel.
-          const syncNotice = page.getByRole('dialog').filter({ hasText: 'Your security panel is out of sync' });
-          const syncNoticeVisible = await syncNotice.waitFor({ state: 'visible', timeout: 10000 })
-            .then(() => true, () => false);
-          if (syncNoticeVisible) {
-            await page.keyboard.press('Escape');
-            await expect(syncNotice).toBeHidden();
-            testInfo.annotations.push({
-              type: 'environment-warning',
-              description: `Iteration ${iteration}: dismissed panel out-of-sync notice with Escape; no sync requested.`,
-            });
-          }
+          await loginPage.dismissCookieConsent();
+          // Preserve the proven panel-check settling sequence before scrolling.
+          // waitFor observes without invoking handlers; the assertion dismisses it.
+          await syncNotice.waitFor({ state: 'visible', timeout: 10000 })
+            .catch(() => {});
+          // These assertions invoke the handlers and verify dismissal. The handlers
+          // remain registered if either popup appears later, even during Sign Out.
+          await expect(done).toBeHidden();
+          await expect(syncNotice).toBeHidden();
           // Scroll to the bottom on EVERY cycle; target the actual sidebar control
           // rather than an off-screen duplicate of the Sign Out text.
-          await page.locator('body').press('Control+End');
           const signOut = page.locator('#menu-SignOutMenu');
-          await signOut.scrollIntoViewIfNeeded();
-          await expect(signOut).toBeVisible();
-          await expect(signOut).toBeInViewport();
+          await expect(async () => {
+            // Dismissing a late modal can reset scrolling. Retry only positioning,
+            // never the logout command, after the handlers have cleared overlays.
+            await page.locator('body').press('Control+End');
+            await signOut.scrollIntoViewIfNeeded();
+            await expect(signOut).toBeVisible({ timeout: 2000 });
+            await expect(signOut).toBeInViewport({ timeout: 2000 });
+          }).toPass({ timeout: 15000 });
           await signOut.click();
           await expect(loginPage.usernameInput).toBeVisible({ timeout: 45000 });
           await expect(loginPage.passwordInput).toBeVisible();
@@ -97,7 +130,7 @@ test.describe('@nl-authored @login-monitor Configured login and logout', () => {
           await expect.poll(() => new URL(page.url()).pathname, {
             message: 'Sign Out must return to the login page',
           }).toMatch(/^\/(?:login\/?)?$/);
-          await expect(homePage.devicesNav).toBeHidden();
+          await expect(devicesNav).toBeHidden();
         });
 
         console.log(`[login-monitor] ${new Date().toISOString()} Login/logout iteration ${iteration} PASS (configured credentials)`);
