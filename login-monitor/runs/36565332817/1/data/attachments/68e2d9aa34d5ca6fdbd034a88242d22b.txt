@@ -1,0 +1,1 @@
+[login-monitor] 2026-09-29T12:11:25.148Z recoveryIteration=20 diagnostics=0
