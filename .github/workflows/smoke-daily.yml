@@ -74,6 +74,8 @@ jobs:
       continue-on-error: true
       run: npx playwright test --project tc-smoke
       env:
+        LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+        LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
         TC_USERNAME: ${{ secrets.TC_USERNAME }}
         TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
         HEADED: ${{ github.event.inputs.headed || 'false' }}
@@ -146,6 +148,8 @@ jobs:
       continue-on-error: true
       run: npx playwright test --project tc-smoke --retries 1
       env:
+        LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+        LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
         TC_USERNAME: ${{ secrets.TC_USERNAME }}
         TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
         AI_HEALING_ENABLED: 'true'

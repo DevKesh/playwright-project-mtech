@@ -1,58 +1,115 @@
 // Full page object source code
 const { expect } = require('@playwright/test');
+const { LoginPage } = require('./LoginPage');
 const {
-  assertVisible,
   assertClickable,
   assertNavigation,
-  assertText,
   withFailureContext,
   classifyAndThrow,
 } = require('../../../utils/assertion-helper');
 
 const PAGE_NAME = 'HomePage';
+const transientPopupSetups = new WeakMap();
 
 class TotalConnectHomePage {
   constructor(page) {
     this.page = page;
     this.cookieDismissButton = page.locator('#truste-consent-button');
-    this.doneButton = page.getByRole('button', { name: 'DONE' });
-    this.selectAllCheckbox = page.getByText(/SELECT ALL|DESELECT ALL/).first();
-    this.armHomeButton = page.locator('button', { hasText: 'ARM HOME' }).first();
-    this.armAwayButton = page.locator('button', { hasText: 'ARM AWAY' }).first();
-    this.disarmButton = page.locator('button', { hasText: 'DISARM' }).first();
-    this.partitionStatusText = page.getByText(/Armed Home|Armed Away|Disarmed/);
+    this.doneButton = page.getByRole('button', { name: 'DONE', exact: true }).filter({ visible: true }).first();
+    this.selectAllCheckbox = page.getByText(/^(SELECT ALL|DESELECT ALL)$/i).filter({ visible: true }).first();
+    this.partitionCheckboxes = page.getByRole('checkbox', { name: /^Toggle P\d+\s*-/ }).filter({ visible: true });
+    this.armHomeButton = page.locator('button, .panelActionText').filter({ hasText: /^\s*ARM HOME(?: ALL)?\s*$/i }).filter({ visible: true }).first();
+    this.armAwayButton = page.locator('button, .panelActionText').filter({ hasText: /^\s*ARM AWAY(?: ALL)?\s*$/i }).filter({ visible: true }).first();
+    this.disarmButton = page.locator('button, .panelActionText').filter({ hasText: /^\s*DISARM(?: ALL)?\s*$/i }).filter({ visible: true }).first();
+    // Only observed status text; do not guess a partition container. Include
+    // pending states so one completed partition cannot mask another in progress.
+    this.partitionStatusText = page.getByText(/^\s*(Armed Home|Armed Away|Disarmed|Arming|Disarming)\s*$/)
+      .filter({ visible: true });
+    this.actionError = page.getByText('Unable to perform the action', { exact: false })
+      .filter({ visible: true }).first();
+    this.securityNav = page.getByRole('button', { name: 'Security', exact: true }).first();
     this.devicesNav = page.getByRole('button', { name: 'Devices' }).first();
     this.camerasNav = page.getByRole('button', { name: 'Cameras' }).first();
     this.activityNav = page.getByRole('button', { name: 'Activity' }).first();
   }
 
   async dismissCookiePopup() {
-    if (await this.cookieDismissButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await this.cookieDismissButton.click();
-    }
+    await new LoginPage(this.page).dismissCookieConsent();
   }
 
   async closeDonePopup() {
-    if (await this.doneButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await this._throwIfActionRejected();
+    if (await this.doneButton.isVisible()) {
       await this.doneButton.click();
     }
   }
 
   /**
-   * Dismisses any error/status dialog that appears with an OK button.
+   * Compatibility method: application failures are reported, never dismissed.
    */
   async dismissErrorDialog() {
-    const okButton = this.page.getByRole('button', { name: 'OK' });
-    if (await okButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await okButton.click();
-      await this.page.waitForTimeout(1000);
+    await this._throwIfActionRejected();
+  }
+
+  async _throwIfActionRejected() {
+    if (await this.page.getByText('Communication Failure', { exact: true }).isVisible()) {
+      throw new Error('Security panel is offline (Communication Failure). Restore panel connectivity before running arm/disarm.');
+    }
+    if (await this.actionError.isVisible()) {
+      classifyAndThrow(
+        new Error(`Security system rejected the command: ${(await this.actionError.innerText()).trim()}`),
+        'Verify security system response',
+        { page: PAGE_NAME, element: 'Security system dialog', expected: 'Command accepted without an application error' }
+      );
     }
   }
 
-  async selectAllPartitions() {
+  /** Optional popups may appear late. Register persistent handlers once per page. */
+  async dismissTransientPopups() {
+    await this.dismissCookiePopup();
+    if (!transientPopupSetups.has(this.page)) {
+      const setup = (async () => {
+        await this.page.addLocatorHandler(this.doneButton, async button => {
+          await this._throwIfActionRejected();
+          await button.click();
+        });
+        const outOfSyncDialog = this.page.getByRole('dialog')
+          .filter({ hasText: 'Your security panel is out of sync' })
+          .filter({ visible: true }).first();
+        await this.page.addLocatorHandler(outOfSyncDialog, async () => {
+          await this._throwIfActionRejected();
+          await this.page.keyboard.press('Escape');
+        });
+      })();
+      transientPopupSetups.set(this.page, setup);
+    }
+    await transientPopupSetups.get(this.page);
+  }
+
+  async selectAllPartitions({ armedOnly = false } = {}) {
     try {
-      await this.selectAllCheckbox.click({ timeout: 10000 });
-      await this.page.waitForTimeout(1000);
+      await this._throwIfActionRejected();
+      await expect(this.selectAllCheckbox.or(this.partitionCheckboxes).first()).toBeVisible({ timeout: 15000 });
+      // Current UI exposes individual selection checkboxes instead of SELECT ALL.
+      // Selecting changes only UI state; setChecked is idempotent, unlike click.
+      const selectable = armedOnly
+        ? this.page.getByRole('listitem').filter({ has: this.partitionCheckboxes })
+          .filter({ hasText: /Armed (Home|Away)/ }).getByRole('checkbox')
+        : this.partitionCheckboxes;
+      const checkboxes = await selectable.all();
+      if (checkboxes.length) {
+        for (const checkbox of checkboxes) {
+          await checkbox.setChecked(true);
+          await expect(checkbox).toBeChecked();
+        }
+        return;
+      }
+      const selectAll = this.page.getByText(/^SELECT ALL$/i).filter({ visible: true }).first();
+      if (await selectAll.isVisible()) {
+        await selectAll.click({ timeout: 10000 });
+      }
+      await this.page.getByText(/^DESELECT ALL$/i).filter({ visible: true }).first()
+        .waitFor({ state: 'visible', timeout: 10000 });
     } catch (error) {
       classifyAndThrow(error, 'Click "SELECT ALL" to select partitions', {
         page: PAGE_NAME,
@@ -64,7 +121,7 @@ class TotalConnectHomePage {
 
   async armHome() {
     try {
-      await this.armHomeButton.waitFor({ state: 'visible', timeout: 10000 });
+      await expect(this.armHomeButton).toBeVisible({ timeout: 10000 });
     } catch (error) {
       classifyAndThrow(error, 'Wait for ARM HOME button to appear', {
         page: PAGE_NAME,
@@ -83,25 +140,13 @@ class TotalConnectHomePage {
       });
     }
 
-    // Genuine failure: security system rejected the action
-    const errorDialog = this.page.getByText('Unable to perform the action');
-    const hasError = await errorDialog.isVisible({ timeout: 8000 }).catch(() => false);
-    if (hasError) {
-      classifyAndThrow(
-        new Error('Security system rejected Arm Home action'),
-        'Arm Home — system response',
-        {
-          page: PAGE_NAME,
-          element: 'Security system dialog',
-          expected: 'System should accept the Arm Home command without errors',
-        }
-      );
-    }
+    // Observe the response; never retry a physical security command.
+    await this.verifyPartitionStatus('Armed Home');
   }
 
   async armAway() {
     try {
-      await this.armAwayButton.waitFor({ state: 'visible', timeout: 10000 });
+      await expect(this.armAwayButton).toBeVisible({ timeout: 10000 });
       await this.armAwayButton.click({ timeout: 10000 });
     } catch (error) {
       classifyAndThrow(error, 'Click ARM AWAY button', {
@@ -110,11 +155,12 @@ class TotalConnectHomePage {
         expected: 'Button should be visible and clickable after selecting partitions',
       });
     }
+    await this.verifyPartitionStatus('Armed Away');
   }
 
   async disarm() {
     try {
-      await this.disarmButton.waitFor({ state: 'visible', timeout: 10000 });
+      await expect(this.disarmButton).toBeVisible({ timeout: 10000 });
     } catch (error) {
       classifyAndThrow(error, 'Wait for DISARM button to appear', {
         page: PAGE_NAME,
@@ -133,113 +179,99 @@ class TotalConnectHomePage {
       });
     }
 
-    // Genuine failure: security system rejected the action
-    const errorDialog = this.page.getByText('Unable to perform the action');
-    const hasError = await errorDialog.isVisible({ timeout: 8000 }).catch(() => false);
-    if (hasError) {
-      classifyAndThrow(
-        new Error('Security system rejected Disarm action'),
-        'Disarm — system response',
-        {
-          page: PAGE_NAME,
-          element: 'Security system dialog',
-          expected: 'System should accept the Disarm command without errors',
-        }
-      );
-    }
+    await this.verifyPartitionStatus('Disarmed');
   }
 
   async waitForArmedHome() {
-    await withFailureContext(
-      () => this.page.getByText('Armed Home', { exact: true }).first().waitFor({ timeout: 30000 }),
-      'Wait for partition status to show "Armed Home"',
-      { page: PAGE_NAME, element: 'Partition status text', expected: 'Status should change to "Armed Home" after arming' }
-    );
+    await this.verifyPartitionStatus('Armed Home');
   }
 
   async waitForArmedAway() {
-    await withFailureContext(
-      () => this.page.getByText('Armed Away', { exact: true }).first().waitFor({ timeout: 30000 }),
-      'Wait for partition status to show "Armed Away"',
-      { page: PAGE_NAME, element: 'Partition status text', expected: 'Status should change to "Armed Away" after arming' }
-    );
+    await this.verifyPartitionStatus('Armed Away');
   }
 
   async waitForDisarmed() {
-    await withFailureContext(
-      () => this.page.getByText('Disarmed', { exact: true }).first().waitFor({ timeout: 30000 }),
-      'Wait for partition status to show "Disarmed"',
-      { page: PAGE_NAME, element: 'Partition status text', expected: 'Status should change to "Disarmed" after disarming' }
-    );
+    await this.verifyPartitionStatus('Disarmed');
   }
 
   async verifyPartitionStatus(expectedStatus) {
-    await assertVisible(
-      this.page.getByText(expectedStatus, { exact: true }).first(),
-      `Partition status "${expectedStatus}"`,
-      { page: PAGE_NAME, timeout: 30000 }
-    );
+    if (!['Armed Home', 'Armed Away', 'Disarmed'].includes(expectedStatus)) {
+      throw new Error(`Unsupported partition status: ${expectedStatus}`);
+    }
+    let statuses = [];
+    let rejection = '';
+    try {
+      await expect.poll(async () => {
+        if (await this.actionError.isVisible()) {
+          rejection = (await this.actionError.innerText()).trim();
+          // Stop polling on rejection; throw outside the retrying assertion.
+          return true;
+        }
+        statuses = await this._visiblePartitionStatuses();
+        return statuses.length > 0 && statuses.every(status => status === expectedStatus);
+      }, {
+        timeout: 60000,
+        message: `Every visible partition must reach "${expectedStatus}"`,
+      }).toBe(true);
+    } catch (error) {
+      await this._throwIfActionRejected();
+      classifyAndThrow(error, `Verify all partitions are "${expectedStatus}"; observed: ${JSON.stringify(statuses)}`, {
+        page: PAGE_NAME, element: 'Visible partition statuses', expected: `All statuses must be "${expectedStatus}" within 60 seconds`,
+      });
+    }
+    if (rejection) {
+      classifyAndThrow(new Error(`Security system rejected the command: ${rejection}`), 'Verify partition status', {
+        page: PAGE_NAME, element: 'Security system dialog', expected: `All partitions should reach "${expectedStatus}"`,
+      });
+    }
+    await this._throwIfActionRejected();
+  }
+
+  async _visiblePartitionStatuses() {
+    return (await this.partitionStatusText.allTextContents())
+      .map(text => text.replace(/\s+/g, ' ').trim());
   }
 
   /**
    * Ensures all partitions are in Disarmed state before proceeding.
    */
   async ensureDisarmed() {
-    // Wait for partition section to fully render
+    await this._throwIfActionRejected();
     await withFailureContext(
-      () => this.selectAllCheckbox.waitFor({ state: 'visible', timeout: 15000 }),
-      'Wait for partition controls to load',
-      { page: PAGE_NAME, element: 'SELECT ALL toggle', expected: 'Partition section should render within 15s' }
+      () => expect(this.partitionStatusText.first()).toBeVisible({ timeout: 30000 }),
+      'Wait for actual partition statuses to load',
+      { page: PAGE_NAME, element: 'Partition status text', expected: 'At least one visible partition status' }
     );
-    await this.page.waitForTimeout(500);
+    const statuses = await this._visiblePartitionStatuses();
+    await this._throwIfActionRejected();
+    if (statuses.length > 0 && statuses.every(status => status === 'Disarmed')) return;
 
-    // Select all partitions to reveal action buttons
-    const selectAllText = this.page.getByText('SELECT ALL', { exact: true });
-    const isSelectAll = await selectAllText.isVisible({ timeout: 2000 }).catch(() => false);
-    if (isSelectAll) {
-      await selectAllText.click({ timeout: 10000 });
-      await this.page.waitForTimeout(1000);
-    }
+    // Mixed-state UI deliberately disables disarmed partitions once an armed
+    // partition is selected. Select ALL armed partitions for this precondition;
+    // normal arm/disarm steps still require every partition selected.
+    await this.selectAllPartitions({ armedOnly: true });
+    await this.disarm(); // Includes verification that ALL visible statuses are Disarmed.
+  }
 
-    // Check: is DISARM visible? → partitions are armed
-    const disarmVisible = await this.disarmButton.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (!disarmVisible) {
-      console.log('[ensureDisarmed] Partitions are already disarmed. Deselecting and proceeding.');
-      const deselectAll = this.page.getByText('DESELECT ALL', { exact: true });
-      if (await deselectAll.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await deselectAll.click({ timeout: 10000 });
-        await this.page.waitForTimeout(500);
-      }
+  async navigateToHome() {
+    await this.dismissTransientPopups();
+    if (new URL(this.page.url()).pathname.replace(/\/$/, '') === '/home') {
+      await expect(this.devicesNav).toBeVisible({ timeout: 30000 });
       return;
     }
-
-    console.log('[ensureDisarmed] Partitions are armed. Clicking DISARM...');
-    await this.disarmButton.click({ timeout: 10000 });
-
-    // Wait for ARM HOME button to appear — confirms disarm completed
-    await withFailureContext(
-      () => this.armHomeButton.waitFor({ state: 'visible', timeout: 60000 }),
-      'Confirm disarm completed (ARM HOME button should reappear)',
-      { page: PAGE_NAME, element: 'ARM HOME button', expected: 'Disarm should complete and show ARM HOME within 60s' }
-    );
-    console.log('[ensureDisarmed] Disarm confirmed — ARM HOME button now visible.');
-
-    await this.dismissErrorDialog();
-
-    // Deselect all partitions to leave clean state
-    const deselectAll = this.page.getByText('DESELECT ALL', { exact: true });
-    if (await deselectAll.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await deselectAll.click({ timeout: 10000 });
-      await this.page.waitForTimeout(500);
+    await assertClickable(this.securityNav, 'Security navigation button', { page: PAGE_NAME });
+    try {
+      await this.securityNav.click({ timeout: 10000 });
+    } catch (error) {
+      classifyAndThrow(error, 'Click Security navigation', {
+        page: PAGE_NAME, element: 'Security sidebar button', expected: 'Should navigate to /home',
+      });
     }
-
-    console.log('[ensureDisarmed] Waiting 5s for security system cooldown...');
-    await this.page.waitForTimeout(5000);
-    console.log('[ensureDisarmed] Cooldown complete. Ready for test.');
+    await assertNavigation(this.page, /\/home\/?(?:[?#].*)?$/, 'Home page', { fromPage: PAGE_NAME });
   }
 
   async navigateToDevices() {
+    await this.dismissTransientPopups();
     await assertClickable(this.devicesNav, 'Devices navigation button', { page: PAGE_NAME });
     try {
       await this.devicesNav.click({ timeout: 10000 });
@@ -252,6 +284,7 @@ class TotalConnectHomePage {
   }
 
   async navigateToCameras() {
+    await this.dismissTransientPopups();
     await assertClickable(this.camerasNav, 'Cameras navigation button', { page: PAGE_NAME });
     try {
       await this.camerasNav.click({ timeout: 10000 });
@@ -264,6 +297,7 @@ class TotalConnectHomePage {
   }
 
   async navigateToActivity() {
+    await this.dismissTransientPopups();
     await assertClickable(this.activityNav, 'Activity navigation button', { page: PAGE_NAME });
     try {
       await this.activityNav.click({ timeout: 10000 });

@@ -1,6 +1,5 @@
 const { test, expect } = require('@playwright/test');
 const { createLoginSession } = require('../../../framework/utils/login-session');
-const { testDataConfig } = require('../../../framework/config/test-data.config');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
 const { TotalConnectHomePage } = require('../../../framework/pages/generated/smoke/TotalConnectHomePage');
 const { DevicesPage } = require('../../../framework/pages/generated/smoke/DevicesPage');
@@ -31,17 +30,21 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
 
   /** Navigate to /home and wait for content to be ready (Devices button visible). */
   async function ensureOnHomePage() {
-    if (!page.url().includes('/home')) {
-      await page.goto(testDataConfig.targetApp.loginUrl.replace('/login', '/home'), { waitUntil: 'commit' });
-    }
-    await page.getByRole('button', { name: 'Devices' }).first().waitFor({ state: 'visible', timeout: 30000 });
+    await homePage.navigateToHome();
   }
 
   test.beforeAll(async () => {
     test.setTimeout(180000);
 
     // Single function call handles: launch browser → cookie consent → login → wait for home
-    const session = await createLoginSession();
+    // Explicitly use the user-approved monitor account, never silently fall back
+    // to the old smoke account (ARIZONA has no cameras/devices and an offline panel).
+    const username = process.env.LOGIN_MONITOR_USERNAME;
+    const password = process.env.LOGIN_MONITOR_PASSWORD;
+    if (!username || !password) {
+      throw new Error('Smoke requires LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD for the approved equipment-enabled account.');
+    }
+    const session = await createLoginSession({ username, password });
     browser = session.browser;
     context = session.context;
     page = session.page;
@@ -55,8 +58,13 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     loginPage = new LoginPage(page);
     homePage = new TotalConnectHomePage(page);
     devicesPage = new DevicesPage(page);
-    camerasPage = new CamerasPage(page);
+    // Observed live-camera inventory for the approved smoke account/location.
+    camerasPage = new CamerasPage(page, [
+      'BULLET QA 1', 'vx5 reg test QA', 'Dome QA 02', 'Bullet QA 02',
+      'vx5 reg test QA 2', 'turret 03', 'BULLET QA 01', 'Front Door',
+    ]);
     activityPage = new ActivityPage(page);
+    await homePage.dismissTransientPopups();
   });
 
   test.afterAll(async () => {
@@ -64,12 +72,18 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-001: Verify home page is loaded after login', async () => {
-    await test.step('Verify URL contains /home', async () => {
-      await expect(page).toHaveURL(/.*\/home/);
+    await test.step('Verify authenticated home content', async () => {
+      await expect.poll(() => new URL(page.url()).pathname).toBe('/home');
+      await expect(homePage.devicesNav).toBeVisible();
+      await expect(homePage.camerasNav).toBeVisible();
+      // Authentication readiness is not the same as panel availability (TC-002).
+      await expect(homePage.securityNav).toBeVisible();
+      await expect(loginPage.passwordInput).toBeHidden();
     });
   });
 
   test('TC-002: Arm Home and Disarm partitions', async () => {
+    test.setTimeout(300000); // Precondition, arm, and disarm each await panel confirmation.
     await test.step('Navigate back to home page', async () => {
       await ensureOnHomePage();
     });
@@ -82,21 +96,25 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
       await homePage.selectAllPartitions();
     });
 
-    await test.step('Arm Home', async () => {
-      await homePage.armHome();
-    });
+    // Always attempt cleanup after sending an arm command, even when its status
+    // assertion fails. Cleanup errors remain failures; no commands are retried.
+    try {
+      await test.step('Arm Home', async () => {
+        await homePage.armHome();
+      });
 
-    await test.step('Verify partition shows Armed Home', async () => {
-      await homePage.verifyPartitionStatus('Armed Home');
-    });
+      await test.step('Verify partition shows Armed Home', async () => {
+        await homePage.verifyPartitionStatus('Armed Home');
+      });
+    } finally {
+      await test.step('Select all partitions again', async () => {
+        await homePage.selectAllPartitions();
+      });
 
-    await test.step('Select all partitions again', async () => {
-      await homePage.selectAllPartitions();
-    });
-
-    await test.step('Disarm', async () => {
-      await homePage.disarm();
-    });
+      await test.step('Disarm', async () => {
+        await homePage.disarm();
+      });
+    }
 
     await test.step('Verify partition shows Disarmed', async () => {
       await homePage.verifyPartitionStatus('Disarmed');
@@ -110,10 +128,6 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
 
     await test.step('Navigate to Devices page', async () => {
       await homePage.navigateToDevices();
-    });
-
-    await test.step('Verify URL contains /automation', async () => {
-      await expect(page).toHaveURL(/.*\/automation/);
     });
 
     await test.step('Verify device categories are visible', async () => {
@@ -131,10 +145,6 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
       await homePage.navigateToCameras();
     });
 
-    await test.step('Verify URL contains /cameras', async () => {
-      await expect(page).toHaveURL(/.*\/cameras/);
-    });
-
     await test.step('Verify camera content is visible on the page', async () => {
       await camerasPage.verifyCamerasPageLoaded();
     });
@@ -147,10 +157,6 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
 
     await test.step('Navigate to Activity page', async () => {
       await homePage.navigateToActivity();
-    });
-
-    await test.step('Verify URL contains /events', async () => {
-      await expect(page).toHaveURL(/.*\/events/);
     });
 
     await test.step('Verify activity log entries are displayed', async () => {
@@ -168,10 +174,6 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
       await homePage.navigateToCameras();
     });
 
-    await test.step('Verify URL contains /cameras', async () => {
-      await expect(page).toHaveURL(/.*\/cameras/);
-    });
-
     await test.step('Verify all cameras are visible and present', async () => {
       const count = await camerasPage.verifyAllCamerasVisible();
       console.log(`[TC-006] Found ${count} camera elements on the page`);
@@ -179,15 +181,9 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-007: Verify camera names are displayed on Cameras page', async () => {
-    await test.step('Navigate to Cameras page if not already there', async () => {
-      if (!page.url().includes('/cameras')) {
-        await ensureOnHomePage();
-        await homePage.navigateToCameras();
-      }
-    });
-
-    await test.step('Verify URL contains /cameras', async () => {
-      await expect(page).toHaveURL(/.*\/cameras/);
+    test.setTimeout(90000);
+    await test.step('Navigate to Cameras page', async () => {
+      await homePage.navigateToCameras();
     });
 
     await test.step('Verify each camera has a visible name', async () => {
@@ -197,15 +193,9 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
   });
 
   test('TC-008: Verify camera feed sections load on Cameras page', async () => {
-    await test.step('Navigate to Cameras page if not already there', async () => {
-      if (!page.url().includes('/cameras')) {
-        await ensureOnHomePage();
-        await homePage.navigateToCameras();
-      }
-    });
-
-    await test.step('Verify URL contains /cameras', async () => {
-      await expect(page).toHaveURL(/.*\/cameras/);
+    test.setTimeout(90000);
+    await test.step('Navigate to Cameras page', async () => {
+      await homePage.navigateToCameras();
     });
 
     await test.step('Verify camera feeds are loaded and visible', async () => {

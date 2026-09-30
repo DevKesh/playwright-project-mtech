@@ -12,14 +12,11 @@ class DevicesPage {
     // Wait for ALL loaders to disappear (e.g., "Loading devices" spinner)
     await waitForPageReady(this.page);
     // Verify there's at least some meaningful content on the page (not just a blank page)
-    const hasContent = await this.page.locator('text=/Lights|Locks|Thermostat|Garage|Sensor|Switch|Device/i').first().isVisible({ timeout: 10000 }).catch(() => false)
-      || await this.page.locator('[class*=automation], [class*=device], [class*=card], md-card, md-list-item').first().isVisible({ timeout: 5000 }).catch(() => false)
-      || await this.page.locator('h1, h2, h3, h4').first().isVisible({ timeout: 5000 }).catch(() => false);
-
-    if (!hasContent) {
-      // Take a screenshot for debugging and fail with clear message
-      throw new Error('Devices/Automation page loaded but no device categories, headings, or content found. The page may be empty or the locators need updating.');
-    }
+    // A sidebar "Devices" button or arbitrary heading must never satisfy this check.
+    const categories = this.page.getByText(/^(Lights?|Locks?|Thermostats?|Garage(?: Doors?)?|Sensors?|Switches?)$/i)
+      .filter({ visible: true });
+    await expect(categories.first(), 'At least one actual device category must be visible')
+      .toBeVisible({ timeout: 30000 });
   }
 
   async verifyDevicesListVisible() {
