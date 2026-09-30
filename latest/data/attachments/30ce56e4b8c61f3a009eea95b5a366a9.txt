@@ -1,0 +1,2 @@
+[CamerasPage] Cameras page loaded.
+[TC-008] Found 8 camera feed elements on the page

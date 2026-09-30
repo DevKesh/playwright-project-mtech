@@ -1,0 +1,2 @@
+[CamerasPage] Cameras page loaded.
+[TC-007] Found 8 camera name labels on the page
