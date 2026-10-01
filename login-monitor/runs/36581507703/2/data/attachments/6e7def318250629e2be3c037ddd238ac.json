@@ -1,0 +1,150 @@
+[
+  {
+    "type": "console",
+    "message": "Refused to apply style from 'https://qa2.totalconnect2.com/bower_components/angular-material/angular-material.min.css?v=1.1.9' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to apply style from 'https://qa2.totalconnect2.com/bower_components/angular-material-data-table/dist/md-data-table.min.css?v=0.10.9' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to apply style from 'https://qa2.totalconnect2.com/wwwroot/css/app-48d969ac76.css' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/MptResources/free.player.1.8.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/MptResources/jsencrypt.min.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/MptResources/sha256.min.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/MptResources/signalr.min.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/MptResources/signalr.init.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Refused to apply style from 'https://qa2.totalconnect2.com/wwwroot/css/app-48d969ac76.css' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/jquery/dist/jquery.min.js?v=3.1.1' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/wwwroot/js/lib-6cbc29f6e8.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/angular-animate/angular-animate.min.js?v=1.7.2' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/angular-material/angular-material.min.js?v=1.1.9' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/angular-component-router/angular_1_router.js?v=0.2.0' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/moment/min/moment.min.js?v=2.17.1' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/signalr/jquery.signalR.min.js?v=2.2.1' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/bower_components/angular-material-data-table/dist/md-data-table.min.js?v=0.10.9' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "console",
+    "message": "Refused to execute script from 'https://qa2.totalconnect2.com/wwwroot/js/app-3f8519a10a.js' because its MIME type ('text/html') is not executable, and strict MIME type checking is enabled."
+  },
+  {
+    "type": "pageerror",
+    "message": "$ is not defined"
+  },
+  {
+    "type": "pageerror",
+    "message": "$ is not defined"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  },
+  {
+    "type": "console",
+    "message": "Failed to load resource: the server responded with a status of 403 ()"
+  }
+]
