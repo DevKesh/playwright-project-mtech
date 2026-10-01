@@ -25,10 +25,19 @@ concurrency:
 jobs:
   negative-login:
     name: Unique credential submissions (${{ inputs.attempts }} attempts)
+    # Share the lock used by every workflow publishing to gh-pages.
+    concurrency:
+      group: allure-gh-pages-${{ github.repository }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    permissions:
+      contents: write
     env:
       CI: 'true'
+      HEADLESS: 'true'
+      EXECUTION_PLATFORM: local
+      AI_HEALING_ENABLED: 'false'
       LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts }}
       LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms }}
     steps:
@@ -37,20 +46,91 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        id: dependencies
+        run: npm ci
       - name: Install browser system dependencies
         run: npx playwright install-deps chrome
+      - name: Clear this suite's previous Allure results
+        run: rm -rf allure-results/login-security
       - name: Run unique-credential login tests
+        id: tests
+        continue-on-error: true
         run: npm run test:login-security
 
-      # Playwright results, failure screenshots and HTML; no Allure/Slack changes.
+      # Preserve raw evidence even when individual tests fail.
       - name: Upload test results and failure screenshots
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: login-security-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            allure-results/login-security/
             test-results/login-security/
             playwright-report/login-security/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Generate Allure report
+        id: report
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: |
+          mkdir -p allure-results/login-security
+          npx allure generate -o allure-report allure-results/login-security
+
+      - name: Bundle portable Allure report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' }}
+        run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
+
+      - name: Upload Allure report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-security-allure-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            allure-report/
+            allure-report-portable.html
+          retention-days: 30
+
+      - name: Stage versioned Allure report
+        if: ${{ !cancelled() && steps.report.outcome == 'success' && github.ref == 'refs/heads/main' }}
+        run: |
+          mkdir -p "publish/login-security/runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}"
+          mkdir -p publish/login-security/latest
+          cp -r allure-report/. "publish/login-security/runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
+          cp -r allure-report/. publish/login-security/latest/
+
+      - name: Publish Allure to GitHub Pages
+        id: publish
+        if: ${{ !cancelled() && steps.report.outcome == 'success' && github.ref == 'refs/heads/main' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish
+          keep_files: true
+          commit_message: 'deploy: login-security ${{ github.run_id }} attempt ${{ github.run_attempt }}'
+
+      - name: Link published Allure report
+        if: ${{ !cancelled() && steps.publish.outcome == 'success' }}
+        env:
+          REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/login-security/runs/${{ github.run_id }}/${{ github.run_attempt }}/
+        run: echo "[Open this run's Allure report](${REPORT_URL})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify existing Slack channel
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: node framework/utils/slack-notify.js
+        env:
+          SLACK_ENABLED: 'true'
+          SLACK_REQUIRED: 'true'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEST_SUITE_NAME: 'Unique Credential Login (${{ inputs.attempts }} attempts)'
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPORT_URL: ${{ steps.publish.outcome == 'success' && format('https://{0}.github.io/{1}/login-security/runs/{2}/{3}/', github.repository_owner, github.event.repository.name, github.run_id, github.run_attempt) || '' }}
+          TEST_OUTCOME: ${{ steps.tests.outcome || 'failure' }}
+          HEAL_ENABLED: 'false'
+
+      - name: Preserve test failure status
+        if: ${{ !cancelled() && steps.tests.outcome != 'success' }}
+        run: |
+          echo 'Login submission tests did not pass. See the Allure report and screenshots.'
+          exit 1

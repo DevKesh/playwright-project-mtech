@@ -160,8 +160,10 @@ does not stop later attempts; explicit cancellation, a job timeout or a runner
 failure can still interrupt execution. Large counts with slow pacing can exceed
 the GitHub job timeout.
 
-The workflow remains manual-only, shares the existing per-branch authentication
-concurrency group, and does not change the positive monitor, Allure or Slack.
+The workflow remains manual-only and shares the existing per-branch authentication
+concurrency group and GitHub Pages publishing lock. It uses the same Slack notifier
+and existing `SLACK_WEBHOOK_URL` secret as the other suites. Security Allure results
+and published pages are isolated from other suites; the positive monitor is unchanged.
 
 ## 6. Failure messages, screenshots and reports
 
@@ -181,5 +183,31 @@ If the browser has crashed or closed, Playwright may be unable to capture a
 screenshot; the original failure still appears. The custom security audit and
 HTTP observer are no longer produced. Older downloaded artifacts are unchanged.
 
-The workflow uploads the results and HTML report for 14 days. A later local run
-reuses its report/output locations, so preserve evidence before rerunning.
+The workflow uploads raw results, screenshots and the Playwright HTML report for
+14 days. It also generates Allure (including failure screenshots), bundles a
+portable HTML copy, and uploads both for 30 days, even when tests fail. The final
+step preserves the test failure status instead of turning a failed suite green.
+
+After publication, the existing Slack channel receives the standard color-coded
+message with test counts, duration, a pipeline button and an **Allure Report**
+button pointing to this run. This is a link, not an interactive report embedded
+inside Slack. The report button is omitted if publication fails or the run is on
+a non-main branch; the pipeline link remains available. Notification is attempted
+after successful dependency installation even when tests or report generation
+fail. The existing webhook secret is required; no new Slack secret is introduced.
+CI generates the report in `allure-report` so the unchanged shared notifier reads
+this suite's summary using the same path as other workflows.
+
+Successful report generation on `main` publishes to the separate
+`login-security/latest/` and `login-security/runs/<run-id>/<run-attempt>/` paths
+on the existing GitHub Pages site. The Actions summary links to the run-specific
+report. Other branches receive downloadable artifacts without updating Pages.
+Publication still depends on the repository's existing Pages configuration and
+workflow-token permissions. Dependency failures, cancellation or job timeout can
+prevent report generation/publication.
+
+Local runs also write raw Allure data to `allure-results/login-security`; the
+workflow clears only that suite's raw directory before each CI run. Local Allure
+data can accumulate between runs, so clear that directory before a fresh local
+report. Local tests do not automatically generate or publish Allure HTML.
+A later run reuses report/output locations; preserve evidence before rerunning.

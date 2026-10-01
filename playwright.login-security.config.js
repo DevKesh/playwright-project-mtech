@@ -20,6 +20,16 @@ module.exports = defineConfig({
     ['list'],
     ['html', { outputFolder: 'playwright-report/login-security', open: 'never' }],
     ['json', { outputFile: 'test-results/login-security/results.json' }],
+    ['allure-playwright', {
+      resultsDir: 'allure-results/login-security',
+      detail: false,
+      suiteTitle: true,
+      environmentInfo: {
+        suite: 'Unique-credential login submissions',
+        target: 'QA2',
+        node_version: process.version,
+      },
+    }],
   ],
   use: {
     ...devices['Desktop Chrome'],
