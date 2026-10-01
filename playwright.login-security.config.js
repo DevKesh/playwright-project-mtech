@@ -1,23 +1,20 @@
 const { defineConfig, devices } = require('@playwright/test');
 const { QA_ORIGIN } = require('./framework/utils/login-security');
 
-// Playwright 1.58 failure context can include password input values even with
-// trace/video/screenshots off. Disable that automatic snapshot for this suite.
+// Keep automatic DOM dumps off; failure screenshots below hide input fields.
 process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
 
 // Intentionally do NOT load dotenv, real credentials, healing or login monitor.
 module.exports = defineConfig({
   testDir: './tests/generated/nl-authored',
   testMatch: 'login-security.spec.js',
-  globalSetup: './framework/utils/login-security-setup.js',
   workers: 1,
   fullyParallel: false,
   retries: 0,
   repeatEach: 1,
-  maxFailures: 1,
+  maxFailures: 0,
   forbidOnly: true,
   timeout: 90000,
-  globalTimeout: 30 * 60 * 1000,
   outputDir: './test-results/login-security',
   reporter: [
     ['list'],
@@ -32,7 +29,11 @@ module.exports = defineConfig({
     baseURL: QA_ORIGIN,
     actionTimeout: 10000,
     navigationTimeout: 45000,
-    screenshot: 'off',
+    screenshot: {
+      mode: 'only-on-failure',
+      style: 'input { visibility: hidden !important; }',
+      timeout: 5000,
+    },
     trace: 'off',
     video: 'off',
   },

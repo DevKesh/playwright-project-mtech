@@ -27,31 +27,6 @@ function uniqueInvalidCredentials(attempt, runId, now = Date.now()) {
   };
 }
 
-// Retain only HTTP status/method/resource type, never URLs, headers, bodies,
-// cookies, tokens, or submitted values. Ignore unrelated third-party telemetry.
-// Observation only: responses never change test execution or skip attempts.
-function observeLoginNetwork(page, origin = QA_ORIGIN) {
-  const responses = [];
-  let pageErrors = 0;
-  const onResponse = response => {
-    if (new URL(response.url()).origin !== origin) return;
-    const status = response.status();
-    const request = response.request();
-    const resourceType = request.resourceType();
-    if (['xhr', 'fetch', 'document'].includes(resourceType) || status >= 400) {
-      responses.push({ status, method: request.method(), resourceType });
-    }
-  };
-  const onPageError = () => { pageErrors++; };
-  page.on('response', onResponse);
-  page.on('pageerror', onPageError);
-  return {
-    responses,
-    get pageErrors() { return pageErrors; },
-    close() { page.off('response', onResponse); page.off('pageerror', onPageError); },
-  };
-}
-
 module.exports = {
-  QA_ORIGIN, securitySettings, uniqueInvalidCredentials, observeLoginNetwork,
+  QA_ORIGIN, securitySettings, uniqueInvalidCredentials,
 };
