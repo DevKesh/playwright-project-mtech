@@ -1,0 +1,35 @@
+const { defineConfig, devices } = require('@playwright/test');
+const { QA_ORIGIN } = require('./framework/utils/login-security');
+
+// Intentionally do NOT load dotenv, real credentials, healing or login monitor.
+module.exports = defineConfig({
+  testDir: './tests/generated/nl-authored',
+  testMatch: 'login-security.spec.js',
+  globalSetup: './framework/utils/login-security-setup.js',
+  workers: 1,
+  fullyParallel: false,
+  retries: 0,
+  repeatEach: 1,
+  maxFailures: 1,
+  forbidOnly: true,
+  timeout: 90000,
+  globalTimeout: 30 * 60 * 1000,
+  outputDir: './test-results/login-security',
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report/login-security', open: 'never' }],
+    ['json', { outputFile: 'test-results/login-security/results.json' }],
+  ],
+  use: {
+    ...devices['Desktop Chrome'],
+    channel: 'chrome',
+    // Show Chrome for local monitored runs; hosted CI has no desktop display.
+    headless: process.env.CI === 'true',
+    baseURL: QA_ORIGIN,
+    actionTimeout: 10000,
+    navigationTimeout: 45000,
+    screenshot: 'off',
+    trace: 'off',
+    video: 'off',
+  },
+});

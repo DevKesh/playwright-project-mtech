@@ -65,7 +65,10 @@ export default defineConfig({
   globalSetup: './global-setup.js',
   testDir: './tests',
   /* Dedicated authentication workflow owns this credential-scoped repeated suite. */
-  testIgnore: '**/nl-authored/login-forgot-password-repeat.spec.js',
+  testIgnore: [
+    '**/nl-authored/login-forgot-password-repeat.spec.js',
+    '**/nl-authored/login-security.spec.js',
+  ],
   /* Run tests sequentially (one after another) for stable execution against live app */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

@@ -1,0 +1,69 @@
+name: Negative Login Security Observation
+
+on:
+  workflow_dispatch:
+    inputs:
+      attempts:
+        description: 'Maximum synthetic invalid-login attempts (1-100)'
+        type: number
+        required: true
+        default: 5
+      interval_ms:
+        description: 'Minimum gap after each attempt in milliseconds (5000-60000)'
+        type: number
+        required: true
+        default: 10000
+      approved:
+        description: 'QA2 security team authorized this run and is ready to monitor'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+# Match the existing manual authentication workflows on the same branch.
+concurrency:
+  group: login-monitor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  negative-login:
+    name: Unique credential submissions (${{ inputs.attempts }} attempts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      LOGIN_SECURITY_APPROVED: ${{ inputs.approved }}
+      LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts }}
+      LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms }}
+    steps:
+      - name: Require explicit authorization
+        run: |
+          if [ "$LOGIN_SECURITY_APPROVED" != 'true' ]; then
+            echo 'Run not authorized. No login attempts will be sent.'
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install browser system dependencies
+        run: npx playwright install-deps chrome
+      - name: Run bounded negative-login observation
+        run: npm run test:login-security
+
+      # Raw audit + HTML only. Does not overwrite any existing Allure/Slack report.
+      - name: Upload sanitized security evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-security-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            test-results/login-security/
+            playwright-report/login-security/
+          if-no-files-found: warn
+          retention-days: 14
