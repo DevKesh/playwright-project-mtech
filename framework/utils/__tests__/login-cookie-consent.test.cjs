@@ -60,6 +60,28 @@ test('supports CONFIRM MY CHOICES without an ACCEPT ALL button', () => withPage(
   await expect(page.getByRole('dialog')).toBeHidden();
 }));
 
+for (const label of ['Accept All', 'Confirm my choices']) {
+  test(`handles late CI consent "${label}" before Sign In without resubmitting`, () => withPage(async (page, login) => {
+    await page.setContent('<label>Username<input id="username"></label><label>Password<input id="password" type="password"></label><button id="signin">Sign In</button>');
+    await page.evaluate(() => {
+      window.submissions = 0;
+      document.querySelector('#signin').onclick = () => { window.submissions++; };
+    });
+    await login.dismissCookieConsent();
+    await login.usernameInput.fill('synthetic-fixture-user');
+    await login.passwordInput.fill('synthetic-fixture-password');
+    await showConsent(page, label);
+    await page.evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"]');
+      dialog.setAttribute('aria-label', 'Your choices regarding the use of cookies on this site');
+      dialog.querySelector('p').textContent = 'We value your privacy. This site uses cookies and related technologies.';
+    });
+    await login.signInButton.click();
+    assert.equal(await page.evaluate(() => window.submissions), 1);
+    await expect(page.getByRole('dialog')).toBeHidden();
+  }));
+}
+
 test('supports the legacy TrustArc consent button', () => withPage(async (page, login) => {
   await login.dismissCookieConsent();
   await showConsent(page, 'Agree', 'truste-consent-button');

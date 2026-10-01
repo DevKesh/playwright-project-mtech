@@ -110,7 +110,9 @@ across all executions.
 
 ### Can a previously submitted password be retrieved?
 
-**No—the test deliberately does not persist generated passwords.** The full
+**Not from the custom audit.** Older Playwright automatic failure snapshots could
+contain synthetic passwords; the dedicated config now disables those snapshots.
+Previously uploaded or downloaded artifacts remain unchanged. The full
 synthetic username is retained in the audit for server-log correlation. Passwords
 exist in memory and are filled into the password input, then sent through the
 application's normal browser login flow. The password-only random suffix cannot
@@ -347,9 +349,14 @@ how much of the requested run actually executed.
 
 ### What is deliberately not collected
 
-Passwords, response bodies, request bodies, headers, tokens and cookies are never
-included in audit records. Trace, video, screenshots and automatic Allure fill
-steps are disabled. Application error messages are not collected.
+Passwords, response bodies, request bodies, headers, tokens and cookies are not
+included in the custom audit records. Trace, video, screenshots and automatic
+Allure fill steps are disabled. Application error messages are not collected.
+The dedicated config also sets `PLAYWRIGHT_NO_COPY_PROMPT=1` to suppress Playwright
+1.58's automatic failure-context snapshot: the CI artifact from run 36847706958
+showed that this snapshot included a synthetic password despite other recording
+options being off. Existing downloaded/uploaded artifacts are not changed by
+this fix. Treat those earlier artifacts as containing generated test passwords.
 Only synthetic usernames are deliberately retained so the team can correlate
 requests with application/security logs.
 
@@ -383,6 +390,6 @@ infer those behaviors from five successful submission actions.
 | Does it verify rejection or successful login? | No login-result assertions are present. |
 | Does it sign out? | No; it stops if authenticated UI is unexpectedly observed. |
 | Can I see the exact submitted usernames? | Yes, in the audit. |
-| Can I recover the submitted passwords from the report? | No; passwords are not retained. |
+| Can I recover submitted passwords from the audit? | No. Older automatic failure snapshots could expose synthetic passwords; those snapshots are now disabled for this suite. |
 | Will it always send 100 attempts? | No; 100 is a maximum, default is five, and stops/timeouts can end a run earlier. |
 | Does a green run prove protection against attacks? | No; the team must assess server-side security evidence. |

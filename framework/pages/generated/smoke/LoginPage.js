@@ -11,10 +11,10 @@ class LoginPage {
     this.passwordInput = page.getByLabel('Password');
     this.signInButton = page.getByRole('button', { name: 'Sign In' });
     // Cookie consent selectors — try multiple (OneTrust / TrustArc variants)
-    this.cookieAcceptAll = page.getByRole('button', { name: 'ACCEPT ALL', exact: true });
+    this.cookieAcceptAll = page.getByRole('button', { name: /^Accept All$/i });
     this.cookieConsentButton = page.locator('#truste-consent-button');
     this.cookieDismissButton = this.cookieAcceptAll
-      .or(page.getByRole('button', { name: 'CONFIRM MY CHOICES', exact: true }))
+      .or(page.getByRole('button', { name: /^Confirm my choices$/i }))
       .or(this.cookieConsentButton)
       .or(page.getByRole('dialog').filter({ hasText: 'This website uses cookies.' })
         .getByRole('button', { name: 'OK', exact: true }))

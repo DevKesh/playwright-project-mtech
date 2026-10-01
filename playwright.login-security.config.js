@@ -1,6 +1,10 @@
 const { defineConfig, devices } = require('@playwright/test');
 const { QA_ORIGIN } = require('./framework/utils/login-security');
 
+// Playwright 1.58 failure context can include password input values even with
+// trace/video/screenshots off. Disable that automatic snapshot for this suite.
+process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
+
 // Intentionally do NOT load dotenv, real credentials, healing or login monitor.
 module.exports = defineConfig({
   testDir: './tests/generated/nl-authored',
