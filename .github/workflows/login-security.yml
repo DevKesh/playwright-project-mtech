@@ -13,11 +13,6 @@ on:
         type: number
         required: true
         default: 10000
-      approved:
-        description: 'QA2 security team authorized this run and is ready to monitor'
-        type: boolean
-        required: true
-        default: false
 
 permissions:
   contents: read
@@ -34,17 +29,9 @@ jobs:
     timeout-minutes: 35
     env:
       CI: 'true'
-      LOGIN_SECURITY_APPROVED: ${{ inputs.approved }}
       LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts }}
       LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms }}
     steps:
-      - name: Require explicit authorization
-        run: |
-          if [ "$LOGIN_SECURITY_APPROVED" != 'true' ]; then
-            echo 'Run not authorized. No login attempts will be sent.'
-            exit 1
-          fi
-
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

@@ -29,9 +29,9 @@ function uniqueInvalidCredentials(attempt, runId, now = Date.now()) {
 
 // Retain only HTTP status/method/resource type, never URLs, headers, bodies,
 // cookies, tokens, or submitted values. Ignore unrelated third-party telemetry.
+// Observation only: responses never change test execution or skip attempts.
 function observeLoginNetwork(page, origin = QA_ORIGIN) {
   const responses = [];
-  let stopReason;
   let pageErrors = 0;
   const onResponse = response => {
     if (new URL(response.url()).origin !== origin) return;
@@ -41,42 +41,17 @@ function observeLoginNetwork(page, origin = QA_ORIGIN) {
     if (['xhr', 'fetch', 'document'].includes(resourceType) || status >= 400) {
       responses.push({ status, method: request.method(), resourceType });
     }
-    if (status === 429) stopReason = 'rate_limited';
-    else if (response.headers()['cf-mitigated'] === 'challenge') stopReason ||= 'security_challenge';
-    else if (status === 403 || status === 423) stopReason ||= 'access_blocked';
-    else if (status >= 500) stopReason ||= 'server_error';
   };
   const onPageError = () => { pageErrors++; };
   page.on('response', onResponse);
   page.on('pageerror', onPageError);
   return {
     responses,
-    get stopReason() { return stopReason; },
     get pageErrors() { return pageErrors; },
     close() { page.off('response', onResponse); page.off('pageerror', onPageError); },
   };
 }
 
-async function visibleSecurityControl(page) {
-  const challenge = page.locator('iframe[title*="challenge" i], iframe[title*="captcha" i], iframe[src*="challenges.cloudflare.com"], .g-recaptcha, .h-captcha')
-    .filter({ visible: true }).first();
-  const message = page.getByText(/too many (?:attempts|requests)|account.{0,30}(?:locked|blocked)|verify (?:that )?you are human|access denied|temporarily blocked|enable javascript and cookies to continue/i)
-    .filter({ visible: true }).first();
-  return await challenge.isVisible() || await message.isVisible();
-}
-
-// Operational stop checks only, not application pass/fail assertions.
-async function stopSignal(page, network) {
-  const pathname = new URL(page.url()).pathname;
-  if (/^\/home(?:\/|$)/.test(pathname) ||
-      await page.getByRole('button', { name: 'Devices', exact: true }).first().isVisible()) {
-    return 'unexpected_authenticated';
-  }
-  if (network.stopReason) return network.stopReason;
-  if (await visibleSecurityControl(page)) return 'security_control';
-  return network.stopReason || null;
-}
-
 module.exports = {
-  QA_ORIGIN, securitySettings, uniqueInvalidCredentials, observeLoginNetwork, stopSignal,
+  QA_ORIGIN, securitySettings, uniqueInvalidCredentials, observeLoginNetwork,
 };

@@ -12,7 +12,7 @@
     "test:login-pages:continuous": "node framework/utils/run-login-monitor.js",
     "test:login-logout": "playwright test --config playwright.login-monitor.config.js --grep @login-logout",
     "test:forgot-password": "playwright test --config playwright.login-monitor.config.js --grep @forgot-password",
-    "test:login-security": "cross-env LOGIN_SECURITY_APPROVED=true playwright test --config playwright.login-security.config.js",
+    "test:login-security": "playwright test --config playwright.login-security.config.js",
 
     "report:allure:generate": "npx allure generate -o ./allure-report",
     "report:allure:open": "npx allure open ./allure-report",

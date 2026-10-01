@@ -32,12 +32,12 @@ helper, and LoginPage locators are unchanged. This is a separate suite.
 | Component | Responsibility |
 |---|---|
 | [Submission spec](../tests/generated/nl-authored/login-security.spec.js) | Creates individual attempts, navigates, submits, paces and writes the audit |
-| [Data and observation helper](../framework/utils/login-security.js) | Generates credentials, validates settings, records HTTP metadata and detects stop signals |
-| [Run setup](../framework/utils/login-security-setup.js) | Checks approval and resolved execution limits before running |
+| [Data and observation helper](../framework/utils/login-security.js) | Generates credentials, validates settings and passively records HTTP metadata |
+| [Run setup](../framework/utils/login-security-setup.js) | Checks resolved execution limits before running |
 | [Dedicated Playwright config](../playwright.login-security.config.js) | QA2 target, browser mode, timeouts, one worker and isolated reports |
 | [Existing LoginPage](../framework/pages/generated/smoke/LoginPage.js) | Existing Username, Password, Sign In locators and cookie handling |
-| [npm scripts](../package.json) | Exposes `test:login-security` and supplies the approval flag |
-| [Manual GitHub workflow](../.github/workflows/login-security.yml) | Accepts attempt count, pacing and approval; uploads evidence |
+| [npm scripts](../package.json) | Exposes `test:login-security` without an approval flag |
+| [Manual GitHub workflow](../.github/workflows/login-security.yml) | Accepts attempt count and pacing; uploads evidence |
 | [Normal Playwright config](../playwright.config.js) | Excludes this security spec from ordinary project discovery |
 
 ## 3. Exact username and password generation
@@ -126,31 +126,26 @@ password logging.
 1. Read attempt-count and pacing settings from the process environment, with
   defaults of five attempts and a 10,000 ms gap.
 2. Validate the settings and resolved Playwright configuration.
-3. Require approval. The dedicated npm script sets the approval flag; the manual
-  GitHub workflow has a separate authorization checkbox.
-4. Generate one run UUID and initialize a sanitized audit record.
-5. Open one browser context and one page. These are reused throughout the run.
-6. Install HTTP-status observation and the existing persistent cookie handler.
+3. Generate one run UUID and initialize a sanitized audit record. There is no
+  approval environment variable or workflow authorization checkbox.
+4. Open one browser context and one page. These are reused throughout the run.
+5. Install passive HTTP-status observation and the existing persistent cookie handler.
 
 ### For each numbered attempt
 
-1. Skip the attempt if a previous safety stop ended the run.
-2. Generate a new username/password pair and start an audit entry.
-3. Check for a pre-existing safety stop **before** reloading or submitting again.
-4. Navigate to `/login` and wait for `domcontentloaded`.
-5. Check for a safety stop on the newly loaded page and reuse cookie dismissal.
-6. Record `startedAt` immediately before the login actions.
-7. Call `LoginPage.login(generatedUsername, generatedPassword)`:
+1. Generate a new username/password pair and start an audit entry.
+2. Navigate to `/login` and wait for `domcontentloaded`.
+3. Reuse cookie dismissal.
+4. Record `startedAt` immediately before the login actions.
+5. Call `LoginPage.login(generatedUsername, generatedPassword)`:
   - Fill `getByLabel('Username')` with the generated username.
   - Fill `getByLabel('Password')` with the generated password.
   - Click `getByRole('button', { name: 'Sign In' })` once.
-8. When that call returns, record `submitted: true` and
+6. When that call returns, record `submitted: true` and
   `outcome: 'submitted_without_assertions'`.
-9. Wait the configured pacing interval. This also occurs after the final
-  submission to allow observation of a delayed stop signal.
-10. Check for a safety stop. If present, annotate the attempt and skip the
-   remaining attempts; otherwise proceed.
-11. Save the audit and attach the sanitized attempt record to the test report.
+7. Wait the configured pacing interval, including after the final submission
+  to allow passive response observation.
+8. Save the audit and attach the sanitized attempt record to the test report.
 
 `submitted: true` means the fill-and-click method returned successfully. It is
 not an assertion that the server received, processed or rejected the request.
@@ -178,7 +173,6 @@ There are still:
 
 - Playwright's normal actionability checks for filling/clicking controls.
 - Configuration guards for the bounded run.
-- Operational safety checks that can stop further submissions.
 - Existing cookie-dismissal verification inside the unchanged LoginPage helper.
 
 A missing/blocked input or button can therefore cause an automation error.
@@ -193,9 +187,9 @@ Removing login-result assertions does not make every broken UI action pass.
 - At least 5 seconds between attempts (default 10 seconds after the prior one).
 - Same browser context, cookies, network identity and page throughout the run.
   No proxy rotation, CAPTCHA solving, lockout bypass or automatic resumption.
-- Stops on HTTP 429/403/423, a challenge, lockout, server error or unexpected
-  authentication. Remaining attempts are skipped. UI automation failures stop
-  the run too. These are operational safeguards, not response assertions.
+- No custom stop/skip checks for HTTP status, challenge text, lockout or
+  authenticated UI. Real UI automation failures still fail the attempt and stop
+  the run through Playwright's existing serial mode and maximum-failure limit.
 - Never creates users, requests resets, or invokes panel actions.
 - No assertions on error messages, HTTP status, redirect, rejection or success.
   Existing LoginPage cookie handling is reused unchanged.
@@ -227,38 +221,30 @@ The limits apply together. For example, requesting 100 attempts does not overrid
 the 30-minute run deadline. Large pacing values or slow navigation may prevent
 completion of the full requested count.
 
-## 7. Safety stops—not security-result assertions
+## 7. Passive observation and actual automation failures
 
-| Signal observed | Recorded stop reason | Meaning for this runner |
-|---|---|---|
-| QA2 HTTP 429 | `rate_limited` | Stop sending further attempts |
-| QA2 response with `cf-mitigated: challenge` | `security_challenge` | Do not attempt to bypass the challenge |
-| QA2 HTTP 403 or 423 | `access_blocked` | Stop for operator review |
-| QA2 HTTP 5xx | `server_error` | Do not continue against an unhealthy service |
-| Visible CAPTCHA/challenge or known blocking text | `security_control` | Stop; do not solve or dismiss it to continue |
-| `/home` route or visible Devices navigation | `unexpected_authenticated` | Stop rather than access authenticated features |
-| Failure of navigation, fill, click or other automation | `automation_error` | Fail the attempt and halt execution |
+HTTP status codes are recorded as metadata only. There are no custom
+`test.skip()` calls, challenge-header checks, CAPTCHA/text checks, or
+authenticated-page checks in this suite. The observer records same-origin QA2
+responses and ignores unrelated third-party telemetry; it never decides whether
+an attempt should run.
 
-The network observer considers same-origin QA2 responses, not only a proven
-authentication endpoint. A blocked QA2 asset can therefore stop the run too.
-Third-party telemetry responses are ignored. These conservative signals do not
-establish that the application's authentication policy caused a block.
+Removing these checks does not bypass an application or Cloudflare block. If a
+challenge replaces the login form, filling Username or Password can time out.
+Navigation, fill, click or cookie-dismissal failures record `automation_error`,
+fail the test, and halt the run. Playwright may then mark later serial tests as
+skipped/not run. These are actual automation failures, not the removed custom
+safety-stop checks.
 
-HTTP responses are observed as they arrive; visible UI signals are checked at
-the defined checkpoints, not continuously. A transient or differently worded
-challenge may be missed. The implementation is not an exhaustive security-control
-detector, and an HTTP 200 response alone does not mean authentication succeeded.
-
-A stop detected **before submission** skips that attempt and subsequent attempts.
-A stop detected **after submission** records an annotation; that submitted test
-can remain green while subsequent attempts are skipped. Always inspect the audit
-status and actual submission count, not just the green test count or process exit.
+Inspect the audit status and actual submission count, not just the process exit
+or number of declared tests. An HTTP 200 response alone does not mean
+authentication succeeded.
 
 ## 8. Manual GitHub Actions
 
 After this change is pushed to the default branch, select **Negative Login Security
-Observation**. Set `attempts` (1–100), `interval_ms` (5000–60000), and check the
-authorization checkbox only when the QA2 security team is ready. There is no
+Observation**. Set `attempts` (1–100) and `interval_ms` (5000–60000), then start
+the workflow. There is no approval checkbox or approval environment flag, no
 scheduled or push trigger and no credentials are injected.
 
 The workflow uses the same per-branch concurrency group as the authentication
@@ -267,18 +253,15 @@ tests: coordinate those separately with the monitoring team.
 
 ## 9. Local execution
 
-Run the `test:login-security` npm script only when your team is ready. Explicitly
-invoking this dedicated script opts in to the QA2 run: it sets the approval flag
-for its child process using `cross-env` (Windows/Linux compatible). No credential
+Run the `test:login-security` npm script when your team is ready. It invokes the
+dedicated Playwright configuration directly, without an approval flag. No credential
 configuration is needed. Defaults are five submissions with ten-second pacing.
 Local runs open a visible Chrome browser; GitHub Actions stays headless.
-The GitHub workflow still requires its authorization checkbox before this step.
 
 Optional settings and direct-Playwright invocation:
 
 | Variable | Meaning |
 |---|---|
-| `LOGIN_SECURITY_APPROVED=true` | Set automatically by the npm script; required manually when invoking Playwright directly |
 | `LOGIN_SECURITY_ATTEMPTS=5` | Attempt count, hard limit 100 |
 | `LOGIN_SECURITY_INTERVAL_MS=10000` | Minimum gap after an attempt, in milliseconds |
 
@@ -291,9 +274,8 @@ editing values in a dotenv file alone does not configure this suite. In GitHub
 Actions, use the workflow inputs instead. No real username/password settings are
 required in either case.
 
-The earlier startup error about `LOGIN_SECURITY_APPROVED` was an approval flag
-check, not a failure fetching credentials. The npm command now sets that flag for
-its child process without permanently changing the terminal environment.
+The earlier approval-gate startup error no longer applies: the workflow, setup
+and spec no longer read an approval flag.
 
 Local browser mode is controlled by `CI`: visible Chrome when `CI` is not exactly
 `'true'`, headless Chrome when it is `'true'`. Browser mode does not alter credential
@@ -321,7 +303,7 @@ name includes run ID and attempt number; retention is configured for 14 days.
 | `requestedAttempts` | Requested maximum, not actual submission count |
 | `minimumGapMs` | Configured post-submission pacing interval |
 | `status` | `running`, `completed_submissions`, `stopped`, or `incomplete` |
-| `stopReason` | Included when the runner stops early |
+| `stopReason` | `automation_error` when a UI automation action fails |
 | `pageErrorCount` | Count of browser page errors; messages are not recorded |
 | `scope` | Reminder that the run has no authentication/security-result assertions |
 | `attempts` | Records for attempts that began execution |
@@ -333,17 +315,16 @@ name includes run ID and attempt number; retention is configured for 14 days.
 | `attempt` | One-based attempt number |
 | `username` | Exact generated username, deliberately retained for correlation |
 | `submitted` | Whether the login fill-and-click call returned successfully |
-| `outcome` | `not_submitted`, `submitted_without_assertions`, `stopped_before_submission`, or `automation_error` |
-| `startedAt` | Recorded just before the login method; absent if stopped earlier |
+| `outcome` | `not_submitted`, `submitted_without_assertions`, or `automation_error` |
+| `startedAt` | Recorded just before the login method; absent if navigation/cookie handling failed earlier |
 | `finishedAt` | When the attempt's final audit is saved |
-| `stopReason` | May be present for a post-submission stop |
 | `httpResponses` | Observed status code, method and resource type metadata |
 
 The audit does not currently store a separate `durationMs` field. Its timestamps
 include automation/pacing effects and must not be interpreted as isolated server
 authentication latency. Playwright also records test execution durations.
 
-Attempts skipped after an earlier stop do not get credential pairs or new audit
+Attempts not run after an earlier automation failure do not get credential pairs or new audit
 records. Use Playwright's skipped count together with the audit when assessing
 how much of the requested run actually executed.
 
@@ -360,8 +341,8 @@ this fix. Treat those earlier artifacts as containing generated test passwords.
 Only synthetic usernames are deliberately retained so the team can correlate
 requests with application/security logs.
 
-The first live validation is limited to **five** attempts and stops early if any
-control intervenes. Further runs require a new monitored execution.
+Runs must still be coordinated with the team responsible for QA2; removal of the
+approval UI does not change the target application's access controls.
 
 ## 11. What the monitoring team should use
 
@@ -388,8 +369,10 @@ infer those behaviors from five successful submission actions.
 | Are real credentials taken from config? | No. |
 | Are generated users registered first? | No. |
 | Does it verify rejection or successful login? | No login-result assertions are present. |
-| Does it sign out? | No; it stops if authenticated UI is unexpectedly observed. |
+| Does it sign out? | No; it submits credentials without checking authentication outcome. |
 | Can I see the exact submitted usernames? | Yes, in the audit. |
 | Can I recover submitted passwords from the audit? | No. Older automatic failure snapshots could expose synthetic passwords; those snapshots are now disabled for this suite. |
-| Will it always send 100 attempts? | No; 100 is a maximum, default is five, and stops/timeouts can end a run earlier. |
+| Is an approval checkbox required? | No. Start the manual workflow with the desired count and pacing. |
+| Does an HTTP status or challenge automatically skip tests? | No custom skip checks remain; an inaccessible login form can still cause a real UI automation failure. |
+| Will it always send 100 attempts? | No; 100 is a maximum, default is five, and automation failures/timeouts can end a run earlier. |
 | Does a green run prove protection against attacks? | No; the team must assess server-side security evidence. |

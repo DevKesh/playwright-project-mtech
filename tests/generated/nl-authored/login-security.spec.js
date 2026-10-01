@@ -6,7 +6,6 @@ const { setTimeout: pace } = require('node:timers/promises');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
 const {
   securitySettings, uniqueInvalidCredentials, observeLoginNetwork,
-  stopSignal,
 } = require('../../../framework/utils/login-security');
 
 const settings = securitySettings();
@@ -23,7 +22,6 @@ test.describe('@nl-authored @login-security Synthetic invalid credentials', () =
   }
 
   test.beforeAll(async ({ browser }) => {
-    if (process.env.LOGIN_SECURITY_APPROVED !== 'true') throw new Error('Explicit security-test approval is required.');
     runId = randomUUID();
     audit = {
       runId, target: 'QA2', startedAt: new Date().toISOString(), requestedAttempts: settings.attempts,
@@ -60,28 +58,13 @@ test.describe('@nl-authored @login-security Synthetic invalid credentials', () =
   Array.from({ length: settings.attempts }, (_, index) => {
     const attempt = index + 1;
     test(`Attempt ${String(attempt).padStart(3, '0')}: submit unique synthetic credentials`, async ({}, testInfo) => {
-      test.skip(audit.status === 'stopped', `Run stopped: ${audit.stopReason}`);
       const credentials = uniqueInvalidCredentials(attempt, runId);
       const record = { attempt, username: credentials.username, submitted: false, outcome: 'not_submitted' };
       const networkStart = network.responses.length;
       audit.attempts.push(record);
       try {
-        const before = await stopSignal(page, network);
-        if (before) {
-          audit.status = 'stopped';
-          audit.stopReason = before;
-          record.outcome = 'stopped_before_submission';
-          test.skip(true, `Safety stop: ${before}`);
-        }
         await test.step('Open the public login form', async () => {
           await page.goto('/login', { waitUntil: 'domcontentloaded' });
-          const stop = await stopSignal(page, network);
-          if (stop) {
-            audit.status = 'stopped';
-            audit.stopReason = stop;
-            record.outcome = 'stopped_before_submission';
-            test.skip(true, `Safety stop: ${stop}`);
-          }
           await new LoginPage(page).dismissCookieConsent();
         });
         await test.step('Fill unique credentials and click Sign In once', async () => {
@@ -94,17 +77,8 @@ test.describe('@nl-authored @login-security Synthetic invalid credentials', () =
         });
         // Allow the response to settle and maintain a bounded request rate.
         await pace(settings.intervalMs);
-        const after = await stopSignal(page, network);
-        if (after) {
-          audit.status = 'stopped';
-          audit.stopReason = after;
-          record.stopReason = after;
-          testInfo.annotations.push({ type: 'safety-stop', description: after });
-        } else {
-          audit.status = attempt === settings.attempts ? 'completed_submissions' : 'running';
-        }
-      } catch (error) {
-        if (record.outcome === 'stopped_before_submission') throw error;
+        audit.status = attempt === settings.attempts ? 'completed_submissions' : 'running';
+      } catch {
         // Do not rethrow raw Playwright errors: fill errors can echo passwords.
         record.outcome = 'automation_error';
         audit.status = 'stopped';
