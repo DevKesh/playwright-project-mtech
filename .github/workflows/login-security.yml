@@ -1,6 +1,8 @@
 name: Negative Login Security Observation
 
 on:
+  schedule:
+    - cron: '*/10 * 6-8 10 *'
   workflow_dispatch:
     inputs:
       attempts:
@@ -23,8 +25,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  observation-window:
+    name: Check login test window
+    runs-on: ubuntu-latest
+    outputs:
+      active: ${{ steps.check.outputs.active }}
+    steps:
+      - name: Check whether the scheduled observation is still active
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          cutoff=$(date -u -d '2026-10-08T11:30:00Z' +%s)
+          now=$(date -u +%s)
+          if [ "$EVENT_NAME" != 'schedule' ] || [ "$now" -lt "$cutoff" ]; then
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+          fi
+
   negative-login:
-    name: Unique credential submissions (${{ inputs.attempts }} attempts)
+    name: Unique credential submissions (${{ inputs.attempts || 5 }} attempts)
+    needs: observation-window
+    if: ${{ needs.observation-window.outputs.active == 'true' }}
     # Share the lock used by every workflow publishing to gh-pages.
     concurrency:
       group: allure-gh-pages-${{ github.repository }}
@@ -38,8 +61,8 @@ jobs:
       HEADLESS: 'true'
       EXECUTION_PLATFORM: local
       AI_HEALING_ENABLED: 'false'
-      LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts }}
-      LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms }}
+      LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts || 5 }}
+      LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms || 10000 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,14 +76,27 @@ jobs:
         run: npx playwright install-deps chrome
       - name: Clear this suite's previous Allure results
         run: rm -rf allure-results/login-security
+      - name: Confirm observation window before test execution
+        id: test-window
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          cutoff=$(date -u -d '2026-10-08T11:30:00Z' +%s)
+          now=$(date -u +%s)
+          if [ "$EVENT_NAME" != 'schedule' ] || [ "$now" -lt "$cutoff" ]; then
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+          fi
       - name: Run unique-credential login tests
         id: tests
+        if: ${{ steps.test-window.outputs.active == 'true' }}
         continue-on-error: true
         run: npm run test:login-security
 
       # Preserve raw evidence even when individual tests fail.
       - name: Upload test results and failure screenshots
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && (steps.test-window.outputs.active == 'true' || steps.test-window.outcome == 'skipped') }}
         uses: actions/upload-artifact@v4
         with:
           name: login-security-${{ github.run_id }}-${{ github.run_attempt }}
@@ -73,7 +109,7 @@ jobs:
 
       - name: Generate Allure report
         id: report
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.test-window.outputs.active == 'true' }}
         run: |
           mkdir -p allure-results/login-security
           npx allure generate -o allure-report allure-results/login-security
@@ -117,20 +153,20 @@ jobs:
         run: echo "[Open this run's Allure report](${REPORT_URL})" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify existing Slack channel
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.test-window.outputs.active == 'true' }}
         run: node framework/utils/slack-notify.js
         env:
           SLACK_ENABLED: 'true'
           SLACK_REQUIRED: 'true'
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          TEST_SUITE_NAME: 'Unique Credential Login (${{ inputs.attempts }} attempts)'
+          TEST_SUITE_NAME: 'Unique Credential Login (${{ inputs.attempts || 5 }} attempts)'
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPORT_URL: ${{ steps.publish.outcome == 'success' && format('https://{0}.github.io/{1}/login-security/runs/{2}/{3}/', github.repository_owner, github.event.repository.name, github.run_id, github.run_attempt) || '' }}
           TEST_OUTCOME: ${{ steps.tests.outcome || 'failure' }}
           HEAL_ENABLED: 'false'
 
       - name: Preserve test failure status
-        if: ${{ !cancelled() && steps.tests.outcome != 'success' }}
+        if: ${{ !cancelled() && steps.test-window.outputs.active == 'true' && steps.tests.outcome != 'success' }}
         run: |
           echo 'Login submission tests did not pass. See the Allure report and screenshots.'
           exit 1
