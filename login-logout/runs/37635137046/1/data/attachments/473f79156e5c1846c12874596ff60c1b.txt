@@ -1,0 +1,3 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[login-monitor] 2026-10-07T14:29:40.741Z Login/logout iteration 32 PASS (configured credentials)
