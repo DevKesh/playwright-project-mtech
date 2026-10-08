@@ -9,7 +9,7 @@ on:
         description: 'Maximum synthetic invalid-login attempts (1-100)'
         type: number
         required: true
-        default: 5
+        default: 100
       interval_ms:
         description: 'Minimum gap after each attempt in milliseconds (5000-60000)'
         type: number
@@ -40,11 +40,11 @@ jobs:
           fi
 
   negative-login:
-    name: Unique credential submissions (${{ inputs.attempts || 5 }} attempts)
+    name: Unique credential submissions (${{ inputs.attempts || 100 }} attempts)
     needs: observation-window
     if: ${{ needs.observation-window.outputs.active == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 210
     outputs:
       tests_outcome: ${{ steps.tests.outcome || 'failure' }}
       allure_artifact_ready: ${{ steps.allure-artifact.outcome == 'success' }}
@@ -54,7 +54,7 @@ jobs:
       HEADLESS: 'true'
       EXECUTION_PLATFORM: local
       AI_HEALING_ENABLED: 'false'
-      LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts || 5 }}
+      LOGIN_SECURITY_ATTEMPTS: ${{ inputs.attempts || 100 }}
       LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms || 10000 }}
     steps:
       - uses: actions/checkout@v4
@@ -200,7 +200,7 @@ jobs:
           SLACK_ENABLED: 'true'
           SLACK_REQUIRED: 'true'
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          TEST_SUITE_NAME: 'Unique Credential Login (${{ inputs.attempts || 5 }} attempts)'
+          TEST_SUITE_NAME: 'Unique Credential Login (${{ inputs.attempts || 100 }} attempts)'
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPORT_URL: ${{ needs.publish-report.outputs.published == 'true' && format('https://{0}.github.io/{1}/login-security/runs/{2}/{3}/', github.repository_owner, github.event.repository.name, github.run_id, github.run_attempt) || '' }}
           TEST_OUTCOME: ${{ needs.negative-login.outputs.tests_outcome || 'failure' }}
