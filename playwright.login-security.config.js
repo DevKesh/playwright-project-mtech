@@ -8,8 +8,8 @@ process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
 module.exports = defineConfig({
   testDir: './tests/generated/nl-authored',
   testMatch: 'login-security.spec.js',
-  workers: 1,
-  fullyParallel: false,
+  workers: 5,
+  fullyParallel: true,
   retries: 0,
   repeatEach: 1,
   maxFailures: 0,
