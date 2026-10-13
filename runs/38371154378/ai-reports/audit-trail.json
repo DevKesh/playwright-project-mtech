@@ -1,0 +1,263 @@
+[
+  {
+    "auditId": "aud-59edc5ad-0640-437a-bf5f-8143faadd47c",
+    "timestamp": "2026-10-13T08:50:43.737Z",
+    "type": "run_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": null,
+    "testTitle": null,
+    "data": {
+      "totalTests": 8
+    },
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-544f3923-0f0b-4db2-ab82-ed78e9b11087",
+    "timestamp": "2026-10-13T08:50:44.981Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-31402645-9add-4fe6-a4e1-ea6941eef08e",
+    "timestamp": "2026-10-13T08:52:21.344Z",
+    "type": "test_fail",
+    "correlationId": "fail-run-1791881443562-chromegeneratedsmoke-1791881541344",
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
+    "data": {
+      "errorMessage": "TimeoutError: locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Username') to be visible\u001b[22m\n",
+      "duration": 0
+    },
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-0f372621-829e-4945-a689-054026514cfd",
+    "timestamp": "2026-10-13T08:52:21.346Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-002: Arm Home and Disarm partitions",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-57b701dd-2b34-4fa7-8594-ff555d6eafe0",
+    "timestamp": "2026-10-13T08:52:21.347Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-003: Navigate to Devices page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-d8470165-6203-4811-96f5-a5034edce29e",
+    "timestamp": "2026-10-13T08:52:21.348Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-004: Navigate to Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-c5c35302-d6a3-4054-b420-bacf76c9d5de",
+    "timestamp": "2026-10-13T08:52:21.349Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-005: Navigate to Activity page and verify log",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-517421f1-8e26-4504-81b5-c1f65485a500",
+    "timestamp": "2026-10-13T08:52:21.349Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-6271e12e-4ea5-4834-bb26-9bd1e940468c",
+    "timestamp": "2026-10-13T08:52:21.350Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-350333b8-a4ca-4ffa-b304-248fa5e828f1",
+    "timestamp": "2026-10-13T08:52:21.351Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-69ce2c52-c581-40fa-a3d5-fb9849876c54",
+    "timestamp": "2026-10-13T08:52:22.711Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-bd6671d9-2075-47ac-84a4-3e05a9b94f3e",
+    "timestamp": "2026-10-13T08:52:28.541Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-002: Arm Home and Disarm partitions",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-e0925244-7518-425e-82e9-9af62bddd4cd",
+    "timestamp": "2026-10-13T08:52:40.108Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-003: Navigate to Devices page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-7e6407fd-fa1c-4068-9cd9-28668527dbce",
+    "timestamp": "2026-10-13T08:52:41.371Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-004: Navigate to Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-b9054231-1fd4-48b9-8e36-bd62db1c48fe",
+    "timestamp": "2026-10-13T08:52:43.100Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-005: Navigate to Activity page and verify log",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-719dd336-c762-4184-b103-328affef7447",
+    "timestamp": "2026-10-13T08:52:44.998Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-2634b908-3ef9-4978-9525-cc496f9a4fb3",
+    "timestamp": "2026-10-13T08:53:17.020Z",
+    "type": "test_fail",
+    "correlationId": "fail-run-1791881443562-chromegeneratedsmoke-1791881597020",
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+    "data": {
+      "errorMessage": "Error: Expected live camera tile BULLET QA 01\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expected live camera tile BULLET QA 01 with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\u001b[22m\n",
+      "duration": 31817
+    },
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-a5941df1-de87-4789-b050-97ae531552a6",
+    "timestamp": "2026-10-13T08:53:18.290Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-bb915d55-44a1-4075-9e45-9a2397d56537",
+    "timestamp": "2026-10-13T08:53:59.211Z",
+    "type": "test_fail",
+    "correlationId": "fail-run-1791881443562-chromegeneratedsmoke-1791881639211",
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+    "data": {
+      "errorMessage": "Error: Expected live camera tile BULLET QA 01\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expected live camera tile BULLET QA 01 with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\u001b[22m\n",
+      "duration": 35541
+    },
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-6c327479-7a78-481b-8e36-3075c3682978",
+    "timestamp": "2026-10-13T08:54:00.486Z",
+    "type": "test_start",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+    "data": {},
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-383613da-e8ae-4b63-9833-0d621719c6a6",
+    "timestamp": "2026-10-13T08:54:37.729Z",
+    "type": "test_fail",
+    "correlationId": "fail-run-1791881443562-chromegeneratedsmoke-1791881677729",
+    "runId": "run-1791881443562",
+    "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+    "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+    "data": {
+      "errorMessage": "Error: Expected live camera tile BULLET QA 01\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expected live camera tile BULLET QA 01 with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\u001b[22m\n",
+      "duration": 32478
+    },
+    "parentAuditId": null
+  },
+  {
+    "auditId": "aud-53aa934e-73e1-4f5e-8249-00d96349d0ae",
+    "timestamp": "2026-10-13T08:54:38.702Z",
+    "type": "run_complete",
+    "correlationId": null,
+    "runId": "run-1791881443562",
+    "testFile": null,
+    "testTitle": null,
+    "data": {
+      "overallStatus": "failed",
+      "totalTests": 16,
+      "failures": 4,
+      "passes": 5
+    },
+    "parentAuditId": null
+  }
+]
