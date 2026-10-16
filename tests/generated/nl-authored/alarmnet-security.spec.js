@@ -25,6 +25,11 @@ test.describe('@nl-authored @login-security AlarmNet synthetic invalid credentia
         await page.goto(ALARMNET_LOGIN_URL, { waitUntil: 'domcontentloaded' });
         const pageText = await page.locator('body').innerText();
         expect(pageText).not.toMatch(/Performing security verification|Verify you are human/i);
+        const acceptAllButton = page.getByRole('button', { name: /^Accept All$/i });
+        if (await acceptAllButton.isVisible().catch(() => false)) {
+          await acceptAllButton.click();
+        }
+        await page.addLocatorHandler(acceptAllButton, button => button.click());
         await expect(page.getByRole('button', { name: /^Accept All$/i })).toBeHidden();
         await expect(page.getByRole('button', { name: /^Confirm my choices$/i })).toBeHidden();
       });

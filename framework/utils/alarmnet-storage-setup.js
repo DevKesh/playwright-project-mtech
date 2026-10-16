@@ -1,7 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require('@playwright/test');
-const { LoginPage } = require('../pages/generated/smoke/LoginPage');
+const { chromium, expect } = require('@playwright/test');
 
 const ALARMNET_LOGIN_URL = 'https://services.qa.alarmnet.com/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn?lang=en-US';
 const STORAGE_STATE_PATH = path.resolve(__dirname, '../../test-results/alarmnet-storage-state.json');
@@ -19,8 +18,11 @@ module.exports = async function globalSetup() {
     const page = await context.newPage();
     await page.goto(ALARMNET_LOGIN_URL, { waitUntil: 'domcontentloaded' });
 
-    const login = new LoginPage(page);
-    await login.dismissCookieConsent();
+    const acceptAllButton = page.getByRole('button', { name: /^Accept All$/i });
+    if (await acceptAllButton.isVisible().catch(() => false)) {
+      await acceptAllButton.click();
+      await expect(acceptAllButton).toBeHidden({ timeout: 10000 });
+    }
     await context.storageState({ path: STORAGE_STATE_PATH });
     await context.close();
   } finally {
