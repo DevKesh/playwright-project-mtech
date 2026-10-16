@@ -25,9 +25,8 @@ test.describe('@nl-authored @login-security AlarmNet synthetic invalid credentia
         await page.goto(ALARMNET_LOGIN_URL, { waitUntil: 'domcontentloaded' });
         const pageText = await page.locator('body').innerText();
         expect(pageText).not.toMatch(/Performing security verification|Verify you are human/i);
-
-        const cookieOkButton = page.getByRole('button', { name: 'OK', exact: true });
-        await page.addLocatorHandler(cookieOkButton, button => button.click());
+        await expect(page.getByRole('button', { name: /^Accept All$/i })).toBeHidden();
+        await expect(page.getByRole('button', { name: /^Confirm my choices$/i })).toBeHidden();
       });
 
       await test.step('Fill unique credentials and click Sign In once', async () => {

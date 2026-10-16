@@ -6,6 +6,7 @@ process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
 
 // Intentionally do NOT load dotenv, real credentials, healing or login monitor.
 module.exports = defineConfig({
+  globalSetup: './framework/utils/alarmnet-storage-setup.js',
   testDir: './tests/generated/nl-authored',
   testMatch: 'alarmnet-security.spec.js',
   workers: 5,
@@ -37,6 +38,7 @@ module.exports = defineConfig({
     // Show Chrome for local monitored runs; hosted CI has no desktop display.
     headless: process.env.CI === 'true',
     baseURL: ALARMNET_ORIGIN,
+    storageState: './test-results/alarmnet-storage-state.json',
     actionTimeout: 10000,
     navigationTimeout: 45000,
     screenshot: {
