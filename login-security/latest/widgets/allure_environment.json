@@ -1,1 +1,1 @@
-[{"name":"suite","values":["Unique-credential login submissions"]},{"name":"target","values":["QA2"]},{"name":"node_version","values":["v22.23.3"]}]
+[{"name":"suite","values":["Unique-credential AlarmNet login submissions"]},{"name":"target","values":["AlarmNet QA"]},{"name":"node_version","values":["v22.23.3"]}]
