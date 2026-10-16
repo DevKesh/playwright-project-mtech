@@ -2,8 +2,7 @@ name: Negative Login Security Observation
 
 on:
   schedule:
-    - cron: '*/20 0-12 8 10 *'
-    - cron: '0,20 13 8 10 *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
       attempts:
@@ -21,29 +20,8 @@ permissions:
   contents: read
 
 jobs:
-  observation-window:
-    name: Check login test window
-    runs-on: ubuntu-latest
-    outputs:
-      active: ${{ steps.check.outputs.active }}
-    steps:
-      - name: Check whether the scheduled observation is still active
-        id: check
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          cutoff=$(date -u -d '2026-10-08T13:30:00Z' +%s)
-          now=$(date -u +%s)
-          if [ "$EVENT_NAME" != 'schedule' ] || [ "$now" -lt "$cutoff" ]; then
-            echo 'active=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'active=false' >> "$GITHUB_OUTPUT"
-          fi
-
   negative-login:
     name: Unique credential submissions (${{ inputs.attempts || 100 }} attempts)
-    needs: observation-window
-    if: ${{ needs.observation-window.outputs.active == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 210
     outputs:
@@ -70,27 +48,14 @@ jobs:
         run: npx playwright install-deps chrome
       - name: Clear this suite's previous Allure results
         run: rm -rf allure-results/login-security
-      - name: Confirm observation window before test execution
-        id: test-window
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          cutoff=$(date -u -d '2026-10-08T13:30:00Z' +%s)
-          now=$(date -u +%s)
-          if [ "$EVENT_NAME" != 'schedule' ] || [ "$now" -lt "$cutoff" ]; then
-            echo 'active=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'active=false' >> "$GITHUB_OUTPUT"
-          fi
       - name: Run unique-credential login tests
         id: tests
-        if: ${{ steps.test-window.outputs.active == 'true' }}
         continue-on-error: true
         run: npm run test:login-security
 
       # Preserve raw evidence even when individual tests fail.
       - name: Upload test results and failure screenshots
-        if: ${{ !cancelled() && (steps.test-window.outputs.active == 'true' || steps.test-window.outcome == 'skipped') }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: login-security-${{ github.run_id }}-${{ github.run_attempt }}
@@ -103,7 +68,7 @@ jobs:
 
       - name: Generate Allure report
         id: report
-        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.test-window.outputs.active == 'true' }}
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: |
           mkdir -p allure-results/login-security
           npx allure generate -o allure-report allure-results/login-security
@@ -141,7 +106,7 @@ jobs:
           retention-days: 1
 
       - name: Preserve test failure status
-        if: ${{ !cancelled() && steps.test-window.outputs.active == 'true' && steps.tests.outcome != 'success' }}
+        if: ${{ !cancelled() && steps.tests.outcome != 'success' }}
         run: |
           echo 'Login submission tests did not pass. See the Allure report and screenshots.'
           exit 1
@@ -149,7 +114,7 @@ jobs:
   publish-report:
     name: Publish Allure to GitHub Pages
     needs: negative-login
-    if: ${{ !cancelled() && needs.negative-login.outputs.pages_artifact_ready == 'true' }}
+    if: ${{ always() && !cancelled() && needs.negative-login.outputs.pages_artifact_ready == 'true' }}
     concurrency:
       group: allure-gh-pages-${{ github.repository }}
       cancel-in-progress: false
@@ -181,7 +146,7 @@ jobs:
   notify:
     name: Notify existing Slack channel
     needs: [negative-login, publish-report]
-    if: ${{ !cancelled() && needs.negative-login.outputs.allure_artifact_ready == 'true' }}
+    if: ${{ always() && !cancelled() && needs.negative-login.outputs.allure_artifact_ready == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
