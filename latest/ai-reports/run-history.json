@@ -1,41 +1,41 @@
 [
   {
-    "runId": "run-1792156506107",
+    "runId": "run-1792157777695",
     "overallStatus": "failed",
     "tests": [
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 001: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 11080,
+        "duration": 11494,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 002: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10849,
+        "duration": 10843,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 003: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10710,
+        "duration": 11227,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 004: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10830,
+        "duration": 10806,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 005: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10724,
+        "duration": 10855,
         "error": null
       },
       {
@@ -151,6 +151,6 @@
         "error": null
       }
     ],
-    "timestamp": "2026-10-16T13:19:06.196Z"
+    "timestamp": "2026-10-16T13:40:18.693Z"
   }
 ]
