@@ -1,41 +1,41 @@
 [
   {
-    "runId": "run-1792306654841",
+    "runId": "run-1792394040870",
     "overallStatus": "failed",
     "tests": [
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 001: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 14692,
+        "duration": 13667,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 002: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10947,
+        "duration": 11386,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 003: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10864,
+        "duration": 10848,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 004: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10823,
+        "duration": 11420,
         "error": null
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
         "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 005: submit unique synthetic credentials to AlarmNet",
         "status": "passed",
-        "duration": 10857,
+        "duration": 10876,
         "error": null
       },
       {
@@ -43,7 +43,7 @@
         "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
         "status": "failed",
         "duration": 0,
-        "error": "TimeoutError: locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Username') to be visible\u001b[22m\n"
+        "error": "TimeoutError: page.waitForURL: Timeout 45000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/home\" until \"commit\"\n============================================================"
       },
       {
         "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
@@ -151,6 +151,6 @@
         "error": null
       }
     ],
-    "timestamp": "2026-10-18T07:01:43.919Z"
+    "timestamp": "2026-10-19T07:17:28.883Z"
   }
 ]
