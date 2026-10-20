@@ -1,1033 +1,407 @@
-# Project Guide — What Every File Does & How to Run Tests
+# Framework Walkthrough and SDET Interview Guide
 
-> Quick-reference guide for the Playwright + AI Self-Healing automation framework  
-> targeting **Total Connect** (qa2.totalconnect2.com).
+Reviewed against the current workspace on 19 October 2026. Based on the purpose and structure of the supplied May dissertation, with implementation differences corrected in [TEST_FRAMEWORK_ARCHITECTURE.md](TEST_FRAMEWORK_ARCHITECTURE.md).
 
----
+This guide is for understanding and explaining the project, not memorizing a claim that AI was never involved. Describe your actual contribution honestly. Ownership means being able to explain decisions, validate output, debug failures, and identify limitations. Use the suggested interview wording only where it matches work you personally did.
 
-## Table of Contents
+## 1. Your Project in One Minute
 
-1. [High-Level Architecture](#1-high-level-architecture)
-2. [Project Tree — File-by-File Explanation](#2-project-tree--file-by-file-explanation)
-3. [The Three Layers: Fixtures → Flows → Pages](#3-the-three-layers-fixtures--flows--pages)
-4. [How a Test Runs End-to-End](#4-how-a-test-runs-end-to-end)
-5. [Running Tests — Single, Suite, All](#5-running-tests--single-suite-all)
-6. [Reports — Allure & HTML](#6-reports--allure--html)
-7. [AI Self-Healing — How to Enable & Use](#7-ai-self-healing--how-to-enable--use)
-8. [AI Explore — Auto-Generate Page Objects & Tests](#8-ai-explore--auto-generate-page-objects--tests)
-9. [AI Natural Language Test Author — Describe → Execute → Generate](#9-ai-natural-language-test-author--describe--execute--generate)
-10. [Writing a New Test — Step by Step](#10-writing-a-new-test--step-by-step)
-11. [Environment Variables Cheat Sheet](#11-environment-variables-cheat-sheet)
-12. [npm Scripts Cheat Sheet](#12-npm-scripts-cheat-sheet)
-13. [Quick Reference Card](#13-quick-reference-card)
-14. [Live Demo Walkthrough](#14-live-demo-walkthrough)
+> "This is a Playwright framework for testing Total Connect 2.0, a home-security web application. It checks workflows such as authentication, security-panel state, devices, cameras, and activity. I added optional AI assistance around the normal automation: when a supported locator action fails, it can inspect the current page, suggest another locator, try it, and let the original test continue. A separate process investigates tests that still fail and proposes changes for review. The project also includes test generation from English, historical analysis, cloud execution, CI workflows, and reporting. The important boundary is that a successful repair is not automatically proof of a correct business result; the assertions still matter."
 
----
+Avoid "AI fixes every failure" or "100% accurate." Your strongest explanation is the distinction between automating an action and verifying a result.
 
-## 1. High-Level Architecture
+## 2. The Problem You Are Solving
 
-```
-┌────────────────────────────────────────────────────────┐
-│  TEST FILES  (tests/)                                  │
-│  Only contain: test logic, assertions, allure tags     │
-└──────────────────────┬─────────────────────────────────┘
-                       │ uses fixtures
-┌──────────────────────▼─────────────────────────────────┐
-│  FIXTURES  (framework/fixtures/)                       │
-│  Provide: login, failure artifacts, perf helpers       │
-│  tc.fixture.js  — Total Connect tests                  │
-│  app.fixture.js — Demo/sample-app tests                │
-└──────────────────────┬─────────────────────────────────┘
-                       │ uses flows
-┌──────────────────────▼─────────────────────────────────┐
-│  FLOWS  (framework/flows/)                             │
-│  Multi-step business actions: login, navigate, etc.    │
-│  TotalConnectFlow.js — all TC navigation methods       │
-└──────────────────────┬─────────────────────────────────┘
-                       │ uses page objects
-┌──────────────────────▼─────────────────────────────────┐
-│  PAGE OBJECTS  (framework/pages/)                      │
-│  Locators + single-step interactions per page          │
-│  TotalConnect2LoginPage.js, TotalConnectHomePage.js…   │
-└────────────────────────────────────────────────────────┘
-```
+Imagine a test opens Cameras by finding a button called Cameras. A UI change alters the name or structure. The camera feature might still work, but the automation cannot find it. An engineer must inspect the page, identify the intended control, update the selector, and rerun the test.
 
-**Optional AI layer** — wraps `page` with a Proxy so if a locator breaks at runtime, the AI agent suggests a fix without stopping the test.
+Your framework assists with that repair loop. It also improves ordinary automation: shared login, reusable page objects, clearer failure messages, meaningful content checks, and consistent reporting.
 
----
+There are three different problems to distinguish:
 
-## 2. Project Tree — File-by-File Explanation
-
-### Root Files
-
-| File | What it does |
-|---|---|
-| `playwright.config.js` | Central Playwright config — projects, reporters (Allure + HTML), global settings (headless in CI, screenshots, video on failure) |
-| `global-setup.js` | Runs **before every test run** — deletes old `allure-results/` and `allure-report/` so reports always show fresh data |
-| `package.json` | npm scripts (see §11) and dependency list |
-| `jsconfig.json` | Enables VS Code Ctrl+Click navigation into framework files |
-
-### `framework/config/` — Configuration
-
-| File | What it does |
-|---|---|
-| `test-data.config.js` | **Single source of truth** for test data — TC base URL, login credentials, exploration parameters. Every test/flow reads from here instead of hardcoding values |
-
-### `framework/fixtures/` — Playwright Test Hooks
-
-| File | What it does |
-|---|---|
-| `tc.fixture.js` | **Total Connect fixture** — provides `tc` (not logged in), `tcLoggedIn` (auto-login), `perf` (timing helpers). Auto-attaches failure screenshot + URL + HTML on any test failure |
-| `app.fixture.js` | **Demo app fixture** — provides `authPage`, `productsPage`, flow helpers for the sample e-commerce app. Same failure-artifact behavior |
-
-### `framework/flows/` — Reusable Business Flows
-
-| File | What it does |
-|---|---|
-| `totalconnect/TotalConnectFlow.js` | All TC navigation: `openLoginPage()`, `fillConfiguredCredentials()`, `submitLogin()` (handles Security Notifications popup), `navigateToSecurity()`, `navigateToDevices()`, `navigateToCameras()`, `navigateToActivity()`, `navigateToScenes()`, `navigateToMyProfile()`, `navigateToLocations()`, `loginWithConfiguredUser()` (does all login steps in one call) |
-| `auth/AuthFlow.js` | Demo app login/logout flow |
-| `cart/CartFlow.js` | Demo app add-to-cart flow |
-| `checkout/CheckoutFlow.js` | Demo app checkout flow |
-| `orders/OrdersFlow.js` | Demo app order verification flow |
-
-### `framework/pages/` — Page Object Models
-
-| File | What it does |
-|---|---|
-| `generated/TotalConnect2LoginPage.js` | Login page locators — username input, password input, sign-in button, consent banner, forgot password/username links |
-| `generated/TotalConnectHomePage.js` | Home/dashboard page — sidebar navigation links (Security, Devices/Automation, Cameras, Activity, Scenes, My Profile, Locations) |
-| `generated/TotalConnectDevicesPage.js` | Devices/Automation page locators |
-| `generated/TotalConnectActivityPage.js` | Activity/Events page locators |
-| `generated/TotalConnectScenesPage.js` | Scenes page locators |
-| `generated/TotalConnectCamerasPage.js` | Cameras page locators |
-| `generated/TotalConnectForgotPasswordPage.js` | Forgot password page locators |
-| `generated/TotalConnectForgotUsernamePage.js` | Forgot username page locators |
-| `AuthPage.js` | Demo app login page locators |
-| `ProductsPage.js` | Demo app products page locators |
-
-### `framework/utils/` — Shared Utilities
-
-| File | What it does |
-|---|---|
-| `pageLoadMetrics.js` | `measureNavigation()` — wraps any action with a stopwatch + browser Performance API metrics. `attachLoadMetrics()` — saves JSON to Allure. `assertOptionalLoadThreshold()` — optional pass/fail based on `PW_TC_MAX_LOAD_MS` env var |
-| `popupInterceptor.js` | Pattern-based + AI-powered popup/modal dismissal. Used by the self-healing layer to clear blocking dialogs before retrying actions |
-| `steps.js` | Allure step decorator helper |
-| `runtimeInput.js` | Helpers for runtime test data injection |
-| `userFactory.js` | Test user creation helpers |
-
-### `tests/` — Test Specs
-
-| File | What it does |
-|---|---|
-| `total-connect/page-load-timings.spec.js` | **8 performance tests** (TC-PERF-01 to 08) — measures page load time for login, dashboard, security, devices, cameras, activity, scenes, my-profile, locations. Uses `tc.fixture.js` |
-| `total-connect/basic-smoke-and-performance.spec.js` | **4 basic smoke tests** (TC-BASIC-01 to 04) — login, dashboard verify, page navigation, performance baseline |
-| `total-connect/_TEMPLATE.spec.js` | **Not a real test** — educational template showing 3 styles of writing tests |
-| `generated/*.spec.js` | AI-explored specs — auto-generated by `npm run ai:explore` |
-| `flows/auth/` | Demo app authentication tests |
-| `flows/cart/` | Demo app cart tests |
-| `flows/checkout/` | Demo app checkout tests |
-
-### `framework/ai/` — AI Self-Healing Engine
-
-| File | What it does |
-|---|---|
-| **`config/ai.config.js`** | Master config — reads `AI_HEALING_ENABLED`, `OPENAI_API_KEY`, model names, confidence thresholds from `.env` |
-| **`fixtures/app.ai.fixture.js`** | AI-enhanced fixture — wraps `page` with the healing proxy. Tests that `require()` this fixture get self-healing automatically |
-| **`core/page-proxy.js`** | Intercepts `page.locator()`, `page.getByRole()`, etc. and wraps returned locators with the healing proxy |
-| **`core/locator-proxy.js`** | Intercepts locator actions (`click`, `fill`, etc.). On failure: (1) try popup dismissal, (2) invoke LangGraph healing graph |
-| **`core/openai-client.js`** | Thin wrapper around OpenAI API — sends DOM snapshots to GPT and returns healed selectors |
-| **`core/ai-client-factory.js`** | Creates the appropriate AI client based on config |
-| **`graph/runtime-graph.js`** | LangGraph state machine for runtime healing — tries CSS → role → text strategies |
-| **`graph/healing-graph.js`** | Offline healing analysis graph |
-| **`graph/exploration-graph.js`** | Drives AI exploration (page discovery + test generation) |
-| **`graph/lifecycle-graph.js`** | Pre/post test run lifecycle |
-| **`agents/locator-healer.agent.js`** | Main healer agent — takes broken selector + DOM → returns working selector |
-| **`agents/exploratory.agent.js`** | Explores the app, discovers pages, generates page objects |
-| **`agents/failure-analyzer.agent.js`** | Post-run failure analysis |
-| **`agents/drift-detection.agent.js`** | Detects UI drift between runs |
-| **`agents/flaky-test.agent.js`** | Identifies flaky test patterns |
-| **`agents/test-case-healer.agent.js`** | Heals entire test case logic (not just locators) |
-| **`rag/`** | ChromaDB vector store for knowledge-base retrieval (page schemas, past healings) |
-| **`prompts/`** | GPT prompt templates for each agent |
-| **`metrics/`** | Latency tracking and metrics computation |
-| **`audit/`** | Audit trail, traceability matrix |
-| **`reporters/ai-healing-reporter.js`** | Custom Playwright reporter — logs healing events to `ai-reports/` |
-| **`storage/`** | Healing history persistence |
-| **`scripts/`** | CLI entry points for AI features (see npm scripts below) |
-
-#### NL Test Authoring files (new)
-
-| File | What it does |
-|---|---|
-| **`prompts/nl-test-authoring.prompt.js`** | 4 prompt builders: parse NL instructions, resolve actions against DOM, generate PO from recording, generate spec from recording |
-| **`graph/nl-authoring-state.js`** | LangGraph state schema — tracks instructions, parsed steps, browser, recorded actions, generated artifacts |
-| **`graph/nl-authoring-conditions.js`** | Edge routing — loops `executeStep` until all steps are done, then routes to `generateArtifacts` |
-| **`graph/nl-authoring-nodes.js`** | Core engine — 5 nodes: `parseInstructions`, `launchBrowser`, `executeStep`, `generateArtifacts`, `writeFiles`. Includes `ensurePageSettled()` helper, DOM snapshot caching, IST timestamps, assertion verdict tracking |
-| **`graph/nl-authoring-graph.js`** | Compiles the LangGraph state machine: `parseInstructions → launchBrowser → executeStep* → generateArtifacts → writeFiles → END` |
-| **`scripts/nl-test-author.js`** | CLI entry point — interactive mode (stdin prompt), inline (`--instructions`), file (`--file`), with `--login` and `--headless` options |
-
----
-
-## 3. The Three Layers: Fixtures → Flows → Pages
-
-### What goes where
-
-| Layer | Responsibility | Example |
+| Problem | Example | Appropriate response |
 |---|---|---|
-| **Fixture** (`tc.fixture.js`) | Lifecycle hooks — login/logout, failure artifacts, injecting helpers | `tcLoggedIn` auto-logs-in before the test, attaches screenshot on failure |
-| **Flow** (`TotalConnectFlow.js`) | Multi-step business actions across pages | `loginWithConfiguredUser()` = open page + consent + fill credentials + submit + dismiss popup |
-| **Page Object** (`TotalConnectHomePage.js`) | Locators and single-step interactions for one page | `navigateToSecurity()` = click the Security sidebar link |
-| **Test Spec** (`page-load-timings.spec.js`) | Test logic, assertions, Allure tags | Measure timing, attach metrics, assert threshold |
+| Broken locator | The intended Cameras control exists under a different locator | A candidate for bounded locator repair. |
+| Timing or environment failure | Content is still loading, a popup blocks interaction, or the panel is offline | Wait for a meaningful condition, handle known optional UI, or report the environment problem. |
+| Genuine behavior defect | A command is rejected or a partition never reaches the required state | Fail and investigate; do not change the expected result to make it pass. |
 
-### Why this matters
+Your rule-based and AI classifications are diagnostic aids, not unquestionable root-cause evidence. The same timeout can arise from several causes.
 
-- **A locator changes?** Update the page object. Flows and tests don't change.
-- **Login flow changes?** Update the flow. Tests don't change.
-- **Need failure screenshots?** The fixture handles it. Tests don't change.
-- **Writing a new test?** Just destructure what you need: `{ page, tcLoggedIn, perf }`
+## 3. Small Vocabulary, Clear Meanings
 
----
-
-## 4. How a Test Runs End-to-End
-
-Example: `TC-PERF-03 — devices page load timing`
-
-```
-1. global-setup.js          → Wipes allure-results/ and allure-report/
-2. Playwright creates a      → Fresh browser context (clean cookies, no state)
-   new page
-3. tc.fixture.js
-   ├─ page fixture           → Wraps page to capture failure artifacts
-   ├─ tcLoggedIn fixture     → Calls loginWithConfiguredUser():
-   │   ├─ openLoginPage()        → TotalConnect2LoginPage.open()
-   │   ├─ acceptConsentIfVisible()
-   │   ├─ fillConfiguredCredentials() → reads test-data.config.js
-   │   └─ submitLogin()          → TotalConnect2LoginPage.clickSignIn()
-   │                                 + dismiss Security Notifications popup
-   └─ perf fixture           → Makes measureNavigation/attachLoadMetrics available
-4. Test body runs:
-   ├─ perf.measureNavigation(page, action, options)
-   │   ├─ Starts stopwatch
-   │   ├─ Calls tc.navigateToDevices()       → TotalConnectHomePage.navigateToDevices()
-   │   ├─ Waits for page to settle (DOM + readySelector)
-   │   └─ Collects browser Performance API metrics
-   ├─ perf.attachLoadMetrics(testInfo, …)    → JSON attachment in Allure
-   └─ perf.assertOptionalLoadThreshold(…)    → Passes unless PW_TC_MAX_LOAD_MS is set
-5. If test FAILS:
-   ├─ page fixture captures: screenshot, URL, HTML source
-   └─ Allure categorizes: "Element not found", "Assertion failure", etc.
-6. Allure reporter writes result JSON to allure-results/
-```
-
----
-
-## 5. Running Tests — Single, Suite, All
-
-### Run a single test by name
-
-```bash
-npx playwright test -g "TC-PERF-03" --project total-connect
-```
-
-The `-g` flag greps the test title. Partial matches work too:
-
-```bash
-npx playwright test -g "security page" --project total-connect
-npx playwright test -g "TC-PERF-0[1-3]" --project total-connect   # regex
-```
-
-### Run a single test file
-
-```bash
-npx playwright test tests/total-connect/page-load-timings.spec.js --project total-connect
-```
-
-### Run all TC tests (cleans Allure + opens HTML report)
-
-```bash
-npm run test:tc
-```
-
-### Run all TC tests headed (visible browser)
-
-```bash
-npm run test:tc:headed
-```
-
-### Run with a load time threshold (fail if any page > 8 seconds)
-
-```bash
-npm run test:tc:perf
-```
-
-### Run all TC tests + generate & open Allure report
-
-```bash
-npm run test:tc:allure
-```
-
-### List all available tests without running them
-
-```bash
-npm run test:tc:list
-```
-
-### Run basic smoke tests only
-
-```bash
-npx playwright test tests/total-connect/basic-smoke-and-performance.spec.js --project total-connect
-```
-
-### Run demo app tests (auth, cart, checkout)
-
-```bash
-npm run test:flows                  # all flow tests
-npm run test:auth                   # just auth
-```
-
-### Run AI-generated tests
-
-```bash
-npm run demo:test                   # headless
-npm run demo:test:headed            # visible browser
-npm run demo:smoke                  # only @smoke tagged
-```
-
-### Run a specific project
-
-```bash
-npx playwright test --project total-connect     # TC manual tests
-npx playwright test --project tc-smoke          # AI-generated @smoke
-npx playwright test --project tc-plan           # AI-generated @tc-plan
-npx playwright test --project chrome            # All tests on Chrome
-```
-
----
-
-## 6. Reports — Allure & HTML
-
-### Allure (primary report)
-
-```bash
-npm run report:allure           # Generate + open in browser
-npm run report:allure:generate  # Generate only (no open)
-npm run report:allure:open      # Open already-generated report
-```
-
-### Playwright HTML (backup report)
-
-```bash
-npm run report                  # Opens the built-in HTML report
-```
-
-Reports auto-clean on every run via `global-setup.js`, so you always see only the latest results.
-
----
-
-## 7. AI Self-Healing — How to Enable & Use
-
-### What it does
-
-When a locator fails (e.g., a CSS selector changed after a deploy), instead of failing the test immediately:
-
-1. **Popup interceptor** tries to dismiss any blocking dialog
-2. **LangGraph healing graph** kicks in:
-   - Extracts the page DOM
-   - Sends it to GPT with the broken selector
-   - GPT returns a healed selector
-   - Framework retries the action with the new selector
-3. If healed, the test **passes** and logs the healing event
-4. If not healable, the test fails normally with full diagnostics
-
-### How to enable
-
-Create a `.env` file in the project root:
-
-```env
-AI_HEALING_ENABLED=true
-OPENAI_API_KEY=sk-your-key-here
-AI_HEALING_MODEL=gpt-4o-mini
-AI_ANALYSIS_MODEL=gpt-4o
-AI_HEALING_MAX_RETRIES=2
-AI_HEALING_CONFIDENCE_THRESHOLD=0.7
-```
-
-### Run tests with healing active
-
-```bash
-npm run test:ai                      # All tests with healing
-npm run demo:heal                    # AI-generated tests with healing (headed)
-cross-env AI_HEALING_ENABLED=true npx playwright test -g "TC-PERF-03" --project total-connect
-```
-
-### How it works under the hood
-
-```
-Test uses tcLoggedIn fixture
-  → tcLoggedIn uses page
-     → (with AI_HEALING_ENABLED=true) page is wrapped by page-proxy.js
-        → Every page.locator() call returns a proxied locator (locator-proxy.js)
-           → On action failure:
-              Step 1: popupInterceptor.dismissPopups()
-              Step 2: runtime-graph.js (LangGraph state machine)
-                 → locator-healer.agent.js
-                    → openai-client.js → GPT-4o-mini
-                       → Returns healed selector
-              Step 3: Retry action with healed selector
-```
-
-### AI CLI scripts
-
-| Command | What it does |
+| Term | Plain meaning in this project |
 |---|---|
-| `npm run ai:explore` | Crawls the app, discovers pages, generates page objects + test specs |
-| `npm run ai:drift` | Detects UI changes between runs |
-| `npm run ai:flaky` | Analyzes flaky test patterns |
-| `npm run ai:review` | Reviews the healing event log |
-| `npm run ai:metrics` | Computes healing success rate, latency stats |
-| `npm run ai:audit` | Generates a full audit report |
-| `npm run ai:index` | Indexes page object knowledge base in ChromaDB |
-| `npm run ai:lifecycle:full` | Pre-analysis → Run tests with healing → Post-analysis |
+| Browser | Chrome running locally or remotely. |
+| Context | A separate browser session with its own cookies/storage. |
+| Page | A tab within that session. |
+| Locator | A repeatable instruction for finding an element, not a saved screenshot coordinate. |
+| Assertion | The check deciding whether the observed result meets the requirement. |
+| Page object | A class that owns a page's locators and interactions. |
+| Flow | A reusable sequence spanning several interactions or pages. |
+| Fixture | Setup/cleanup and dependencies supplied by the test runner. |
+| DOM | The browser's structured representation of the page. |
+| iframe | Another document embedded inside the page; Cameras uses one. |
+| Agent | A specialized module with a task, prompt, input, and output. |
+| Graph/state | A workflow with named steps and a shared record of progress. |
+| Runtime healing | Recovery while the failing test is still executing. |
+| Post-mortem | Investigation after a test attempt has failed. |
+| Cache | Reuse an exact previously recorded answer. |
+| RAG | Retrieve related evidence before asking the model; only partially connected here. |
+| Embedding | A numeric representation used to compare text similarity. |
+| Correlation ID | An identifier intended to connect related evidence records. |
+| CI/CD | Automatically running checks and publishing outputs through pipeline jobs. |
+| Flaky test | An inconsistent result under otherwise unchanged relevant conditions, not simply any timeout. |
 
----
+## 4. Where Things Live
 
-## 8. AI Explore — Auto-Generate Page Objects & Tests
+Start from [package.json](../package.json), then follow the selected configuration, spec, helper, page object, and any optional AI path. A file's presence is not proof it participates in your chosen run.
 
-The exploration agent crawls the app (starting from the login page), discovers pages, and auto-generates:
-- Page object files → `framework/pages/generated/`
-- Test spec files → `tests/generated/`
-
-```bash
-npm run ai:explore                   # Explore without logging in first
-npm run demo:explore:login           # Login first, then explore
-```
-
-Then run the generated tests:
-
-```bash
-npm run demo:test                    # Headless
-npm run demo:test:headed             # Visible browser
-npm run demo:smoke                   # Only @smoke tagged generated tests
-npm run demo:full                    # Explore + test + report all in one
-```
-
----
-
-## 9. AI Natural Language Test Author — Describe → Execute → Generate
-
-### What it does
-
-Describe a test scenario in **plain English**, and the AI will:
-
-1. **Parse** your instructions into structured steps (GPT-4o)
-2. **Launch a real browser** and execute each step live
-3. **Record every action** — selectors, Playwright code, timestamps, PASS/FAIL verdicts
-4. **Generate proper artifacts** — Page Objects + Test Specs following the framework's exact patterns (fixtures, allure tags, testDataConfig)
-
-You write English. You get a runnable Playwright test.
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  YOU write plain English instructions                       │
-│  "login, go to devices, verify device list is visible"      │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  Phase 1: parseInstructions                                 │
-│  GPT-4o converts NL → structured steps                      │
-│  [navigate, click, fill, assert_visible, assert_text, ...]  │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  Phase 2: launchBrowser                                     │
-│  Opens headed Chrome, optional auto-login                   │
-│  Uses ensurePageSettled() after every navigation             │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  Phase 3: executeStep (loops for each step)                 │
-│  For each step:                                             │
-│    1. ensurePageSettled() — wait for DOM + network           │
-│    2. Extract DOM snapshot (cached if URL unchanged)         │
-│    3. GPT resolves selector + Playwright code                │
-│    4. Execute via Playwright                                 │
-│    5. Record: selector, code, timestamp, PASS/FAIL           │
-│    6. ensurePageSettled() after DOM-mutating actions          │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  Phase 4: generateArtifacts                                 │
-│  Groups actions by page → generates POs + test spec via GPT │
-│  All code includes: await, waitForLoadState, allure tags     │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────▼────────────────────────────────────┐
-│  Phase 5: writeFiles                                        │
-│  → framework/pages/generated/*.js     (Page Objects)        │
-│  → tests/generated/*.spec.js          (Test Specs)          │
-│  → ai-reports/nl-authoring/           (Action log + report) │
-└─────────────────────────────────────────────────────────────┘
-```
-
-The graph is implemented as a **LangGraph state machine**:
-`parseInstructions → launchBrowser → executeStep* → generateArtifacts → writeFiles → END`
-
-### Files added
-
-| File | Purpose |
+| Area | Responsibility and useful starting point |
 |---|---|
-| `framework/ai/prompts/nl-test-authoring.prompt.js` | 4 prompt builders: parse NL → resolve actions → generate PO → generate spec |
-| `framework/ai/graph/nl-authoring-state.js` | LangGraph state schema for the NL authoring workflow |
-| `framework/ai/graph/nl-authoring-conditions.js` | Edge routing — step loop vs. generation |
-| `framework/ai/graph/nl-authoring-nodes.js` | Core engine — 5 graph nodes (parse, launch, execute, generate, write) |
-| `framework/ai/graph/nl-authoring-graph.js` | LangGraph state machine wiring |
-| `framework/ai/scripts/nl-test-author.js` | CLI entry point with interactive mode |
+| Root configuration | [Main runner](../playwright.config.js), [login monitor](../playwright.login-monitor.config.js), [negative-login runner](../playwright.login-security.config.js), [smoke validation](../playwright.smoke-validation.config.js). |
+| Runtime/test data | [Runtime settings](../framework/config/runtime.config.js), [test data](../framework/config/test-data.config.js). Multiple consumers have their own defaults. |
+| Authentication/browser helpers | [Login session](../framework/utils/login-session.js), [browser launcher](../framework/utils/browser-launcher.js). |
+| Main tests | [Eight-test smoke](../tests/generated/smoke/smoke-suite.spec.js), [login/recovery](../tests/generated/nl-authored/login-forgot-password-repeat.spec.js), [clip export](../tests/export-clip.spec.js). |
+| Page objects | [Login](../framework/pages/generated/smoke/LoginPage.js), [Home](../framework/pages/generated/smoke/TotalConnectHomePage.js), [Devices](../framework/pages/generated/smoke/DevicesPage.js), [Cameras](../framework/pages/generated/smoke/CamerasPage.js), [Activity](../framework/pages/generated/smoke/ActivityPage.js). |
+| Conventional reuse | [TC fixture](../framework/fixtures/tc.fixture.js), [TC flow](../framework/flows/totalconnect/TotalConnectFlow.js), [demo fixture](../framework/fixtures/app.fixture.js). Not the same route as the smoke suite's manual session. |
+| AI integration | [TC AI fixture](../framework/ai/fixtures/tc.ai.fixture.js), [demo AI fixture](../framework/ai/fixtures/app.ai.fixture.js), [locator patch](../framework/ai/core/locator-proxy.js). |
+| AI orchestration | [Runtime graph](../framework/ai/graph/runtime-graph.js), [post-mortem graph](../framework/ai/graph/healing-graph.js), [lifecycle](../framework/ai/graph/lifecycle-graph.js), [exploration](../framework/ai/graph/exploration-graph.js), [NL authoring](../framework/ai/graph/nl-authoring-graph.js). |
+| Provider access | [Common factory](../framework/ai/core/ai-client-factory.js), [OpenAI client](../framework/ai/core/openai-client.js), [Azure client](../framework/ai-azure/core/azure-ai-client.js). |
+| Records | [Healing history](../framework/ai/storage/healing-history.js), [cache](../framework/ai/storage/healing-cache.js), [report writer](../framework/ai/storage/report-writer.js), [audit trail](../framework/ai/audit/audit-trail.js). |
+| Reporting | [AI reporter](../framework/ai/reporters/ai-healing-reporter.js), [Allure reporter](../framework/reporters/allure-auto-reporter.js), [Slack notifier](../framework/utils/slack-notify.js). |
+| Framework checks | [Page-object checks](../framework/utils/__tests__/smoke-page-objects.test.cjs), [cookie-consent checks](../framework/utils/__tests__/login-cookie-consent.test.cjs), [Slack checks](../framework/utils/__tests__/slack-notify.test.cjs). |
 
-### How to run
+Generated reports and artifacts are outputs, not framework logic. Historical report folders are useful only when you can identify the producing run and configuration.
 
-#### Interactive mode (prompts you for instructions)
+## 5. Follow One Smoke Run End to End
 
-```bash
-npm run ai:author
-```
+### Step 1: Select the Test Lane
 
-You'll see:
-```
-Describe what you want to test in plain English.
-You can write multiple lines. Press Enter twice (empty line) when done.
-```
+For an approved live smoke run, use the explicit `tc-smoke` project. Bare `npm test` can discover multiple projects and unrelated suites. The broad Chrome project overlaps with more specific projects, so it can run the same source under multiple project names.
 
-Type your test scenario and press Enter twice.
+The main configuration sets one worker and disables full parallel execution. This protects shared session and panel state from simultaneous actions within that run. It does not stop another process or workflow from using the same account.
 
-#### Inline mode (pass instructions directly)
+### Step 2: Prepare Results
 
-```bash
-npm run ai:author -- --instructions "login to the app, dismiss cookie popup, go to devices page, verify device list is visible"
-```
+Main global setup removes the current shared Allure results/report. This prevents old results from appearing as new ones, but means simultaneous runs sharing those directories can interfere. Dedicated monitor/validation configurations isolate their own outputs and avoid this cleanup.
 
-#### From a file
+### Step 3: Authenticate
 
-```bash
-npm run ai:author -- --file my-test-steps.txt --login
-```
+Smoke explicitly requires the approved equipment-enabled account through `LOGIN_MONITOR_USERNAME` and `LOGIN_MONITOR_PASSWORD`. The login helper launches Chrome or connects to LambdaTest, handles cookie consent, fills credentials, waits for the home URL, and waits for a Devices navigation control.
 
-#### With auto-login (uses credentials from test-data.config.js)
+Why both URL and element? A single-page application can update the address before its content is ready. An authenticated page is also not proof that the security panel is online.
 
-```bash
-npm run ai:author:login -- --instructions "navigate to cameras, verify camera feed loads, go to activity, verify activity log"
-```
+The setup timeout is 180 seconds. That is a maximum budget, not an intentional three-minute pause.
 
-#### Run the generated test afterward
+### Step 4: Build Page Objects
 
-```bash
-npx playwright test tests/generated/<generated-file>.spec.js --headed
-# or run all generated tests:
-npm run demo:test:headed
-```
+If eligible AI healing is enabled, the suite patches the authenticated page before constructing page objects. The page objects then store locators that may have recovery behavior attached.
 
-### CLI options
+Why before construction? A locator created earlier is a separate object; patching future locator creation does not automatically retrofit everything already created. Smoke login itself is outside this repair path.
 
-| Option | Default | Description |
+### Step 5: Run Eight Tests
+
+Each test describes a business check using page-object methods. Tests normally share the setup session within a worker. Playwright can restart the worker after failure and rerun setup, so "one browser for the entire run under all circumstances" is inaccurate. The suite uses default mode rather than serial mode, allowing later tests to be attempted instead of automatically skipped as a serial group.
+
+### Step 6: Close and Report
+
+Teardown closes the manually launched browser. Playwright and Allure record results. The optional AI reporter investigates failed attempts. Reporting/publication and notifications depend on the selected configuration or CI job, not merely on importing a page object.
+
+A manual browser context does not automatically inherit the runner's screenshot, trace, video, or action-timeout settings. This is an important interview detail: configuration only works where the owning code consumes it.
+
+## 6. What the Eight Tests Really Prove
+
+| Test | What you can say | What you cannot infer |
 |---|---|---|
-| `--instructions "..."` | — | Plain English test description (wrap in quotes) |
-| `--file <path>` | — | Read instructions from a text file |
-| `--url <URL>` | test-data.config.js | Override base URL |
-| `--login` | `false` | Auto-login before executing steps |
-| `--headless` | `false` (headed) | Run browser in headless mode |
+| Home loaded | Authenticated home UI is present and the password field is hidden. | Panel connectivity or all dashboard features work. |
+| Arm Home/disarm | All visible observed partition statuses reach required states; cleanup is attempted. | Exactly-once physical commands under retries, or independently verified hardware state. |
+| Devices | A recognized device-category label is visible after readiness checks. | Every device exists or responds correctly. |
+| Cameras page | Route, iframe, and heading load. | Camera inventory or playback correctness. |
+| Activity | A timestamped activity row appears on the Events route. | That a particular action created a matching new event. |
+| Camera inventory | Each configured expected camera has a visible live tile/name. | There are no unexpected extra cameras. |
+| Camera names | Expected names are visible; much of this overlaps inventory verification. | Independent additional coverage just because the test count increased. |
+| Feed sections | Player/feed containers are rendered. | Video is playing, fresh, or recording correctly. |
 
-### Example input
+Good interview answer: "I tightened checks so sidebar text or a generic heading cannot stand in for actual feature content. I still distinguish visible UI from full backend or playback verification."
 
-```
-login to Total Connect, dismiss the cookie popup, go to the devices page,
-verify the devices list is visible, click on the first device, verify device
-details panel opens, go back to devices, navigate to activity page, verify
-activity log entries are displayed
-```
+## 7. Security-Panel Decisions Worth Explaining
 
-### Example console output
+Read [TotalConnectHomePage.js](../framework/pages/generated/smoke/TotalConnectHomePage.js) beside this section.
 
-```
-[NL-AUTHOR] [14:32:01] Phase 1: Parsing natural language instructions...
-[NL-AUTHOR] [14:32:03]   → Test: "Devices and Activity Navigation"
-[NL-AUTHOR] [14:32:03]   → Steps parsed: 9
-[NL-AUTHOR] [14:32:03]     1. [navigate] Navigate to Total Connect login page
-[NL-AUTHOR] [14:32:03]     2. [click] Dismiss cookie consent popup
-[NL-AUTHOR] [14:32:03]     3. [fill] Enter username
-[NL-AUTHOR] [14:32:03]     ...
+**Preconditions:** A prior run or user may have left partitions armed. `ensureDisarmed()` examines actual visible statuses, selects armed partitions when states are mixed, and disarms them before the test's arm operation.
 
-[NL-AUTHOR] [14:32:05] Phase 2: Launching browser...
-[NL-AUTHOR] [14:32:06]   → Browser ready at: https://qa2.totalconnect2.com/
+**Selection:** Selection can reset after arming. Select partitions again before disarming. When individual checkboxes exist, `setChecked(true)` is safer than blind clicking: requesting "checked" twice does not undo the first selection.
 
-[NL-AUTHOR] [14:32:07] ──── Step 1/9 ────
-[NL-AUTHOR] [14:32:07]   Action:      navigate
-[NL-AUTHOR] [14:32:07]   Description: Navigate to Total Connect login page
-[NL-AUTHOR] [14:32:08]   → Navigated to: https://qa2.totalconnect2.com/login
+**All partitions:** One successful partition must not mask another still showing Arming or Disarming. The check requires at least one visible status and every observed status to match.
 
-[NL-AUTHOR] [14:32:09] ──── Step 5/9 ────
-[NL-AUTHOR] [14:32:09]   Action:      assert_visible
-[NL-AUTHOR] [14:32:09]   Description: Verify devices list is visible
-[NL-AUTHOR] [14:32:09]   → DOM snapshot: reused from cache (saved tokens)
-[NL-AUTHOR] [14:32:10]   → Resolved: await expect(page.locator('.device-list')).toBeVisible();
-[NL-AUTHOR] [14:32:10]   → Selector:   locator(.device-list)
-[NL-AUTHOR] [14:32:10]   → Confidence: 0.92
-[NL-AUTHOR] [14:32:11]   → ✓ ASSERTION PASSED: Verify devices list is visible
-[NL-AUTHOR] [14:32:11]   → Step 5 completed | Assertion: PASS | started: 14:32:09 | finished: 14:32:11
-```
+**Cleanup:** The test uses `finally` to attempt disarm after sending the arm command, even if the armed-state assertion fails. Cleanup can also fail, so this is best effort, not a guarantee that physical equipment is restored.
 
-### Results summary
+**Errors:** "Unable to perform the action" and offline-panel messages are surfaced. The method historically named `dismissErrorDialog()` now checks and throws instead of hiding application failure.
 
-```
-╔══════════════════════════════════════════════════════════╗
-║   Results                                               ║
-╠══════════════════════════════════════════════════════════╣
-║  Steps Executed:     9                                   ║
-║  Actions Passed:     6                                   ║
-║  Actions Failed:     0                                   ║
-║                                                          ║
-║  Assertions Total:   3                                   ║
-║  Assertions PASSED:  3                                   ║
-║  Assertions FAILED:  0                                   ║
-║                                                          ║
-║  Page Objects:       2                                   ║
-║  Test Specs:         1                                   ║
-║                                                          ║
-║  Generated Page Objects:                                 ║
-║    → framework/pages/generated/DevicesPage.js            ║
-║    → framework/pages/generated/ActivityPage.js           ║
-║                                                          ║
-║  Generated Test Specs:                                   ║
-║    → tests/generated/devices-activity-flow.spec.js       ║
-╚══════════════════════════════════════════════════════════╝
-```
+**Remaining risk:** The page methods do not deliberately retry physical commands, but the generic healing patch and whole-test runner retries can repeat them. Keep healing/retries disabled for safety-sensitive demonstrations until an explicit action-level policy is implemented.
 
-### What gets generated
+## 8. Why Cameras Needed Special Handling
 
-#### Page Object (`framework/pages/generated/DevicesPage.js`)
+Cameras renders inside the `#fenixPagetarget` iframe. Searching only the outer page does not search that document. The page object gets a frame reference, then searches inside it.
 
-```javascript
-const { expect } = require('@playwright/test');
+Modern UI checks are scoped to live camera cards so camera names appearing in activity history do not satisfy inventory assertions. Full names may appear in tooltip text while the visible link is shortened. Smoke passes an explicit expected inventory rather than relying on the older default camera names.
 
-class DevicesPage {
-  constructor(page) {
-    this.page = page;
-    this.deviceList = page.locator('.device-list');
-    this.firstDevice = page.locator('.device-item').first();
-    this.detailsPanel = page.locator('.device-details');
-  }
+Feed-container checks are separate from name checks. A visible offline/no-live-video panel can still be a rendered section. To prove playback in future, add a suitable observable signal such as media time progression or a supported stream-status API, with clear handling of intentionally offline cameras.
 
-  async open(url) {
-    await this.page.goto(url);
-    await this.page.waitForLoadState('networkidle');
-  }
+The generic locator patch does not automatically follow `contentFrame()` into every frame locator. "Every camera interaction self-heals" is not a supported claim.
 
-  async clickFirstDevice() {
-    await this.firstDevice.click();
-    await this.page.waitForLoadState('domcontentloaded');
-  }
+## 9. Explain Runtime Healing Without Jargon
 
-  async verifyDeviceListVisible() {
-    await this.page.waitForLoadState('networkidle');
-    await expect(this.deviceList).toBeVisible();
-  }
-}
+Use this example: the test tries Cameras but its locator has been intentionally changed to Cameras-broken. In the supplied report screenshot the eventual replacement is `#menu-CamerasMenu`, not a username field.
 
-module.exports = { DevicesPage };
-```
+1. The action tries its original locator.
+2. If a recognized failure occurs, the wrapper checks whether healing is enabled and whether repair is already in progress.
+3. It looks for a trusted exact cached replacement. If that fails, it discards the stale cache entry.
+4. It tries removing a blocking popup and retries the original action.
+5. If still unsuccessful, the graph asks the locator-healer module for candidates using current page evidence.
+6. The healer checks candidate matches and tries the original action on a candidate.
+7. If the action works, it returns the result. The test continues to its original checks.
+8. If nothing works, the original error is reported.
 
-#### Test Spec (`tests/generated/devices-activity-flow.spec.js`)
+### Why Patch the Locator?
 
-```javascript
-const { test, expect } = require('@playwright/test');
-const allure = require('allure-js-commons');
-const { testDataConfig } = require('../../framework/config/test-data.config');
-const { DevicesPage } = require('../../framework/pages/generated/DevicesPage');
+The TC path replaces selected methods on the actual Playwright object. It does not substitute a fake object for assertions. A file still named "proxy" can therefore implement direct method patching; the file name is historical, not proof of the mechanism.
 
-test.describe('Devices and Activity Navigation', () => {
-  test('User navigates to devices and activity pages', async ({ page }) => {
-    await allure.epic('Total Connect');
-    await allure.feature('Navigation');
-    await allure.story('Device and Activity page access');
-    await allure.severity('critical');
-    await allure.tags('tc', 'navigation', 'devices', 'activity');
+### Why Keep Original Methods?
 
-    const devicesPage = new DevicesPage(page);
+Repair also needs to find and click elements. If those repair actions invoke the same recovery wrapper indefinitely, the system can recurse. Stored unpatched locator factories and the in-progress guard avoid that loop.
 
-    await test.step('Navigate to devices page', async () => {
-      await devicesPage.open(testDataConfig.targetApp.baseUrl + '/devices');
-      await page.waitForLoadState('networkidle');
-    });
+### Why a Short Timeout?
 
-    await test.step('Verify devices list is visible', async () => {
-      await devicesPage.verifyDeviceListVisible();
-    });
-    // ... more steps
-  });
-});
-```
+If the original action consumes the entire test budget, there is no time left to inspect and recover. The patch injects seven seconds where a supported method has no explicit timeout. It does not override explicit options or guarantee that the model/retry will finish before teardown.
 
-### Assertion tracking
+### What Counts as a Successful Repair?
 
-Every step is categorised as either an **action** or an **assertion**:
+The candidate action completed. That is weaker than "the candidate was semantically correct." Matching the wrong similarly named control can still be a false repair. Business assertions and human review are essential.
 
-| Step type | Detected via | Verdict |
+### What Does Not Automatically Heal?
+
+All `expect` failures, raw page actions, APIs outside the patch list, earlier-created locators, and iframe-derived locator paths are not universally covered. A boolean check returning false is not the same as a thrown failure.
+
+## 10. The Graphs and Agents
+
+LangGraph keeps workflow progress explicit: what failed, which strategy is being attempted, what was tried, and whether to continue or stop. Its state declarations describe expected fields, not proof that model output is valid.
+
+| Graph | One-sentence explanation |
+|---|---|
+| Runtime healing | Try a supported repair strategy, then continue or stop based on the outcome. |
+| Post-mortem | Classify a failed test, propose a source fix or only report, then summarize. |
+| Lifecycle | Inspect the repository before tests and summarize records afterward. |
+| Exploration | Visit pages, understand their structure, generate source artifacts. |
+| NL authoring | Turn an English scenario into steps, execute them, then generate artifacts. |
+
+Six main roles: locator healer finds alternatives; failure analyzer investigates; test-case healer proposes source edits; drift detector compares source with a live page; flaky analyzer interprets history; explorer discovers page structure. Separate registry-healer and registry-generator modules also exist.
+
+Why split roles? They need different evidence and rules. Locating a button is different from diagnosing a failed business assertion. Why not just functions? Functions could handle a small sequence; a graph makes branching and repeated attempts more explicit, at the cost of more state and configuration to maintain. Do not claim a graph makes AI output deterministic.
+
+The intended runtime strategies are CSS, role, and text. Current default routing can reach a fourth attempt with an `exhausted` hint. Explain this as a known boundary defect, not an exact three-attempt guarantee.
+
+## 11. After a Test Fails
+
+The reporter collects the spec path, title, errors, step context, and a screenshot when available. Analyzing nested errors matters because the top-level message may say only "test timed out."
+
+The failure analyzer requests a category and explanation. Screenshot analysis has text-only fallback. The graph may suggest test changes or decide to report an infrastructure problem. The source healer follows local imports using regular expressions, including one further import level; it does not build a complete syntax tree.
+
+Suggested changes are saved for review, not automatically proven fixes. The reviewer must ask:
+
+- Does the proposal preserve the requirement and original assertion?
+- Is the application wrong, rather than the test?
+- Is the replacement element the intended element?
+- Does the proposal introduce retries or unsafe side effects?
+- Does a focused rerun with healing off pass after the approved change?
+
+The post-mortem route does not itself turn a failed Playwright test into a pass. Some audit labels use "healing succeeded" to mean suggestions were produced; distinguish that from a verified repair.
+
+A separate registry-healing utility can modify source directly. Therefore "all AI changes always require approval" describes the desired policy, not a universal implementation guarantee.
+
+## 12. Cache Versus RAG
+
+**Cache:** "For this exact original locator description, we previously recorded this replacement." It is checked after the original failure. Entries require two recorded high-confidence successes, expire after seven days, and are invalidated when reuse fails. New cache writes require confidence at least 0.9. Cache keys are not scoped by application/account.
+
+**RAG:** "Find evidence similar to this problem, then provide it to the model." Your repository has an embedding service, four index categories, storage, and a similarity-query helper. The active healer does not currently retrieve that evidence into its prompt.
+
+Interview wording: "I built knowledge-indexing components and an exact repair cache. The final retrieval-to-healing integration is still incomplete." This is more defensible than calling the cache a trained model or claiming the system learns continuously.
+
+A local JSON vector store does not eliminate the remote embedding call. Saving examples does not retrain GPT.
+
+## 13. Explain the Six-Phase Lifecycle Accurately
+
+1. Discovery finds page objects, tests, and flows and builds an approximate source relationship map.
+2. Strategy asks AI which page objects seem risky based on inventory and history.
+3. Pre-execution reads up to three candidates and records locator counts/readability. It does not currently visit the live application.
+4. Playwright executes tests outside this graph.
+5. Runtime repair operates independently during eligible test actions.
+6. Synthesis calculates metrics and can index recent healing records.
+
+Important distinctions: the strategy is not automatic risk-based test selection; a summary checkpoint is not durable browser-session recovery; a separately invoked post phase does not inherit every in-memory pre-phase detail. A success-only npm chain can skip synthesis after a failing test, which is a reliability gap.
+
+## 14. English-to-Test and Exploration
+
+### Preview
+
+An AI call converts English to a structured plan. Code builds a rough template, prints it, and saves a Markdown report. No browser is launched. "No browser" does not mean no cost or no file writes.
+
+### Generate from Existing Page Objects
+
+The generator sends an API description and your scenario to the model, then writes a spec. This narrows the model's choices. The embedded API description can still lag the actual code, and generated files need review and validation. `--run` opts into executing the generated test immediately.
+
+### Full Authoring
+
+The graph parses the scenario, launches/logs in, captures page evidence, asks for a step implementation, executes it, and records whether actions/assertions succeeded. It can try fallback code and generate source from the action history. DOM caching and invalidation reduce repeated extraction; they do not guarantee freshness.
+
+This path executes generated JavaScript with `new Function`. That is not an isolation boundary. Do not run untrusted instructions or expose powerful credentials. Artifact generation can occur after failed steps, so inspect the recorded assertion outcomes, not merely the existence of a file.
+
+### Exploration
+
+The exploration graph visits a bounded set of pages, extracts UI structure, classifies pages, proposes flows, and generates artifacts. A crawler discovering a page does not establish complete business coverage. The older generated patterns can reference page objects no longer present.
+
+### Registries and Markdown Suites
+
+Registry JSON stores named elements, selector expressions, and context. The Markdown parser turns suite descriptions into structured input. Recording conversion, validation, and registry generation offer another source-driven route. Registries and page-object source can drift apart; they are not automatically interchangeable sources of truth.
+
+Source: [Markdown parser](../framework/ai/utils/md-suite-parser.js), [registry conversion](../framework/ai/scripts/codegen-to-registry.js), [validation](../framework/ai/scripts/validate-registry.js), [suite source](../tests/suites/smoke.md).
+
+## 15. Newer Authentication Work
+
+### Login and Logout
+
+The dedicated suite verifies login readiness, handles optional consent/transient UI, performs logout, and checks the login form returns with an empty password and disabled Sign In. It requires the explicitly configured monitor account.
+
+### Forgot Password
+
+It navigates to the recovery form, checks its heading/input/button states, and returns to login. It does not send a password-reset request. That reduces unwanted account/email side effects and also defines the coverage limit.
+
+### Repetition and Continuous Monitoring
+
+`repeatEach` creates separate test executions rather than hiding many cycles inside one passing result. Default configuration repeats each of the two tests 20 times. The continuous wrapper runs batches until stopped or a configured limit, waits between completed batches, tracks failed batches, and stops on runner-level interruption.
+
+No AI healing or automatic local Slack/report publishing is installed by this monitor config. This keeps the original failure evidence visible. Named step reporting avoids some credential-bearing automatic step details, and custom screenshots mask inputs. Retained traces and automatic screenshots still require review before sharing.
+
+### Negative-Login Observation
+
+The dedicated security command currently selects the AlarmNet spec; an older TC negative-login spec also remains in the repository. Synthetic inputs and response observations are not a penetration test or proof of lockout/rate limiting. Treat any repeated or scheduled login submissions as an explicitly authorized activity with account and request-rate controls.
+
+Source: [security configuration](../playwright.login-security.config.js), [AlarmNet spec](../tests/generated/nl-authored/alarmnet-security.spec.js), [observation helper](../framework/utils/login-security.js), [storage setup](../framework/utils/alarmnet-storage-setup.js).
+
+## 16. Local, Cloud, and CI Execution
+
+Local execution launches Chrome. LambdaTest execution connects to a remote browser using `chromium.connect()` and configured capabilities. The tests still run from Node; the browser runs remotely. Cloud access requires its own credentials and may incur cost.
+
+There are two browser owners: the runner's fixture configuration and the manual browser launcher. Both need cloud configuration because smoke manually creates its own session. Do not claim there is one universal browser setup path.
+
+GitHub Actions provides five workflows covering general tests, weekday smoke, login/recovery, login/logout, and negative-login observations. General/smoke workflows can run a separate healing-enabled attempt after failure. That second whole-suite run differs from repairing an action inside the first test attempt.
+
+Reports preserve versioned runs and a latest pointer. Publishing jobs use locks to reduce conflicting writes. The final report chooses healing-run results when available rather than merging two complete UUID-based result sets. Keep original results for comparison: passing on a second run is not itself proof AI caused the improvement.
+
+Known operational limits: some commands use shell separators that differ between Windows and Linux; some success-only chains skip reports/notifications after failure; several workflows use `continue-on-error`, so inspect final failure propagation before calling them release gates. Deployment configuration does not prove a workflow ran successfully.
+
+## 17. Reports, Audit, and Notifications
+
+**Playwright HTML:** test results and available debugging artifacts.
+
+**Allure:** business-oriented steps, attachments, categories, and run summaries. The custom auto-reporter builds timestamped reports. Its execution is not a guaranteed barrier after all AI augmentation; regenerate after completion when necessary.
+
+**AI reports:** locator attempts, proposed code changes, failure analysis, cost/latency, and historical outcomes.
+
+**Audit:** records who/what produced a diagnostic event and links post-mortem events through IDs. Runtime events lack equally complete test/run linkage, and cache recoveries are not equivalently represented. This is not a tamper-proof compliance system.
+
+**Slack:** summarizes available Allure results and links to reports. It supports current and older summary layouts plus fallback sources. Confirm that a notification is for the intended run, especially when fallback history is used. Notification success is separate from test success.
+
+**Portable report:** [bundler](../framework/utils/bundle-allure-report.js) packages reporting assets for sharing. Portability is not permission to share sensitive screenshots or internal application data.
+
+**Cloud status:** [LambdaTest status updater](../framework/utils/lambdatest-status.js) is a separate integration step, not an automatic consequence of a passed local assertion.
+
+## 18. Metrics You Can Defend
+
+Do not equate eight passing tests with comprehensive coverage or a proven maintenance reduction.
+
+| Metric | Meaning | Current caution |
 |---|---|---|
-| `assert_visible` | Step action type | `PASS` if `expect(locator).toBeVisible()` succeeds, `FAIL` if it throws |
-| `assert_text` | Step action type | `PASS` if `expect(locator).toHaveText()` succeeds, `FAIL` if it throws |
-| `assert_url` | Step action type | `PASS` if `expect(page).toHaveURL()` succeeds, `FAIL` if it throws |
-| GPT sets `isAssertion: true` | GPT response flag | Same PASS/FAIL based on execution outcome |
-| `click`, `fill`, etc. | Not an assertion | `success: true/false` — no assertion verdict |
+| Pass@k | Logged sessions recovered within their first k events | Sessions are grouped heuristically by adjacent selector/time, not stable failure IDs. |
+| SHE | Applied events divided by recorded final failed tests | Recovered tests can pass; timeouts are excluded; numerator/denominator are not aligned and the ratio can exceed 1. |
+| Latency | Distribution of instrumented AI method durations | May include retries; not the whole QA cycle. |
+| Token cost | Usage multiplied by configured prices | Estimate, not invoice; provider/model paths may differ. |
+| Confidence | A score produced by the model | Not a measured probability of correct repair. |
 
-Assertion verdicts are:
-- Logged in real-time: `→ ✓ ASSERTION PASSED` or `→ ✗ ASSERTION FAILED`
-- Included in the results summary (Assertions PASSED / FAILED counts)
-- Written to the action log with `Verdict: PASS` or `Verdict: FAIL`
+To establish real benefit, compare the same scenarios/settings with AI off/on across multiple runs, include genuine defects as well as broken locators, manually judge recovered targets, and measure human repair effort. Separate cold/cache runs and include login/reporting in wall time. Report sample size, variability, and false recoveries.
 
-### DOM snapshot caching (token optimisation)
+Useful future measurement: correct recoveries divided by independently identified recoverable failures. This is a recommended evaluation measure, not a claim that the current engine computes it correctly.
 
-DOM snapshots are expensive to send to GPT. The system caches them:
+## 19. Supporting Utilities and Older Paths
 
-| Cache layer | Scope | Eviction |
-|---|---|---|
-| **In-memory** | Same CLI run | Invalidated after `click`, `fill`, `select`, `press`, `navigate` |
-| **Disk** (`ai-reports/nl-authoring/snapshot-cache/`) | Across CLI runs | Expires after 24 hours |
-
-If two consecutive steps target the same page URL (e.g., fill username then fill password), the second step **reuses the cached snapshot** — zero extra tokens sent to GPT. The console shows:
-
-```
-[NL-AUTHOR] [14:32:09]   → DOM snapshot: reused from cache (saved tokens)
-```
-
-### IST timestamped action log
-
-Every run produces a human-readable action log at `ai-reports/nl-authoring/action-log-*.txt`:
-
-```
-NL Test Authoring — Action Log
-Generated: 19/4/2026, 2:32:15 pm IST
-Instructions: login to Total Connect, go to devices, verify device list
-──────────────────────────────────────────────────────────────────────────
-
-SUMMARY
-  Total steps:        9
-  Actions:            6 passed, 0 failed
-  Assertions:         3 PASSED, 0 FAILED (3 total)
-──────────────────────────────────────────────────────────────────────────
-
-[14:32:07] Step 1 — ✓ PASS
-  Action:      navigate
-  Description: Navigate to login page
-  Code:        await page.goto('https://qa2.totalconnect2.com/', { waitUntil: 'networkidle' });
-  Started:     14:32:07 IST
-  Completed:   14:32:08 IST
-
-[14:32:11] Step 5 — ✓ ASSERTION PASSED
-  Action:      assert_visible
-  Description: Verify devices list is visible
-  Selector:    locator(.device-list)
-  Code:        await expect(page.locator('.device-list')).toBeVisible();
-  Confidence:  0.92
-  Verdict:     PASS
-  Started:     14:32:09 IST
-  Completed:   14:32:11 IST
-  Snapshot:    reused from cache
-```
-
-### Async/await & waitForLoadState — standard rules
-
-All generated code follows mandatory wait rules enforced at **two layers**:
-
-**Layer 1 — Runtime execution engine** (`nl-authoring-nodes.js`)
-
-A central `ensurePageSettled(page)` helper is called at every transition point:
-
-| When | What it waits for |
+| Component | Why it exists / limitation |
 |---|---|
-| After every `page.goto()` | `domcontentloaded` → `networkidle` |
-| After auto-login URL change | `domcontentloaded` → `networkidle` |
-| Before every DOM snapshot extraction | `domcontentloaded` → `networkidle` |
-| After every `click`/`fill`/`select`/`press` | `domcontentloaded` (5s) → `networkidle` (3s) |
-| After screenshot | `domcontentloaded` only |
-
-**Layer 2 — GPT prompt rules** (all 4 prompt files)
-
-Every GPT prompt that generates Playwright code includes these mandatory rules:
-
-- Every Playwright call MUST use `await`
-- After `page.goto()` → `await page.waitForLoadState('networkidle')`
-- After navigation clicks → `await page.waitForLoadState('networkidle')`
-- After DOM-mutating clicks (tabs, modals) → `await page.waitForLoadState('domcontentloaded')`
-- After form submit → `await page.waitForLoadState('networkidle')`
-- Before assertions on async content → `await page.waitForLoadState('networkidle')`
-- Never use `Promise.all()` for sequential UI actions
-- Every `test.step()` body must `await` every action
-
-These rules apply to **all generated artifacts** across the framework — both the NL authoring pipeline and the exploration pipeline.
-
----
-
-## 10. Writing a New Test — Step by Step
-
-### 1. Create the spec file
-
-```
-tests/total-connect/my-new-test.spec.js
-```
-
-### 2. Import the TC fixture (not `@playwright/test`)
-
-```javascript
-const { test, expect } = require('../../framework/fixtures/tc.fixture');
-const allure = require('allure-js-commons');
-```
-
-### 3. Pick the right fixture for your test
-
-```javascript
-// Need manual login control (measuring login timing):
-test('my test', async ({ page, tc, perf }, testInfo) => {
-  await tc.openLoginPage();
-  await tc.fillConfiguredCredentials();
-  await tc.submitLogin();
-  // ... test logic
-});
-
-// Already logged in (most tests):
-test('my test', async ({ page, tcLoggedIn, perf }, testInfo) => {
-  await tcLoggedIn.navigateToSecurity();
-  // ... test logic
-});
-
-// No perf measurement needed:
-test('my test', async ({ page, tcLoggedIn }, testInfo) => {
-  // ... test logic
-});
-```
-
-### 4. Add Allure metadata
-
-```javascript
-await allure.epic('Total Connect');
-await allure.feature('Security');
-await allure.story('Arm Panel');
-await allure.severity('critical');
-await allure.tags('tc-only', 'security');
-```
-
-### 5. Run it
-
-```bash
-npx playwright test tests/total-connect/my-new-test.spec.js --project total-connect
-```
-
----
-
-## 11. Environment Variables Cheat Sheet
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `CI` | — | Set by GitHub Actions. Switches to headless, enables retries |
-| `PW_OPEN_REPORT` | `false` | Auto-open HTML report after run |
-| `PW_TC_MAX_LOAD_MS` | — | Optional max page load time (ms). Tests fail if exceeded |
-| `AI_HEALING_ENABLED` | `false` | Master switch for AI self-healing |
-| `OPENAI_API_KEY` | — | Required when `AI_HEALING_ENABLED=true` |
-| `AI_HEALING_MODEL` | `gpt-4o-mini` | Model for locator healing |
-| `AI_ANALYSIS_MODEL` | `gpt-4o` | Model for failure analysis |
-| `AI_HEALING_MAX_RETRIES` | `2` | Max healing attempts per locator |
-| `AI_HEALING_CONFIDENCE_THRESHOLD` | `0.7` | Min confidence to accept a healed selector |
-
----
-
-## 12. npm Scripts Cheat Sheet
-
-### Total Connect Tests
-
-| Script | What it does |
-|---|---|
-| `npm run test:tc` | Clean Allure → run all TC tests → open HTML report |
-| `npm run test:tc:headed` | Same but with visible browser |
-| `npm run test:tc:perf` | Same + enforce 8s max load threshold |
-| `npm run test:tc:allure` | Clean → run → generate + open Allure report |
-| `npm run test:tc:list` | List all TC tests (no execution) |
-
-### Reports
-
-| Script | What it does |
-|---|---|
-| `npm run report` | Open Playwright HTML report |
-| `npm run report:allure` | Generate + open Allure report |
-| `npm run clean:allure` | Delete allure-results/ and allure-report/ |
-
-### AI Features
-
-| Script | What it does |
-|---|---|
-| `npm run test:ai` | Run all tests with self-healing enabled |
-| `npm run ai:explore` | Crawl app + generate page objects + test specs |
-| `npm run ai:author` | **NL Test Author** — interactive mode (prompts for English instructions) |
-| `npm run ai:author:login` | NL Test Author with auto-login |
-| `npm run ai:author:headless` | NL Test Author in headless mode |
-| `npm run ai:drift` | Detect UI changes |
-| `npm run ai:flaky` | Analyze flaky test patterns |
-| `npm run ai:metrics` | Compute healing stats |
-| `npm run ai:audit` | Full audit report |
-| `npm run ai:lifecycle:full` | Pre + test with healing + post analysis |
+| [Readiness helper](../framework/utils/waitForPageReady.js) | Shared loader/readiness handling; does not establish business correctness. |
+| [Assertion helper](../framework/utils/assertion-helper.js) | Preserves context and labels likely synchronization, timeout, or functional failure using message rules. |
+| [Popup interceptor](../framework/utils/popupInterceptor.js) | Generic popup handling used by recovery; application error dialogs need stricter treatment than optional consent. |
+| [Page metrics](../framework/utils/pageLoadMetrics.js) | Browser timing measurements; a few UI timings are not a load-testing program. |
+| [Step helper](../framework/utils/steps.js) | Reusable step/reporting conventions. |
+| [Runtime input](../framework/utils/runtimeInput.js), [user factory](../framework/utils/userFactory.js) | Input/test-user support for older demo flows. |
+| [Auth page](../framework/pages/AuthPage.js), [products page](../framework/pages/ProductsPage.js) | Demo application's page objects, separate from TC. |
+| [Auth flow](../framework/flows/auth/AuthFlow.js), [cart](../framework/flows/cart/CartFlow.js), [checkout](../framework/flows/checkout/CheckoutFlow.js), [orders](../framework/flows/orders/OrdersFlow.js) | Examples of grouping business operations; not all follow the newer smoke path. |
+| [Audit report generator](../framework/ai/audit/audit-report-generator.js), [traceability matrix](../framework/ai/audit/traceability-matrix.js) | Present relationships in recorded evidence; missing event IDs limit completeness. |
+| [Knowledge indexer](../framework/ai/rag/rag-indexer.js), [embeddings](../framework/ai/rag/embedding-service.js) | Prepare four categories of searchable evidence; live prompt retrieval remains disconnected. |
+| [Azure router](../framework/ai-azure/router.js), [Azure factory](../framework/ai-azure/core/azure-ai-client-factory.js) | Additional provider experiments beside the changed common factory; avoid describing all routes as equivalent. |
 
-### Demo Pipeline
+The older performance specs are disabled. The clip-export spec uses fixed IDs/coordinates and checks interaction steps, not the resulting video file. The repository is an evolved prototype with several generations of implementation, not a uniformly production-hardened platform.
 
-| Script | What it does |
-|---|---|
-| `npm run demo:explore` | AI exploration |
-| `npm run demo:test` | Run AI-generated tests |
-| `npm run demo:heal` | Run AI-generated tests with self-healing (headed) |
-| `npm run demo:full` | Explore → test → report in one command |
+## 20. Interview Questions and Honest Answers
 
-### CI / CD
+**Why Playwright?** It gives locator-based actions, automatic actionability waiting, retrying assertions, browser isolation, and useful artifacts. Your own logic adds domain checks and optional recovery, rather than replacing the runner.
 
-| Script | What it does |
-|---|---|
-| `npm run ci:test` | Run generated tests headless (CI default) |
-| `npm run ci:test:heal` | Re-run with AI healing + 1 retry |
-| `npm run ci:report` | Generate Allure report from `allure-results/` |
-| `npm run ai:author:suite -- <path>` | Run a markdown test suite end-to-end |
+**Why not use retries alone?** A retry repeats the same test or action. A stale locator may fail identically each time. Healing proposes a different locator, but adds cost and wrong-target risk.
 
----
+**Why not heal assertion failures?** Assertions express the requirement. Changing an expectation to match a broken application can hide a defect. Your post-mortem tool may suggest changes, but these require review.
 
-## 13. Quick Reference Card
+**Why share a session?** It reduces repeated authentication and suits a sequential smoke flow. The tradeoff is shared state and worker-restart behavior. Independent tests need separate contexts/accounts when parallelism matters.
 
-> Print this page or keep it open during demos.
+**Why not add long sleeps?** A sleep waits even when ready and may still be too short when slow. Wait for the meaningful state. Some older helpers still contain fixed waits; do not claim they were all removed.
 
-| What you want to do | Command |
-|---|---|
-| **Author a test from English** | `npm run ai:author -- --instructions "login, go to devices, verify list"` |
-| **Author from a markdown suite** | `npm run ai:author:suite -- tests/suites/smoke.md` |
-| **Run all generated tests (headed)** | `npm run demo:test:headed` |
-| **Run a single test (headed)** | `npx playwright test tests/generated/login-flow.spec.js --headed` |
-| **Run with AI self-healing** | `npm run demo:heal` |
-| **Run smoke suite** | `npm run demo:smoke:headed` |
-| **Generate & open Allure report** | `npm run demo:report` |
-| **Full pipeline (explore → test → report)** | `npm run demo:full` |
-| **CI — execute tests** | `npm run ci:test` |
-| **CI — heal & retry** | `npm run ci:test:heal` |
-| **CI — build report** | `npm run ci:report` |
+**How do you prevent false positives?** Check actual partition states, scope camera checks to live cards, distinguish feed rendering from playback, and retain original assertions. Complete prevention is not established; false-heal evaluation is still needed.
 
-### Key Environment Variables
+**What is human-in-the-loop here?** Post-mortem suggestions are reviewed instead of automatically applied. Separate registry/generation tools can write files, so approval is not enforced everywhere yet.
 
-| Variable | Purpose |
-|---|---|
-| `AI_HEALING_ENABLED=true` | Turns on the self-healing proxy |
-| `OPENAI_API_KEY` | Required for authoring and healing |
-| `CI=true` | Switches to headless mode (auto-set in GitHub Actions) |
-| `PW_TC_MAX_LOAD_MS` | Optional max page-load threshold in ms |
+**How does it learn?** It stores exact repairs and has knowledge-indexing components. It does not retrain the model, and runtime semantic retrieval is not connected yet.
 
----
+**What did Azure change?** Provider selection moved into a common factory and an Anthropic-compatible client was added. Some OpenAI-specific guards/model overrides remain, so migration is incomplete.
 
-## 14. Live Demo Walkthrough
+**What is your hardest engineering issue?** Choose one you actually worked on: late cookie overlays, home URL preceding real readiness, mixed panel states, iframe inventory, method-patch recursion, or stale report duplication. Explain evidence, root cause, decision, verification, and remaining risk.
 
-A five-act demo you can deliver in ~15 minutes with a real Total Connect login.
+**How did you use AI?** "I used AI-assisted tooling for parts of development. My responsibility was defining requirements, checking generated code, integrating it, validating behavior, and deciding where automation should stop." Follow with a concrete decision you can explain from source.
 
-### Prerequisites
+**What would you fix before production?** Action-specific safety policies, credential fallback removal and redaction, provider-independent configuration, generated-code isolation, complete event identity, correct metrics, enforced flags, and failure-safe reporting.
 
-1. `npm install` has been run
-2. `OPENAI_API_KEY` is set in `.env`
-3. Credentials in `framework/config/test-data.config.js` are valid
-4. Chrome is installed
-
-### Act 1 — Author a test from plain English
-
-```powershell
-npm run ai:author -- --instructions "login to the app, dismiss cookie popup, close any pop up that occurs by clicking on DONE, click on SELECT ALL, and click on ARM HOME, wait till the partitions status changes to Armed Home"
-```
-
-**What happens:** A headed browser opens. The AI parses your English into structured steps, drives the browser through each action in real time, records selectors, and generates a Page Object + test spec.
-
-**Show the audience:**
-- The live browser executing each step
-- Console output with step-by-step verdicts
-- Generated files in `framework/pages/generated/` and `tests/generated/`
-
-### Act 2 — Run the generated test (no AI cost)
-
-```powershell
-npm run demo:test:headed
-```
-
-Or run a single spec:
-
-```powershell
-npx playwright test tests/generated/login-flow.spec.js --headed
-```
-
-**Key point:** The generated test is standard Playwright — no LLM tokens consumed at runtime. This is what runs daily in CI at zero AI cost.
-
-### Act 3 — Demonstrate AI self-healing
-
-```powershell
-npm run demo:heal
-```
-
-This sets `AI_HEALING_ENABLED=true` and runs headed. If any selector has drifted since the test was authored, the healing agent intercepts the failure, sends the live DOM to GPT-4o-mini, gets a working selector back, and retries — all in real time.
-
-**To prove healing works on stage:**
-
-```powershell
-# 1. Open a generated spec and break a selector on purpose
-#    e.g. change '#txtUserName' → '#txtUserName_BROKEN'
-
-# 2. Run with healing — watch the proxy fix it live
-npm run demo:heal
-
-# 3. Revert the edit after the demo
-```
-
-Healing reports are saved to `ai-reports/`.
-
-### Act 4 — Run a markdown test suite
-
-```powershell
-npm run ai:author:suite -- tests/suites/smoke.md
-```
-
-Open `tests/suites/smoke.md` to show the audience the format:
-- `# heading` = suite name
-- `## TC-ID: Title` = test case
-- `> login: true` = per-test config
-- Plain English instructions in the body
-
-Five test cases run sequentially; a suite report is generated at the end.
-
-### Act 5 — Generate the Allure report
-
-```powershell
-npm run demo:report
-```
-
-Allure opens in the browser with epics, features, severity tags, trend history, and failure categories.
-
-**In CI:** This report auto-deploys to GitHub Pages on every push via the multi-stage pipeline (execute → heal on failure → report → publish).
-
-### Demo flow diagram
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Act 1: NL Author          "describe in English"             │
-│  npm run ai:author -- --instructions "..."                   │
-│          │                                                   │
-│          ▼                                                   │
-│  Act 2: Execute             zero-cost Playwright run         │
-│  npm run demo:test:headed                                    │
-│          │                                                   │
-│          ▼                                                   │
-│  Act 3: Self-Heal           break a selector, watch it fix   │
-│  npm run demo:heal                                           │
-│          │                                                   │
-│          ▼                                                   │
-│  Act 4: Suite Run           QA writes markdown, not code     │
-│  npm run ai:author:suite -- tests/suites/smoke.md            │
-│          │                                                   │
-│          ▼                                                   │
-│  Act 5: Report              Allure with trends & categories  │
-│  npm run demo:report                                         │
-└──────────────────────────────────────────────────────────────┘
-```
+## 21. Three Stories to Prepare
+
+Use real evidence from your own work. Do not invent results or saved hours.
+
+### Story A: Login Looked Complete but the Test Was Early
+
+Situation: URL changed before usable content appeared. Diagnosis: authentication/navigation completion was being confused with readiness. Decision: check a real home control after navigation and handle known consent UI. Tradeoff: readiness must be application-specific. Evidence: show the login helper and an actual trace from your run.
+
+### Story B: A Pass Was Too Weak
+
+Situation: seeing one partition state or a camera name could produce misleading confidence. Decision: require all observed partitions, scope expected camera inventory, and separate feed sections from names. Verification: synthetic positive and negative cases. Limit: UI status still does not prove video playback or backend state independently.
+
+### Story C: Repair Could Consume the Test Budget
+
+Situation: a long action wait leaves no time for diagnosis. Decision: inject a shorter initial timeout where none was specified, preserve original methods, and prevent recursive repair. Verification: an isolated navigation mutation, original assertions, and recorded outcomes. Limit: explicit timeouts and multiple API retries still need a real end-to-end deadline budget.
+
+## 22. Study and Demonstration Plan
+
+1. Explain sections 1-8 with AI disabled: test ownership, login, pages, assertions, safety, iframe behavior.
+2. Draw the normal flow and failure flow from memory, then locate each arrow in source.
+3. Explain runtime versus whole-test retries versus a separate CI rerun.
+4. Study cache, graphs, post-mortem, and RAG boundaries; name what is only partially integrated.
+5. Inspect a real run's original failure, proposed repair, final assertion, and evidence IDs.
+6. Practice the interview questions aloud without reading scripts.
+
+For a safe demonstration, start with offline framework checks or a read-only navigation case in an approved QA account. Keep physical commands, reset requests, security submissions, and paid services out unless explicitly approved. Do not alter a working page object merely to stage a demo without an isolated change and restoration plan.
+
+Before claiming a feature, answer four questions: Where is it called? What does it verify? What happens when it fails? What evidence proves it worked?
+
+Commands and prerequisites are maintained in the [README](../README.md). The [architecture report](TEST_FRAMEWORK_ARCHITECTURE.md) contains the detailed claim-to-code corrections and outstanding risks. This review did not run live QA, AI, cloud, or notification workflows.

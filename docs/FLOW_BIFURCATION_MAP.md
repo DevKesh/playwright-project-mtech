@@ -1,5 +1,7 @@
 # Flow Bifurcation Map
 
+> Historical folder map. Current smoke, NL-authored, monitoring, and security-observation lanes are described in [PROJECT_GUIDE.md](PROJECT_GUIDE.md). For new Total Connect generation, follow [the current authoring rules](../.github/copilot-instructions.md); the older generic domain conventions below do not override them.
+
 Use this map to decide where each new scenario belongs.
 
 ## Domain To Folder Mapping

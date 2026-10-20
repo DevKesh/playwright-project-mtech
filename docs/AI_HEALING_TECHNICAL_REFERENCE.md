@@ -1,5 +1,7 @@
 # AI Self-Healing Framework — Technical Reference (Q&A)
 
+> Historical Q&A, superseded where it conflicts with [TEST_FRAMEWORK_ARCHITECTURE.md](TEST_FRAMEWORK_ARCHITECTURE.md). In particular, live RAG retrieval is not connected, AI suggestions remain fallible, and runtime repairs differ from post-mortem suggestions. Use [PROJECT_GUIDE.md](PROJECT_GUIDE.md) for current interview answers.
+
 > Important technical points about the Multi-Agentic AI Self-Healing Test Automation Framework.
 > Use this as a quick reference for thesis defense, demos, and documentation.
 

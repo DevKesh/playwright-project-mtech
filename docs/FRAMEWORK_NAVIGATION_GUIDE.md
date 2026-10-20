@@ -1,5 +1,7 @@
 # Framework Navigation Guide
 
+> Historical navigation notes. For the current execution lanes, use [PROJECT_GUIDE.md](PROJECT_GUIDE.md) and [TEST_FRAMEWORK_ARCHITECTURE.md](TEST_FRAMEWORK_ARCHITECTURE.md), reviewed on 19 October 2026. The two-lane description below predates the dedicated monitoring/security configurations and newer smoke behavior.
+
 This guide explains how the framework actually runs, where to add new tests, and how to explain the self-healing behavior without overselling it.
 
 ## Why This Guide Exists
