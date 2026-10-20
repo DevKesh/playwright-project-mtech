@@ -1,0 +1,121 @@
+[
+  {
+    "runId": "run-1792482962342",
+    "overallStatus": "failed",
+    "tests": [
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
+        "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 001: submit unique synthetic credentials to AlarmNet",
+        "status": "passed",
+        "duration": 11041,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
+        "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 002: submit unique synthetic credentials to AlarmNet",
+        "status": "passed",
+        "duration": 10671,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
+        "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 003: submit unique synthetic credentials to AlarmNet",
+        "status": "passed",
+        "duration": 10651,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
+        "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 004: submit unique synthetic credentials to AlarmNet",
+        "status": "passed",
+        "duration": 10684,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/nl-authored/alarmnet-security.spec.js",
+        "testTitle": " > chrome > generated/nl-authored/alarmnet-security.spec.js > @nl-authored @login-security AlarmNet synthetic invalid credentials > Attempt 005: submit unique synthetic credentials to AlarmNet",
+        "status": "passed",
+        "duration": 10689,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-001: Verify home page is loaded after login",
+        "status": "passed",
+        "duration": 41,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-002: Arm Home and Disarm partitions",
+        "status": "passed",
+        "duration": 18425,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-003: Navigate to Devices page",
+        "status": "passed",
+        "duration": 2618,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-004: Navigate to Cameras page",
+        "status": "passed",
+        "duration": 3294,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-005: Navigate to Activity page and verify log",
+        "status": "passed",
+        "duration": 20679,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+        "status": "failed",
+        "duration": 31236,
+        "error": "Error: Expected live camera tile BULLET QA 01\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expected live camera tile BULLET QA 01 with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\u001b[22m\n"
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-006: Verify all cameras are visible on Cameras page",
+        "status": "failed",
+        "duration": 0,
+        "error": "TimeoutError: page.waitForURL: Timeout 45000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/home\" until \"commit\"\n============================================================"
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+        "status": "skipped",
+        "duration": 0,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+        "status": "skipped",
+        "duration": 0,
+        "error": null
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-007: Verify camera names are displayed on Cameras page",
+        "status": "failed",
+        "duration": 30504,
+        "error": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().getByText('Cameras', { exact: true }).filter({ visible: true }).first()\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().getByText('Cameras', { exact: true }).filter({ visible: true }).first()\u001b[22m\n\u001b[2m    - found getByRole('button', { name: 'DONE', exact: true }).filter({ visible: true }).first(), intercepting action to run the handler\u001b[22m\n"
+      },
+      {
+        "testFile": "/home/runner/work/playwright-project-mtech/playwright-project-mtech/tests/generated/smoke/smoke-suite.spec.js",
+        "testTitle": " > chrome > generated/smoke/smoke-suite.spec.js > @smoke @tc @tc-plan TC Smoke Suite > TC-008: Verify camera feed sections load on Cameras page",
+        "status": "failed",
+        "duration": 31731,
+        "error": "Error: Expected live camera tile BULLET QA 01\n\n\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\nExpected: visible\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expected live camera tile BULLET QA 01 with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('#fenixPagetarget').contentFrame().locator('app-live-camera').locator('app-device-card').filter({ has: getByText('BULLET QA 01', { exact: true }) })\u001b[22m\n"
+      }
+    ],
+    "timestamp": "2026-10-20T08:00:23.772Z"
+  }
+]

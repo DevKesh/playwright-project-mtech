@@ -1,1 +1,1 @@
-{"id":"bb6b28cbc97f86abfaf610a811b666e8","fullName":"generated/smoke/smoke-suite.spec.js:183:3","name":"TC-007: Verify camera names are displayed on Cameras page","status":"skipped","testResultsByEnv":{"default":"795de924d7688d78a402b293f1bbdcc5"}}
+{"id":"bb6b28cbc97f86abfaf610a811b666e8","fullName":"generated/smoke/smoke-suite.spec.js:183:3","name":"TC-007: Verify camera names are displayed on Cameras page","status":"failed","testResultsByEnv":{"default":"8594637af35f9bc7afe67114172b0f8b"}}
