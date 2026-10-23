@@ -31,5 +31,5 @@ jobs:
       suite: alarmnet-forgot-login-security
       iterations: 100
       iteration_override: ${{ inputs.iterations || '' }}
-      interval_ms: ${{ inputs.interval_ms || 10000 }}
+      interval_ms: ${{ fromJSON(format('{0}', inputs.interval_ms || 10000)) }}
     secrets: inherit
