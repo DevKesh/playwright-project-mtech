@@ -1,0 +1,35 @@
+name: '@alarmnet-login-security | AlarmNet Sign In'
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: 'Optional positive integer override; blank uses iterations below (values above 100 allowed)'
+        type: string
+        required: false
+      interval_ms:
+        description: 'Minimum delay after each iteration per worker (5000-60000 ms)'
+        type: number
+        default: 10000
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alarmnet-security-target-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sign-in:
+    name: '/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/alarmnet-security-runner.yml
+    with:
+      suite: alarmnet-login-security
+      iterations: 100
+      iteration_override: ${{ inputs.iterations || '' }}
+      interval_ms: ${{ inputs.interval_ms || 10000 }}
+    secrets: inherit

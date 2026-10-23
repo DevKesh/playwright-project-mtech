@@ -10,7 +10,7 @@ const ALARMNET_LOGIN_URL = 'https://services.qa.alarmnet.com/AlarmNet360/AlarmNe
 const settings = securitySettings();
 const runId = randomUUID();
 
-test.describe('@nl-authored @login-security AlarmNet synthetic invalid credentials', () => {
+test.describe('@nl-authored @login-security @alarmnet-login-security AlarmNet Sign In (/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn) synthetic invalid credentials', () => {
   test.afterEach(async () => {
     await pace(settings.intervalMs);
   });
