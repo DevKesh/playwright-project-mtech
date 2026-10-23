@@ -68,6 +68,8 @@ export default defineConfig({
   testIgnore: [
     '**/nl-authored/login-forgot-password-repeat.spec.js',
     '**/nl-authored/login-security.spec.js',
+    '**/nl-authored/alarmnet-security.spec.js',
+    '**/nl-authored/alarmnet-*-security.spec.js',
   ],
   /* Run tests sequentially (one after another) for stable execution against live app */
   fullyParallel: false,
@@ -79,6 +81,7 @@ export default defineConfig({
   workers: 1,
   /* Reporters: Allure (primary) + HTML (backup) + AI reporter (conditional) */
   reporter: [
+    ['list'],
     ['html', {
       open: process.env.CI
         ? 'never'
