@@ -1,1 +1,1 @@
-{"id":"9f01909d5bdd1de65ddd08e3407b802e","fullName":"alarmnet-security.spec.js:20:5","name":"Attempt 060: submit unique synthetic credentials to AlarmNet","status":"failed","testResultsByEnv":{"default":"1d6895ecfe0f799f71161d0beb2ac034"}}
+{"id":"9f01909d5bdd1de65ddd08e3407b802e","fullName":"alarmnet-security.spec.js:20:5","name":"Attempt 060: submit unique synthetic credentials to AlarmNet","status":"passed","testResultsByEnv":{"default":"797014499188c202f3bb14e089c16b35"}}
