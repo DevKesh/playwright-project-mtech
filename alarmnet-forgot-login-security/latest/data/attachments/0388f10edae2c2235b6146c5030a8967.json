@@ -1,0 +1,7 @@
+{
+  "requestedUrl": "https://services.qa.alarmnet.com/AlarmNet360/AlarmNetDirectV/UserManagement/UserRegistration/ForgotLogin",
+  "status": 200,
+  "detected": false,
+  "observationMs": 10000,
+  "finalUrl": "https://services.qa.alarmnet.com/AlarmNet360/AlarmNetDirectV/UserManagement/UserRegistration/ForgotLogin"
+}
