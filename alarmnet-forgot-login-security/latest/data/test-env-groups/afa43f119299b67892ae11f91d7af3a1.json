@@ -1,1 +1,1 @@
-{"id":"afa43f119299b67892ae11f91d7af3a1","fullName":"alarmnet-forgot-login-security.spec.js:15:5","name":"Attempt 068: Forgot Login challenge check without recovery submission","status":"passed","testResultsByEnv":{"default":"524a356ce67adf09ca50fe89f770115f"}}
+{"id":"afa43f119299b67892ae11f91d7af3a1","fullName":"alarmnet-forgot-login-security.spec.js:10:5","name":"Attempt 068: Forgot Login challenge check without recovery submission","status":"failed","testResultsByEnv":{"default":"619c3c90eae0ce78534c4b23f3fcb9c8"}}
