@@ -125,7 +125,7 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 2. NEVER use waitForLoadState('networkidle') — BANNED (causes 2-min timeouts on SPAs)
 3. For optional elements (popups, banners), wrap in: if (await element.isVisible({ timeout: 3000 }).catch(() => false)) { await element.click(); }
 4. After clicks that trigger arming/state change, use the waitFor from stateTransitions
-5. Use testDataConfig references for credentials, never hardcode
+5. Authentication is owned by fixtures; never hardcode or read credentials in generated specs
 6. Generate a complete Page Object class + test spec file
 7. Follow Playwright best practices: auto-waiting, no artificial delays
 
@@ -162,57 +162,43 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 - For arming operations: include error dialog detection that throws on system errors
 
 ## Spec Rules:
-- Import { test, expect, chromium } from @playwright/test
-- Import ALL page objects needed: require('../../../framework/pages/generated/smoke/PageName')
-- Import testDataConfig: require('../../../framework/config/test-data.config')
+- Authenticated business tests import { test, expect } from '../../../framework/fixtures/smoke.fixture'.
+- Request named fixtures as destructured test parameters: authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage.
+- Every test gets a fresh browser/context and authenticated /home page. The fixture owns createLoginSession and cleanup, with a separate 180000ms setup/teardown budget.
+- LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD must supply the approved account; no fallback. Do not import testDataConfig, chromium, or manually construct smoke POMs in business specs.
+- Public login/recovery uses @playwright/test and its native unauthenticated page, never smoke.fixture. Synthetic security may use '../../../framework/fixtures/login-security.fixture' for page, loginPage, and pacing. Do not authenticate or heal these flows.
 - CRITICAL IMPORT PATHS: The spec file lives at tests/generated/smoke/. Relative paths MUST use '../../../framework/...' (3 levels up). NEVER use '../../framework/...' (2 levels). NEVER invent paths like 'pages/total-connect/'.
 - Use ONLY page object classes that exist in the "Existing Page Objects" list below. Match the EXACT class names and file names.
 - Use test.describe with tags in title
-- Use test.describe.configure({ mode: 'serial' }) to ensure order
-- CRITICAL: Use beforeAll/afterAll hooks for SHARED BROWSER SESSION:
-  * beforeAll: launch browser, create context + page, login ONCE, dismiss popups
-  * afterAll: close browser
+- Use default describe mode with independent tests, not serial skip-on-failure.
+- Do not use shared mutable pages or beforeAll/afterAll sessions. Smoke remains single-worker, fullyParallel false, because the physical panel is shared.
 - Each test case is a separate test() block inside the describe
 - Each test should navigate back to home if needed before its flow
 - Use test.step() for each logical action within a test
 - Add meaningful expect() assertions for verification steps
-- The browser must NOT close between tests — only afterAll closes it
-- For arm/disarm tests: add test.setTimeout(180000) for the extra time needed
+- Business navigation must use homePage methods; no manual goto/waitForURL/URL assertions. Public navigation assertions are allowed when they are the tested behavior.
+- Camera tests call test.setTimeout(90000); arm/disarm tests call test.setTimeout(300000), as their first statement.
+- Arm/disarm: ensureDisarmed, selectAllPartitions, then try { armHome/armAway; verify matching Armed Home/Armed Away status; } finally { selectAllPartitions; disarm; }. Verify Disarmed afterward. Preserve assertions and do not retry physical commands.
+- Include Allure epic/feature/story/severity/tag inside each test.
 
 ## CONSOLIDATED SUITE TEMPLATE (follow this pattern exactly):
 \`\`\`javascript
-const { test, expect, chromium } = require('@playwright/test');
-const { testDataConfig } = require('../../../framework/config/test-data.config');
-// ... page object imports ...
+const { test, expect } = require('../../../framework/fixtures/smoke.fixture');
+const allure = require('allure-js-commons');
 
 test.describe('@smoke @tc @tc-plan Suite Name', () => {
-  test.describe.configure({ mode: 'serial' });
-
-  let page, context, browser;
-  let loginPage, homePage; // ... other page objects
-
-  test.beforeAll(async () => {
-    browser = await chromium.launch({ headless: false });
-    context = await browser.newContext();
-    page = await context.newPage();
-    // instantiate page objects
-    loginPage = new LoginPage(page);
-    homePage = new HomePage(page);
-    // Login ONCE for the entire suite
-    await page.goto(testDataConfig.targetApp.loginUrl);
-    await loginPage.dismissCookieConsent();
-    await loginPage.login(testDataConfig.targetApp.credentials.email, testDataConfig.targetApp.credentials.password);
-    await page.waitForURL('**/home', { timeout: 30000 });
-    await homePage.dismissCookiePopup();
-    await homePage.closeDonePopup();
-  });
-
-  test.afterAll(async () => {
-    if (browser) await browser.close();
-  });
-
-  test('TC-XXX: Test name', async () => {
-    // test.step blocks here
+  test('TC-XXX: Verify device categories', async ({ homePage, devicesPage }) => {
+    await allure.epic('Total Connect');
+    await allure.feature('Devices');
+    await allure.story('Device categories are visible');
+    await allure.severity('critical');
+    await allure.tag('nl-authored');
+    await test.step('Navigate to Devices', async () => {
+      await homePage.navigateToDevices();
+    });
+    await test.step('Verify device categories', async () => {
+      await devicesPage.verifyDeviceCategoriesVisible();
+    });
   });
 });
 \`\`\``;
@@ -229,9 +215,8 @@ ${registryContext}
 - Entry Criteria: ${testMeta.entry || 'User is on login page'}
 - Exit Criteria: ${testMeta.exit || 'Test assertions pass'}
 
-## Test Data Config Available:
-- testDataConfig.targetApp.credentials.email = "${testDataConfig.targetApp.credentials.email}"
-- testDataConfig.targetApp.credentials.password = (configured)
+## Test Environment:
+- Credentials belong to the authenticated fixture and must not be emitted in generated code.
 - testDataConfig.targetApp.loginUrl = "${testDataConfig.targetApp.loginUrl}"
 - testDataConfig.targetApp.baseUrl = "${testDataConfig.targetApp.baseUrl}"
 

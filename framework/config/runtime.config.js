@@ -77,8 +77,8 @@ module.exports = {
   },
 
   credentials: {
-    username: process.env.TC_USERNAME || 'tmsqa@1',
-    password: process.env.TC_PASSWORD || 'Password@3',
+    username: process.env.TC_USERNAME || 'newQA3',
+    password: process.env.TC_PASSWORD || 'Password@5',
     displayName: process.env.TC_DISPLAY_NAME || 'Keshav QA_Testt',
   },
 

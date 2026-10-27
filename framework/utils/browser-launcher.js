@@ -124,6 +124,15 @@ async function launchBrowser(options = {}) {
     browser = await chromium.launch(launchOptions);
   }
 
+  try {
+    return await createBrowserContext(browser, platform);
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
+}
+
+async function createBrowserContext(browser, platform) {
   // Viewport:
   // LAMBDA: 1920x1080 matching the cloud VM resolution for full-screen execution.
   // LOCAL: default (no override) — browser opens at normal size.

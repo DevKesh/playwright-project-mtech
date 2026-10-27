@@ -75,7 +75,7 @@ describe('smoke page objects against isolated synthetic pages', { concurrency: t
     return error => {
       assert.equal(error.matcherResult?.name, 'toBeVisible');
       assert.match(error.message, locatorPattern);
-      assert.match(error.message, new RegExp(`Timeout: ${timeout}ms`));
+      assert.match(error.message, new RegExp(`Timeout:\\s+${timeout}ms`));
       return true;
     };
   }
@@ -196,6 +196,142 @@ describe('smoke page objects against isolated synthetic pages', { concurrency: t
       assert.equal(await cameras.verifyAllCamerasVisible(), 1);
       assert.equal(await cameras.verifyCameraNames(), 1);
       assert.equal(await cameras.verifyCameraFeedsLoaded(), 1);
+    }));
+
+  test('rename-tolerant camera inventory reads current names without a name baseline', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { expectedCount: 1 });
+      await cameras.frame.locator('.cameraname-link').evaluate(element => {
+        element.textContent = 'Renamed Entrance';
+      });
+      assert.equal(await cameras.verifyAllCamerasVisible(), 1);
+      assert.equal(await cameras.verifyCameraNames(), 1);
+      assert.equal(await cameras.verifyCameraFeedsLoaded(), 1);
+    }));
+
+  test('rename-tolerant camera inventory waits for the delayed live section', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { dynamicInventory: true });
+      await cameras.liveCameras.evaluate(element => {
+        const parent = element.parentElement;
+        element.remove();
+        setTimeout(() => parent.append(element), 700);
+      });
+      assert.equal(await cameras.verifyCameraNames(), 1);
+    }));
+
+  test('dynamic camera inventory discovers additions and removals without a fixed count', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { dynamicInventory: true });
+      for (const count of [1, 3, 9, 2]) {
+        await cameras.liveCameras.evaluate((root, cameraCount) => {
+          const container = root.querySelector('.card-container');
+          const template = container.querySelector('app-device-card').cloneNode(true);
+          container.replaceChildren();
+          for (let index = 0; index < cameraCount; index++) {
+            const card = template.cloneNode(true);
+            card.querySelector('.cameraname-link').textContent = `Current camera ${index}`;
+            container.append(card);
+          }
+        }, count);
+        assert.equal(await cameras.verifyAllCamerasVisible(), count);
+        assert.equal(await cameras.verifyCameraNames(), count);
+        assert.equal(await cameras.verifyCameraFeedsLoaded(), count);
+        const state = await cameras.captureLiveState();
+        assert.equal(state.inventoryMode, 'dynamic');
+        assert.equal(state.expectedCount, null);
+        assert.equal(state.actualCount, count);
+      }
+    }));
+
+  test('camera snapshot contains exact iframe labels and excludes unrelated content and secrets', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { expectedCount: 1 });
+      await cameras.liveCameras.evaluate(element => {
+        element.insertAdjacentHTML('beforeend', '<input value="PRIVATE_INPUT"><a href="https://private.invalid/?token=PRIVATE_URL">Details</a>');
+        element.setAttribute('data-secret', 'PRIVATE_ATTRIBUTE');
+      });
+      const state = await cameras.captureLiveState();
+      assert.equal(state.available, true);
+      assert.equal(state.expectedCount, 1);
+      assert.equal(state.actualCount, 1);
+      assert.equal(state.cameras[0].displayedName, 'Long Cam...');
+      assert.equal(state.cameras[0].nameTextContent, 'Long Cam...Long Camera Name');
+      assert.deepEqual(state.cameras[0].feedText, ['No live video']);
+      assert.match(state.dom, /app-device-card/);
+      assert.doesNotMatch(JSON.stringify(state), /Camera Activities|PRIVATE_INPUT|PRIVATE_URL|PRIVATE_ATTRIBUTE/);
+      const screenshot = await cameras.liveCameras.screenshot();
+      assert.equal(screenshot.subarray(1, 4).toString(), 'PNG');
+      assert(screenshot.readUInt32BE(16) <= 800);
+      assert(screenshot.readUInt32BE(20) < 600);
+    }));
+
+  test('camera snapshot reports an unavailable live section without using activity content', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { expectedCount: 1 });
+      await cameras.liveCameras.evaluate(element => element.remove());
+      const state = await cameras.captureLiveState();
+      assert.equal(state.available, false);
+      assert.deepEqual(state.cameras, []);
+      assert.equal(state.dom, '');
+    }));
+
+  test('rename-tolerant camera inventory accepts duplicate names on distinct cards', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { expectedCount: 2 });
+      await cameras.cameraCards.first().evaluate(card => card.parentElement.append(card.cloneNode(true)));
+      assert.equal(await cameras.verifyCameraNames(), 2);
+      assert.equal(await cameras.verifyCameraFeedsLoaded(), 2);
+    }));
+
+  test('rename-tolerant camera inventory cannot learn a reduced expected count from the DOM', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      await assert.rejects(new CamerasPage(page, { expectedCount: 2 }).verifyAllCamerasVisible(), error => {
+        assert.equal(error.matcherResult?.name, 'toHaveCount');
+        return true;
+      });
+    }));
+
+  test('dynamic camera inventory rejects activities without live cards', () =>
+    withPage('/cameras', modernCameraHTML({ cards: false }), async page => {
+      await assert.rejects(new CamerasPage(page, { dynamicInventory: true }).verifyAllCamerasVisible(),
+        visibilityFailure(/app-device-card/, 30000));
+    }));
+
+  test('dynamic camera inventory rejects a hidden card after a valid card', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { dynamicInventory: true });
+      await cameras.cameraCards.first().evaluate(card => {
+        const hiddenCard = card.cloneNode(true);
+        hiddenCard.style.display = 'none';
+        card.parentElement.append(hiddenCard);
+      });
+      await assert.rejects(cameras.verifyAllCamerasVisible(), visibilityFailure(/app-device-card/, 15000));
+    }));
+
+  test('dynamic camera inventory rejects blank visible names even with tooltip text', () =>
+    withPage('/cameras', modernCameraHTML(), async page => {
+      const cameras = new CamerasPage(page, { dynamicInventory: true });
+      await cameras.cameraCards.first().locator('.cameraname-link').evaluate(label => {
+        label.innerHTML = ' <span hidden>Old name</span>';
+        label.style.cssText = 'display:block;width:150px;height:30px';
+      });
+      await assert.rejects(cameras.verifyCameraNames(), error => {
+        assert.match(error.message, /toMatch/);
+        return true;
+      });
+    }));
+
+  test('dynamic camera inventory rejects a missing feed on an added card', () =>
+    withPage('/cameras', modernCameraHTML({ feeds: false }), async page => {
+      const cameras = new CamerasPage(page, { dynamicInventory: true });
+      await cameras.cameraCards.first().evaluate(card => {
+        const missingFeed = card.cloneNode(true);
+        card.insertAdjacentHTML('afterbegin', '<div class="video-player">No live video</div>');
+        card.parentElement.append(missingFeed);
+      });
+      await assert.rejects(cameras.verifyCameraFeedsLoaded(),
+        visibilityFailure(/video-player/, 15000));
     }));
 
   test('activity name and clip cannot replace a missing live camera tile', () =>

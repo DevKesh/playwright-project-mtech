@@ -58,3 +58,4 @@ test('missing results cannot be reported as a successful run', () => {
     assert.match(payload.text, /TESTS FAILED/);
   });
 });
+

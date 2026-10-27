@@ -1,37 +1,13 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../../../framework/fixtures/tc.fixture');
 const allure = require('allure-js-commons');
-const { createLoginSession } = require('../../../framework/utils/login-session');
 const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
 
 // Run using playwright.login-monitor.config.js to avoid smoke/Allure side effects.
 // These worker-scoped options must be at file level. Do not record credential entry.
-test.use({ trace: 'off', video: 'off' });
+test.use({ trace: 'off', video: 'off', sessionArtifacts: false, pageArtifacts: false });
 
 test.describe('@nl-authored @login-monitor Configured login and logout', () => {
-  let session;
-
-  const createConfiguredSession = () => {
-    const username = process.env.LOGIN_MONITOR_USERNAME;
-    const password = process.env.LOGIN_MONITOR_PASSWORD;
-    if (!username || !password) {
-      throw new Error('Set LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD in the local environment before running this test.');
-    }
-    return createLoginSession({ username, password });
-  };
-
-  test.beforeAll(async () => {
-    test.setTimeout(180000);
-    // Monitor-only settings keep the corrected account separate from smoke credentials.
-    // Playwright reruns this setup for each repeatEach execution with a fresh session.
-    session = await createConfiguredSession();
-  });
-
-  test.afterAll(async () => {
-    test.setTimeout(180000);
-    if (session) await session.close();
-  });
-
-  test('@login-logout Successfully login and logout with configured credentials', async ({}, testInfo) => {
+  test('@login-logout Successfully login and logout with configured credentials', async ({ authenticatedSession: session }, testInfo) => {
     test.setTimeout(180000);
     await allure.epic('Authentication');
     await allure.feature('Repeated login and logout');
@@ -144,9 +120,6 @@ test.describe('@nl-authored @login-monitor Configured login and logout', () => {
           });
         } catch { /* Preserve the original assertion failure if the page closed. */ }
         throw error;
-      } finally {
-        await session.close();
-        session = undefined;
       }
     });
   });

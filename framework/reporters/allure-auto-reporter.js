@@ -20,6 +20,12 @@ class AllureAutoReporter {
   }
 
   onEnd(result) {
+    this._result = result;
+  }
+
+  onExit() {
+    if (!this._result) return;
+    const result = this._result;
     const timestamp = this._formatTimestamp(this._startTime || new Date());
     const reportDir = path.join(this.outputBase, `allure-report-${timestamp}`);
 

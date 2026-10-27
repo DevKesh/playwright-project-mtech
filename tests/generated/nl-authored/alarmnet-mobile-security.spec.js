@@ -1,6 +1,5 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../../../framework/fixtures/login-security.fixture');
 const { randomUUID } = require('node:crypto');
-const { setTimeout: pace } = require('node:timers/promises');
 const allure = require('allure-js-commons');
 const { observeSecurityChallenge, securitySettings, uniqueInvalidCredentials } = require('../../../framework/utils/login-security');
 
@@ -9,10 +8,6 @@ const settings = securitySettings();
 const runId = randomUUID();
 
 test.describe('@nl-authored @login-security @alarmnet-mobile-security AlarmNet /AlarmNet360/Mobile', () => {
-  test.afterEach(async () => {
-    await pace(settings.intervalMs);
-  });
-
   for (let attempt = 1; attempt <= settings.attempts; attempt += 1) {
     test(`Attempt ${String(attempt).padStart(3, '0')}: Mobile synthetic invalid login and challenge check`, async ({ page }, testInfo) => {
       const credentials = uniqueInvalidCredentials(attempt, runId);

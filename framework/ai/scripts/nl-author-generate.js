@@ -4,7 +4,7 @@
  * Takes plain English test instructions and generates a RUNNABLE Playwright
  * spec file that uses existing page objects. Unlike the full pipeline (which
  * opens a browser to discover elements), this uses GPT with the available
- * page object API as context — guaranteeing the generated code actually works.
+ * page object and fixture APIs as context. Generated code still requires validation.
  *
  * Demo flow:
  *   1. npm run ai:author:generate -- --instructions "Navigate to Devices page, verify device categories"
@@ -70,59 +70,47 @@ const PAGE_OBJECT_API = `
 - constructor(page)
 - verifyActivityLogEntries() — asserts activity log entries are displayed
 
-## Login Helper (framework/utils/login-session.js)
-- createLoginSession() — launches browser, logs in, returns { browser, context, page, close }
-  - page is already on /home, fully authenticated and ready
-  - Login itself takes 15-30s (handled internally)
-  - Use in test.beforeAll with test.setTimeout(180000), close browser in test.afterAll
+## Authenticated Fixtures (framework/fixtures/smoke.fixture.js)
+- Import { test, expect } from '../../../framework/fixtures/smoke.fixture'.
+- Named test-scoped fixtures: authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage.
+- Each test gets a fresh browser/context and authenticated /home page through createLoginSession internally.
+- LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD are required; no account fallback.
+- Request only needed fixtures as destructured test parameters. No manual POM construction or login/browser lifecycle.
+- Public login/recovery uses native @playwright/test page, never the authenticated smoke fixture.
+- Synthetic security uses '../../../framework/fixtures/login-security.fixture' (native page, loginPage, pacing); never authenticate it.
+- Public entry navigation and URL assertions are allowed when that is the behavior under test.
 
 ## BEHAVIORAL RULES (TIMING & PRECONDITIONS — MANDATORY):
 
-1. **beforeAll timeout**: ALWAYS set test.setTimeout(180000) in beforeAll — login takes 15-30s.
+1. **Session timeout**: Setup/teardown has its own 180000ms fixture budget, separate from the test. Do not add beforeAll/afterAll or shared pages.
 2. **Cameras timeout**: Any test that navigates to Cameras MUST call test.setTimeout(90000) as the first line inside the test function — cameras load asynchronously and take 10-20s on first visit.
 3. **Arm/Disarm precondition**: Before arming (armHome/armAway), ALWAYS:
    a. Call ensureDisarmed() first — system may be in armed state from a prior run
    b. Call selectAllPartitions() — required to select which partitions to arm
 4. **Re-select for disarm**: After verifying armed status, call selectAllPartitions() AGAIN before calling disarm() — the selection resets after arming.
+  Put the arm command and armed-status assertion in try, and reselect/disarm in finally. Verify Disarmed after cleanup. Use test.setTimeout(300000) for arm/disarm tests. Match Armed Home or Armed Away to the command.
 5. **Navigation from non-home page**: navigateToDevices/Cameras/Activity can be called from ANY page, not just /home. The page object handles the click regardless of current URL.
-6. **No page.goto()**: NEVER use page.goto() for app pages. All navigation is through page object methods.
-7. **No page.waitForURL()**: NEVER use page.waitForURL() — the page object navigation methods already wait for the URL internally.
-8. **No expect(page).toHaveURL()**: NEVER add URL assertions — navigation methods already verify URLs internally.
+6. **Business navigation**: Authenticated tests use page object navigation, not page.goto(), page.waitForURL(), or expect(page).toHaveURL(). Public navigation exceptions are described above.
+7. **Isolation**: Use default describe mode. Each test must work independently; never use serial skip-on-failure or shared mutable sessions. Keep physical panel tests single-worker, fullyParallel false.
 
 ## Test Pattern (MUST follow this EXACT structure):
 \`\`\`javascript
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../../../framework/fixtures/smoke.fixture');
 const allure = require('allure-js-commons');
-const { createLoginSession } = require('../../../framework/utils/login-session');
-const { TotalConnectHomePage } = require('../../../framework/pages/generated/smoke/TotalConnectHomePage');
-// ... other page object imports as needed
 
 test.describe('@nl-authored <Suite Name>', () => {
-  let page, browser, homePage;
-
-  test.beforeAll(async () => {
-    test.setTimeout(180000);
-    const session = await createLoginSession();
-    browser = session.browser;
-    page = session.page;
-    homePage = new TotalConnectHomePage(page);
-    // ... instantiate other page objects as needed
-  });
-
-  test.afterAll(async () => {
-    if (browser) await browser.close();
-  });
-
-  test('<Test Title>', async () => {
-    // test.setTimeout(90000); ← ADD THIS if test involves Cameras page
+  test('Verify device categories', async ({ homePage, devicesPage }) => {
     await allure.epic('...');
     await allure.feature('...');
     await allure.story('...');
     await allure.severity('critical');
     await allure.tag('nl-authored');
 
-    await test.step('<Step description>', async () => {
-      // ... page object method calls
+    await test.step('Navigate to Devices', async () => {
+      await homePage.navigateToDevices();
+    });
+    await test.step('Verify device categories', async () => {
+      await devicesPage.verifyDeviceCategoriesVisible();
     });
   });
 });
@@ -135,14 +123,14 @@ Given plain English test instructions, generate a COMPLETE, RUNNABLE Playwright 
 
 CRITICAL RULES:
 1. ONLY use the page objects and methods listed in the API reference below. NEVER invent new page objects or methods.
-2. ALWAYS use createLoginSession() for authentication — NEVER write manual login code.
+2. Authenticated business tests MUST use smoke.fixture named fixtures. Public login/recovery/security MUST stay unauthenticated and use the public fixture path described below.
 3. Use test.step() blocks for each logical step.
 4. Follow the exact import paths shown in the API reference.
 5. Include allure metadata INSIDE the test function using await allure.epic/feature/story/severity/tag.
 6. The test MUST be self-contained and runnable with: npx playwright test <file> --headed
-7. Use the test.describe → beforeAll/afterAll pattern shown in the API reference.
+7. Use the fixture-based test.describe pattern shown in the API reference, without beforeAll/afterAll session ownership.
 8. After login, page is already on /home. Use homePage methods for navigation.
-9. NEVER use page.goto(), page.waitForURL(), or expect(page).toHaveURL() — navigation methods handle this.
+9. Authenticated business navigation uses page objects. Public entry navigation and URL assertions are permitted for public login/recovery behavior.
 10. ALWAYS follow the BEHAVIORAL RULES for timeouts and preconditions — these are non-negotiable.
 11. Return the JavaScript code in a JSON field called "code". No markdown fences.
 

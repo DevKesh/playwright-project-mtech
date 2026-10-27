@@ -1,27 +1,9 @@
-const { test, expect } = require('@playwright/test');
-const { createLoginSession } = require('../framework/utils/login-session');
+const { test, expect } = require('../framework/fixtures/tc.fixture');
+
+test.use({ credentialProfile: 'configured' });
 
 test.describe('@tc Camera Clip Export', () => {
-  /** @type {import('@playwright/test').Page} */
-  let page;
-  /** @type {import('@playwright/test').BrowserContext} */
-  let context;
-  /** @type {import('@playwright/test').Browser} */
-  let browser;
-
-  test.beforeAll(async () => {
-    test.setTimeout(180000);
-    const session = await createLoginSession();
-    browser = session.browser;
-    context = session.context;
-    page = session.page;
-  });
-
-  test.afterAll(async () => {
-    if (browser) await browser.close();
-  });
-
-  test('Export camera clip from timeline', async () => {
+  test('Export camera clip from timeline', async ({ authenticatedPage: page }) => {
     test.setTimeout(180000);
 
     const frame = page.locator('#fenixPagetarget').contentFrame();

@@ -49,7 +49,15 @@ const { testDataConfig } = require('../config/test-data.config');
  */
 async function createLoginSession(options = {}) {
   const { browser, context, page } = await launchBrowser(options.launchOptions);
+  try {
+    return await authenticateSession({ browser, context, page }, options);
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
+}
 
+async function authenticateSession({ browser, context, page }, options) {
   const loginUrl = testDataConfig.targetApp.loginUrl;
   const username = options.username || testDataConfig.targetApp.credentials.email;
   const password = options.password || testDataConfig.targetApp.credentials.password;

@@ -1,5 +1,4 @@
-const { test, expect } = require('@playwright/test');
-const { setTimeout: pace } = require('node:timers/promises');
+const { test, expect } = require('../../../framework/fixtures/login-security.fixture');
 const allure = require('allure-js-commons');
 const { observeSecurityChallenge, securitySettings } = require('../../../framework/utils/login-security');
 
@@ -7,10 +6,6 @@ const FORGOT_LOGIN_URL = 'https://services.qa.alarmnet.com/AlarmNet360/AlarmNetD
 const settings = securitySettings();
 
 test.describe('@nl-authored @login-security @alarmnet-forgot-login-security AlarmNet /AlarmNet360/AlarmNetDirectV/UserManagement/UserRegistration/ForgotLogin', () => {
-  test.afterEach(async () => {
-    await pace(settings.intervalMs);
-  });
-
   for (let attempt = 1; attempt <= settings.attempts; attempt += 1) {
     test(`Attempt ${String(attempt).padStart(3, '0')}: Forgot Login challenge check without recovery submission`, async ({ page }, testInfo) => {
       await allure.epic('AlarmNet QA');

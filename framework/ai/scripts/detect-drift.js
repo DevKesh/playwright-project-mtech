@@ -63,7 +63,7 @@ async function main() {
   }
 
   const agent = new DriftDetectionAgent(config);
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
 
   let authContext = null;
 

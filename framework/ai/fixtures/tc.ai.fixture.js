@@ -19,6 +19,7 @@ const base = require('@playwright/test');
 const { createLocatorProxy } = require('../core/locator-proxy');
 const { LocatorHealerAgent } = require('../agents/locator-healer.agent');
 const { loadAIConfig } = require('../config/ai.config');
+const { attachFailureArtifacts } = require('../../utils/test-artifacts');
 
 const config = loadAIConfig();
 
@@ -43,16 +44,7 @@ const test = base.test.extend({
 
     await use(page);
 
-    // Capture failure artifacts
-    if (testInfo.status !== testInfo.expectedStatus) {
-      try {
-        const screenshot = await page.screenshot({ fullPage: true }).catch(() => null);
-        if (screenshot) {
-          await testInfo.attach('failure-screenshot', { body: screenshot, contentType: 'image/png' });
-        }
-        await testInfo.attach('failure-url', { body: page.url(), contentType: 'text/plain' });
-      } catch { /* browser may be closed */ }
-    }
+    await attachFailureArtifacts(page, testInfo);
   },
 });
 
