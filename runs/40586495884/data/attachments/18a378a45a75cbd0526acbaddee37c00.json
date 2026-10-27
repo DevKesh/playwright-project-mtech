@@ -1,0 +1,125 @@
+{
+  "capturedAt": "2026-10-27T21:32:19.867Z",
+  "scope": "#fenixPagetarget >> app-live-camera",
+  "expectedCount": null,
+  "inventoryMode": "dynamic",
+  "available": true,
+  "cameras": [
+    {
+      "index": 0,
+      "visible": true,
+      "displayedName": "LOBBY",
+      "nameTextContent": "LOBBY LOBBY",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 1,
+      "visible": true,
+      "displayedName": "vx5 reg te...",
+      "nameTextContent": "vx5 reg te... vx5 reg test QA",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 2,
+      "visible": true,
+      "displayedName": "Dome QA 02",
+      "nameTextContent": "Dome QA 02 Dome QA 02",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 3,
+      "visible": true,
+      "displayedName": "Bullet QA ...",
+      "nameTextContent": "Bullet QA ... Bullet QA 02",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 4,
+      "visible": true,
+      "displayedName": "turret 03",
+      "nameTextContent": "turret 03 turret 03",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 5,
+      "visible": true,
+      "displayedName": "BULLET QA ...",
+      "nameTextContent": "BULLET QA ... BULLET QA 1",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 6,
+      "visible": true,
+      "displayedName": "DOORBELL",
+      "nameTextContent": "DOORBELL DOORBELL",
+      "nameTitle": "",
+      "feedText": [
+        "",
+        ""
+      ]
+    },
+    {
+      "index": 7,
+      "visible": true,
+      "displayedName": "New vx5 Ca...",
+      "nameTextContent": "New vx5 Ca... New vx5 Camera",
+      "nameTitle": "",
+      "feedText": [
+        "",
+        ""
+      ]
+    },
+    {
+      "index": 8,
+      "visible": true,
+      "displayedName": "New Vx3 ca...",
+      "nameTextContent": "New Vx3 ca... New Vx3 cam",
+      "nameTitle": "",
+      "feedText": [
+        "",
+        ""
+      ]
+    },
+    {
+      "index": 9,
+      "visible": true,
+      "displayedName": "Dome 1.96",
+      "nameTextContent": "Dome 1.96 Dome 1.96",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    },
+    {
+      "index": 10,
+      "visible": true,
+      "displayedName": "LIVING ROO...",
+      "nameTextContent": "LIVING ROO... LIVING ROOM",
+      "nameTitle": "",
+      "feedText": [
+        ""
+      ]
+    }
+  ],
+  "actualCount": 11,
+  "dom": "<app-live-camera><div class=\"card-header ng-star-inserted\"><div class=\"card-header-span\"><span>Cameras</span></div><div class=\"grid-card\"><div class=\"card-content ng-star-inserted\"><mat-card class=\"mat-mdc-card mdc-card grid-mat-card\"><div class=\"card-header-text\"><div class=\"grid-mat-card-text ng-star-inserted\"><span class=\"span-color\">View:</span></div><!----><div class=\"grid-icon layout ng-star-inserted\"></div><!----><div class=\"grid-icon layout active-layout ng-star-inserted\"></div><!----><div class=\"grid-icon layout ng-star-inserted\"></div><!----><!----><div class=\"grid-mat-card-pipe ng-star-inserted\">|</div><!----><div class=\"grid-icon ng-star-inserted\"></div><!----><!----></div></mat-card></div><!----><div class=\"card-content-search ng-star-inserted\"><mat-card class=\"mat-mdc-card mdc-card search-mat-card\"><div class=\"toolbar-section search\"><mat-form-field class=\"mat-mdc-form-field search-field search-field-input ng-tns-c9-2 mat-mdc-form-field-type-mat-input mat-mdc-form-field-has-icon-prefix mat-form-field-appearance-fill mat-primary ng-untouched ng-pristine ng-valid ng-star-inserted\"><!----><div class=\"mat-mdc-text-field-wrapper mdc-text-field ng-tns-c9-2 mdc-text-field--filled mdc-text-field--no-label\"><div class=\"mat-mdc-form-field-focus-overlay ng-tns-c9-2 ng-star-inserted\"></div><!----><div class=\"mat-mdc-form-field-flex ng-tns-c9-2\"><!----><div class=\"mat-mdc-form-field-icon-prefix ng-tns-c9-2 ng-star-inserted\"><span class=\"ng-tns-c9-2\"></span></div><!----><!----><div class=\"mat-mdc-form-field-infix ng-tns-c9-2\"><!----><!----><!----><!----><mat-autocomplete class=\"mat-mdc-autocomplete ng-tns-c47-3 ng-tns-c9-2 ng-star-inserted\"><!----></mat-autocomplete></div><!----><!----></div><div class=\"mdc-line-ripple ng-tns-c9-2 mdc-line-ripple--deactivating ng-star-inserted\"></div><!----></div><div class=\"mat-mdc-form-field-subscript-wrapper mat-mdc-form-field-bottom-align ng-tns-c9-2\"><!----><div class=\"mat-mdc-form-field-hint-wrapper ng-tns-c9-2 ng-trigger ng-trigger-transitionMessages ng-star-inserted\"><!----><div class=\"mat-mdc-form-field-hint-spacer ng-tns-c9-2\"></div><mat-hint class=\"mat-mdc-form-field-hint mat-mdc-form-field-bottom-align mat-mdc-form-field-hint-end ng-tns-c9-2\" id=\"mat-mdc-hint-0\"> 0 / 1000 character limit </mat-hint></div><!----></div></mat-form-field></div></mat-card></div><!----></div></div><!----><div class=\"scroll-drag-drop\"><div class=\"card-container\"><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">LOBBY <span class=\"tooltip-text\">LOBBY</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><div class=\"video-player fov-fill ng-star-inserted\"><!----></div><!----><!----><!----><div class=\"ng-star-inserted\"><div class=\"camera-offline-icon ng-star-inserted\"><div class=\"small-icons\"></div><div class=\"play-icon-text\">Camera Offline</div></div><!----></div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">vx5 reg te... <span class=\"tooltip-text\">vx5 reg test QA</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">Dome QA 02 <span class=\"tooltip-text\">Dome QA 02</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">Bullet QA ... <span class=\"tooltip-text\">Bullet QA 02</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">turret 03 <span class=\"tooltip-text\">turret 03</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">BULLET QA ... <span class=\"tooltip-text\">BULLET QA 1</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><div class=\"video-player fov-contain ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><div class=\"ng-star-inserted\"><div><!----><div class=\"clip-play-icon-rtsp small-icons\"><div></div><div class=\"play-icon-text\">Go Live</div></div></div></div><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">DOORBELL <span class=\"tooltip-text\">DOORBELL</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><div class=\"video-player fov-fill ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><div class=\"ng-star-inserted\"><div><!----><div class=\"clip-play-icon-rtsp small-icons\"><div></div><div class=\"play-icon-text\">Go Live</div></div></div></div><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">New vx5 Ca... <span class=\"tooltip-text\">New vx5 Camera</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><div class=\"video-player fov-fill ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><div class=\"ng-star-inserted\"><div><!----><div class=\"clip-play-icon-rtsp small-icons\"><div></div><div class=\"play-icon-text\">Go Live</div></div></div></div><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">New Vx3 ca... <span class=\"tooltip-text\">New Vx3 cam</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privacy\"></button><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Record Clip\"></button><!----><!----><button class=\"card-icons-div disabled-btn ng-star-inserted\" title=\"Full screen\"></button><!----></div><!----></div></mat-card-actions><!----></mat-card></app-device-card></div><!----><div class=\"cdk-drag card-item cdk-drag-disabled ng-star-inserted\"><app-device-card><mat-card class=\"mat-mdc-card mdc-card video-container\"><!----><!----><!----><!----><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><!----><div class=\"ng-star-inserted\"><!----></div><!----><!----><!----><!----><div class=\"spinner-overlay small-icons ng-star-inserted\"><div class=\"spinner ng-star-inserted\"></div><!----><!----></div><!----><mat-card-actions class=\"mat-mdc-card-actions mdc-card__actions ng-star-inserted\"><div class=\"mat-card-action small-icons\"><div><!----><div class=\"display-inline-block setting-icon ng-star-inserted\"><a class=\"cameraname-link small-icons\"><span class=\"tooltip ng-star-inserted\">Dome 1.96 <span class=\"tooltip-text\">Dome 1.96</span></span><!----><!----></a><button class=\"card-icons-div video-icons ng-star-inserted\" title=\"Settings\"></button><!----></div><!----><!----><!----></div><div class=\"card-icons small-icons ng-star-inserted\"><!----><!----><button class=\"card-icons-div ng-star-inserted\" title=\"Privac",
+  "truncated": true
+}

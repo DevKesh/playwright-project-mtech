@@ -1,1 +1,1 @@
-{"id":"1d56e0c250774cd1d43a63cf7395faa8","fullName":"generated/smoke/smoke-suite.spec.js:138:3","name":"TC-004: Navigate to Cameras page","status":"skipped","testResultsByEnv":{"default":"74be26924b0498d48a9131764cde257f"}}
+{"id":"1d56e0c250774cd1d43a63cf7395faa8","fullName":"generated/smoke/smoke-suite.spec.js:71:3","name":"TC-004: Navigate to Cameras page","status":"failed","testResultsByEnv":{"default":"e00be6e3d2d834cb39d7f671b5bc75ac"}}
