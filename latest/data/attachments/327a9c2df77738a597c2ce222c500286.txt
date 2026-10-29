@@ -1,0 +1,4 @@
+[BrowserLauncher] Launching chrome | headless=true | slowMo=0
+[LoginSession] Authenticated and home page ready
+[CamerasPage] Cameras page loaded.
+[TC-008] Found 10 camera feed elements on the page
