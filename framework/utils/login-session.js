@@ -52,6 +52,9 @@ async function createLoginSession(options = {}) {
   try {
     return await authenticateSession({ browser, context, page }, options);
   } catch (error) {
+    try {
+      await options.onFailure?.(page);
+    } catch {}
     await browser.close().catch(() => {});
     throw error;
   }

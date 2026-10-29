@@ -4,7 +4,7 @@ const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPag
 
 // Run using playwright.login-monitor.config.js to avoid smoke/Allure side effects.
 // These worker-scoped options must be at file level. Do not record credential entry.
-test.use({ trace: 'off', video: 'off', sessionArtifacts: false, pageArtifacts: false });
+test.use({ trace: 'off', video: 'off' });
 
 test.describe('@nl-authored @login-monitor Configured login and logout', () => {
   test('@login-logout Successfully login and logout with configured credentials', async ({ authenticatedSession: session }, testInfo) => {

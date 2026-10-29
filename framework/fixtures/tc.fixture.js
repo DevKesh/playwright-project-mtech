@@ -36,6 +36,11 @@ const test = base.test.extend({
     } else if (credentialProfile !== 'configured') {
       throw new Error(`Unknown credential profile: ${credentialProfile}`);
     }
+    if (sessionArtifacts) {
+      options.onFailure = page => attachFailureArtifacts(page, testInfo, {
+        force: true, includeUrl: false, screenshotName: 'login-setup-failure',
+      });
+    }
     const session = await sessionFactory(options);
     let useFailed = false;
     try {

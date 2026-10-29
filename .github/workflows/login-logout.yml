@@ -124,6 +124,8 @@ jobs:
         env:
           SLACK_ENABLED: 'true'
           SLACK_REQUIRED: 'true'
+          SLACK_REPORT_DIR: allure-report
+          SLACK_RESULTS_DIR: allure-results/login-monitor
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TEST_SUITE_NAME: 'Login & Logout Only (${{ inputs.repetitions }} repetitions)'
           GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

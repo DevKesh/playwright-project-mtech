@@ -38,6 +38,32 @@ test('login failure closes the acquired browser and preserves the login error', 
   assert.equal(closed, 1);
 });
 
+test('login setup captures evidence before close and preserves errors when capture fails', async () => {
+  for (const captureFails of [false, true]) {
+    const failure = new Error('login failed before test body');
+    const events = [];
+    const page = { goto: async () => { throw failure; } };
+    const { createLoginSession } = loadWithDependencies('../login-session.js', {
+      './browser-launcher': {
+        launchBrowser: async () => ({
+          browser: { close: async () => { events.push('close'); } }, context: {}, page,
+        }),
+      },
+      '../config/test-data.config': {
+        testDataConfig: { targetApp: { loginUrl: 'https://fixture.test/login', credentials: {} } },
+      },
+    });
+    await assert.rejects(createLoginSession({
+      onFailure: async failedPage => {
+        assert.equal(failedPage, page);
+        events.push('capture');
+        if (captureFails) throw new Error('screenshot failed');
+      },
+    }), error => error === failure);
+    assert.deepEqual(events, ['capture', 'close']);
+  }
+});
+
 function sessionFixtures(env = {}) {
   return loadWithDependencies('../../fixtures/tc.fixture.js', {
     '@playwright/test': { test: { extend: fixtures => fixtures }, expect: {} },
@@ -46,6 +72,31 @@ function sessionFixtures(env = {}) {
     '../utils/pageLoadMetrics': {},
   }, env).test;
 }
+
+test('session fixture attaches masked setup failure evidence even while status is passed', async () => {
+  const fixtures = sessionFixtures();
+  const attachments = [];
+  const failure = new Error('login setup failed');
+  const info = {
+    status: 'passed', expectedStatus: 'passed',
+    attach: async (name, data) => attachments.push({ name, ...data }),
+  };
+  await assert.rejects(fixtures.authenticatedSession[0]({
+    credentialProfile: 'configured', sessionArtifacts: true,
+    sessionFactory: async options => {
+      await options.onFailure({
+        screenshot: async settings => {
+          assert.match(settings.style, /input, textarea, \[contenteditable\]/);
+          return Buffer.from('masked screenshot');
+        },
+      });
+      throw failure;
+    },
+  }, async () => assert.fail('Failed setup must not run the test body'), info), error => error === failure);
+  assert.equal(attachments.length, 1);
+  assert.equal(attachments[0].name, 'login-setup-failure');
+  assert.equal(attachments[0].contentType, 'image/png');
+});
 
 test('approved credentials are validated before invoking the session factory', async () => {
   const fixtures = sessionFixtures();

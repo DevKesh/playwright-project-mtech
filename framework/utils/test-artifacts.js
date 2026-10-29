@@ -3,8 +3,9 @@ async function attachFailureArtifacts(page, testInfo, {
   includeUrl = true,
   screenshotName = 'failure-screenshot',
   mask = [],
+  force = false,
 } = {}) {
-  if (testInfo.status === testInfo.expectedStatus) return;
+  if (!force && testInfo.status === testInfo.expectedStatus) return;
   try {
     const screenshot = await page.screenshot({
       fullPage: true,

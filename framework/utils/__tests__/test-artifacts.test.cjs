@@ -53,6 +53,19 @@ test('passing tests do not capture artifacts', async () => {
   assert.equal(sample.screenshots.length, 0);
 });
 
+test('setup failures capture a masked PNG before Playwright updates the status', async () => {
+  const sample = artifactCase('passed');
+  await attachFailureArtifacts(sample.page, sample.info, {
+    force: true, includeUrl: false, screenshotName: 'login-setup-failure',
+  });
+  assert.equal(sample.attachments.length, 1);
+  assert.equal(sample.attachments[0].name, 'login-setup-failure');
+  assert.equal(sample.attachments[0].contentType, 'image/png');
+  assert.match(sample.screenshots[0].style, /input, textarea, \[contenteditable\]/);
+  assert.equal(sample.htmlCalls, 0);
+  assert.equal(sample.info.status, 'passed');
+});
+
 test('capture failures never replace the original test outcome', async () => {
   const sample = artifactCase();
   sample.page.screenshot = async () => { throw new Error('page closed'); };

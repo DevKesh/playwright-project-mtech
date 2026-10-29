@@ -364,6 +364,8 @@ jobs:
       run: node framework/utils/slack-notify.js
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_REPORT_DIR: allure-report
+        SLACK_RESULTS_DIR: allure-results
         GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         # Per-run permanent URL — does NOT change when later runs deploy.
         REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/runs/${{ github.run_id }}/
