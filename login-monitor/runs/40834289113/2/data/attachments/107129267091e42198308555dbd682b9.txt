@@ -1,0 +1,2 @@
+[login-monitor] 2026-10-29T07:47:41.878Z Forgot Password iteration 12 PASS (no reset requested)
+[login-monitor] 2026-10-29T07:47:41.879Z recoveryIteration=12 diagnostics=2
