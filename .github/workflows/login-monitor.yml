@@ -63,7 +63,7 @@ jobs:
       - name: Run configured repetitions of both tests
         id: tests
         continue-on-error: true
-        run: npm run test:login-pages
+        run: npx playwright test --config playwright.login-monitor.config.js
         env:
           LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
           LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}

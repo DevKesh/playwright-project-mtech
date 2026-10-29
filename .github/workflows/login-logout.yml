@@ -62,8 +62,7 @@ jobs:
       - name: Run login/logout tests only
         id: tests
         continue-on-error: true
-        # Existing script filters @login-logout; native repeatEach supplies count.
-        run: npm run test:login-logout
+        run: npx playwright test --config playwright.login-monitor.config.js --grep @login-logout
         env:
           LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
           LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
