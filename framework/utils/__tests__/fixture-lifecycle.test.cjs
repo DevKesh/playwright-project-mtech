@@ -199,7 +199,7 @@ test('smoke healing is conditional and precedes page object construction', async
   }
 });
 
-test('camera fixture uses dynamic inventory and attaches evidence after success or failure', async () => {
+test('camera fixture retains state evidence but attaches screenshots only on failure', async () => {
   for (const outcome of ['passed', 'failed', 'capture-error']) {
     const events = [];
     const attachments = [];
@@ -233,7 +233,10 @@ test('camera fixture uses dynamic inventory and attaches evidence after success 
       '../ai/config/ai.config': {},
       '../ai/fixtures/tc.ai.fixture': {},
     }).test;
-    const testInfo = { annotations: [], attach: async (name, options) => attachments.push({ name, ...options }) };
+    const testInfo = {
+      status: outcome === 'passed' ? 'passed' : 'failed', expectedStatus: 'passed',
+      annotations: [], attach: async (name, options) => attachments.push({ name, ...options }),
+    };
     const execution = fixtures.camerasPage({ authenticatedPage: page }, async () => {
       events.push('use');
       if (outcome !== 'passed') throw failure;
@@ -244,8 +247,9 @@ test('camera fixture uses dynamic inventory and attaches evidence after success 
       assert.deepEqual(events, ['use', 'state']);
       assert.equal(testInfo.annotations.length, 1);
     } else {
-      assert.deepEqual(events, ['use', 'state', 'screenshot']);
-      assert.deepEqual(attachments.map(attachment => attachment.name), ['camera-live-state', 'camera-live-section']);
+      assert.deepEqual(events, outcome === 'passed' ? ['use', 'state'] : ['use', 'state', 'screenshot']);
+      assert.deepEqual(attachments.map(attachment => attachment.name), outcome === 'passed'
+        ? ['camera-live-state'] : ['camera-live-state', 'camera-live-section']);
       assert.equal(JSON.parse(attachments[0].body).cameras[0].displayedName, 'New name');
     }
   }

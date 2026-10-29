@@ -36,7 +36,7 @@ const test = base.test.extend({
           body: JSON.stringify(state, null, 2),
           contentType: 'application/json',
         });
-        if (state.available) {
+        if (state.available && testInfo.status !== testInfo.expectedStatus) {
           const screenshot = await camerasPage.liveCameras.screenshot({
             timeout: 3000,
             animations: 'disabled',

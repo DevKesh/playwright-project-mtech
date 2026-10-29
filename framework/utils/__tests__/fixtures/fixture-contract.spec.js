@@ -32,8 +32,9 @@ test.afterAll(() => {
     expect(session.page.isClosed()).toBe(true);
   }
   expect(cameraTestInfo.attachments.map(attachment => attachment.name)).toEqual(
-    expect.arrayContaining(['camera-live-state', 'camera-live-section'])
+    expect.arrayContaining(['camera-live-state'])
   );
+  expect(cameraTestInfo.attachments.some(attachment => attachment.contentType === 'image/png')).toBe(false);
   expect(cameraTestInfo.annotations.some(annotation => annotation.type === 'camera-capture')).toBe(false);
 });
 
