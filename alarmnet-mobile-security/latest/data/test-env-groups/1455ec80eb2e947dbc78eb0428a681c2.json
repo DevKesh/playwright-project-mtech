@@ -1,1 +1,1 @@
-{"id":"1455ec80eb2e947dbc78eb0428a681c2","fullName":"alarmnet-mobile-security.spec.js:12:5","name":"Attempt 096: Mobile synthetic invalid login and challenge check","status":"passed","testResultsByEnv":{"default":"65373771a7b9926318a9c46b7b669aa8"}}
+{"id":"1455ec80eb2e947dbc78eb0428a681c2","fullName":"alarmnet-mobile-security.spec.js:12:5","name":"Attempt 096: Mobile synthetic invalid login and challenge check","status":"failed","testResultsByEnv":{"default":"c07d7adfd2fc4df2d4a9ba89ea245e27"}}
