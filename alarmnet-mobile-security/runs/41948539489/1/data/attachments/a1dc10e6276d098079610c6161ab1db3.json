@@ -1,0 +1,5 @@
+{
+  "detected": false,
+  "observationMs": 10000,
+  "finalUrl": "https://services.qa.alarmnet.com/AlarmNet360/Mobile/Login/UMJsonLogin?ReturnUrl=home%2FMain"
+}
