@@ -13,7 +13,7 @@
  */
 
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+if (require.main === module) require('../../config/environment').loadEnvironment();
 
 const { MetricsEngine } = require('../metrics/metrics-engine');
 const { loadHealingLog, loadRunHistory } = require('../storage/healing-history');
@@ -93,7 +93,7 @@ async function main() {
   console.log(`Metrics report saved to: ${filePath}`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('Failed to compute metrics:', err.message);
   process.exit(1);
 });

@@ -37,7 +37,7 @@ function runBatch() {
   if (stopping) return;
   console.log(`\n[login-monitor] ${new Date().toISOString()} Starting batch ${completed + 1}. Ctrl+C to stop.`);
   child = spawn(process.execPath, [
-    cli, 'test', '--config', 'playwright.login-monitor.config.js',
+    cli, 'test', '--project', 'monitoring',
     ...process.argv.slice(2),
   ], { cwd: root, stdio: 'inherit', shell: false });
 

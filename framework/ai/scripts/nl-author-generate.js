@@ -9,7 +9,7 @@
  * Demo flow:
  *   1. npm run ai:author:generate -- --instructions "Navigate to Devices page, verify device categories"
  *   2. GPT generates a spec file using real page objects (~5-10s)
- *   3. npx playwright test tests/generated/nl-authored/<file> --headed
+ *   3. npx playwright test tests/tc2/nl-authored/<file> --headed
  *
  * Usage:
  *   npm run ai:author:generate -- --instructions "your English description"
@@ -19,11 +19,11 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadAIConfig } = require('../config/ai.config');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 const { createAIClient } = require('../core/ai-client-factory');
+const { SPEC_OUTPUT_DIR: OUTPUT_DIR, writeNewGeneratedFile } = require('../utils/generated-output');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
-const OUTPUT_DIR = path.join(PROJECT_ROOT, 'tests', 'generated', 'nl-authored');
 
 /**
  * The available page object API that GPT must use.
@@ -32,12 +32,12 @@ const OUTPUT_DIR = path.join(PROJECT_ROOT, 'tests', 'generated', 'nl-authored');
 const PAGE_OBJECT_API = `
 ## Available Page Objects & Methods
 
-### LoginPage (framework/pages/generated/smoke/LoginPage.js)
+### LoginPage (framework/pages/tc2/LoginPage.js)
 - constructor(page)
 - login(username, password) — fills username, password, clicks Sign In
 - dismissCookieConsent() — dismisses cookie banner if visible
 
-### TotalConnectHomePage (framework/pages/generated/smoke/TotalConnectHomePage.js)
+### TotalConnectHomePage (framework/pages/tc2/TotalConnectHomePage.js)
 - constructor(page)
 - Locators: devicesNav, camerasNav, activityNav, armHomeButton, armAwayButton, disarmButton, partitionStatusText, selectAllCheckbox
 - dismissCookiePopup() — dismiss cookie bar
@@ -56,17 +56,17 @@ const PAGE_OBJECT_API = `
 - navigateToCameras() — click Cameras nav, wait for /cameras URL (takes ~10-20s, cameras load async)
 - navigateToActivity() — click Activity nav, wait for /events URL (takes ~5-10s)
 
-### DevicesPage (framework/pages/generated/smoke/DevicesPage.js)
+### DevicesPage (framework/pages/tc2/DevicesPage.js)
 - constructor(page)
 - verifyDeviceCategoriesVisible() — asserts device categories are visible on the page
 
-### CamerasPage (framework/pages/generated/smoke/CamerasPage.js)
+### CamerasPage (framework/pages/tc2/CamerasPage.js)
 - constructor(page)
 - verifyCamerasPageLoaded() — asserts camera content is visible
 - verifyAllCamerasVisible() — returns count of camera elements
 - verifyCameraNames() — returns count of camera name labels
 
-### ActivityPage (framework/pages/generated/smoke/ActivityPage.js)
+### ActivityPage (framework/pages/tc2/ActivityPage.js)
 - constructor(page)
 - verifyActivityLogEntries() — asserts activity log entries are displayed
 
@@ -74,10 +74,11 @@ const PAGE_OBJECT_API = `
 - Import { test, expect } from '../../../framework/fixtures/smoke.fixture'.
 - Named test-scoped fixtures: authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage.
 - Each test gets a fresh browser/context and authenticated /home page through createLoginSession internally.
-- LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD are required; no account fallback.
+- The default account is approved_monitor, configured with ACCOUNT_APPROVED_MONITOR_USERNAME and ACCOUNT_APPROVED_MONITOR_PASSWORD. Credentials are resolved by the fixture, never read in specs.
 - Request only needed fixtures as destructured test parameters. No manual POM construction or login/browser lifecycle.
-- Public login/recovery uses native @playwright/test page, never the authenticated smoke fixture.
+- Public login/recovery uses the guarded unauthenticated page from '../../../framework/fixtures/tc.fixture', never raw @playwright/test or the authenticated smoke fixture.
 - Synthetic security uses '../../../framework/fixtures/login-security.fixture' (native page, loginPage, pacing); never authenticate it.
+- These native fixtures enforce RUN_LIVE_TESTS=true for live execution. Never bypass the guard; live runs require explicit approval.
 - Public entry navigation and URL assertions are allowed when that is the behavior under test.
 
 ## BEHAVIORAL RULES (TIMING & PRECONDITIONS — MANDATORY):
@@ -91,14 +92,14 @@ const PAGE_OBJECT_API = `
   Put the arm command and armed-status assertion in try, and reselect/disarm in finally. Verify Disarmed after cleanup. Use test.setTimeout(300000) for arm/disarm tests. Match Armed Home or Armed Away to the command.
 5. **Navigation from non-home page**: navigateToDevices/Cameras/Activity can be called from ANY page, not just /home. The page object handles the click regardless of current URL.
 6. **Business navigation**: Authenticated tests use page object navigation, not page.goto(), page.waitForURL(), or expect(page).toHaveURL(). Public navigation exceptions are described above.
-7. **Isolation**: Use default describe mode. Each test must work independently; never use serial skip-on-failure or shared mutable sessions. Keep physical panel tests single-worker, fullyParallel false.
+7. **Isolation**: Use default describe mode. Each test must work independently; never use serial skip-on-failure or shared mutable sessions. Keep physical panel tests single-worker, fullyParallel false. Every physical-action test must use the native @panel tag and approved_monitor account; never heal or replay physical commands.
 
 ## Test Pattern (MUST follow this EXACT structure):
 \`\`\`javascript
 const { test, expect } = require('../../../framework/fixtures/smoke.fixture');
 const allure = require('allure-js-commons');
 
-test.describe('@nl-authored <Suite Name>', () => {
+test.describe('<Suite Name>', { tag: ['@nl-authored', '@regression'] }, () => {
   test('Verify device categories', async ({ homePage, devicesPage }) => {
     await allure.epic('...');
     await allure.feature('...');
@@ -127,7 +128,7 @@ CRITICAL RULES:
 3. Use test.step() blocks for each logical step.
 4. Follow the exact import paths shown in the API reference.
 5. Include allure metadata INSIDE the test function using await allure.epic/feature/story/severity/tag.
-6. The test MUST be self-contained and runnable with: npx playwright test <file> --headed
+6. The test MUST be self-contained and, only after explicit live approval, runnable with: npm run test:regression -- <file> --headed. Do not expand the eight-test smoke inventory.
 7. Use the fixture-based test.describe pattern shown in the API reference, without beforeAll/afterAll session ownership.
 8. After login, page is already on /home. Use homePage methods for navigation.
 9. Authenticated business navigation uses page objects. Public entry navigation and URL assertions are permitted for public login/recovery behavior.
@@ -158,10 +159,7 @@ async function main() {
   }
 
   const config = loadAIConfig();
-  if (!config.openaiApiKey) {
-    console.error('OPENAI_API_KEY not set. Add it to your .env file.');
-    process.exit(1);
-  }
+  validateAIConfig(config);
 
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════════╗');
@@ -170,7 +168,7 @@ async function main() {
   console.log(`║  Input:   "${instructions.substring(0, 50)}${instructions.length > 50 ? '...' : ''}"`)
   console.log(`║  Mode:    Generate spec file using existing page objects     ║`);
   console.log(`║  Model:   ${(config.analysisModel || 'gpt-4o').padEnd(50)} ║`);
-  console.log(`║  Output:  tests/generated/nl-authored/                      ║`);
+  console.log(`║  Output:  tests/tc2/nl-authored/                            ║`);
   if (autoRun) {
     console.log(`║  Action:  Generate → Save → Run (--run flag active)         ║`);
   }
@@ -221,12 +219,12 @@ async function main() {
   const filePath = path.join(OUTPUT_DIR, fileName);
 
   // Write the file
-  fs.writeFileSync(filePath, code, 'utf-8');
+  writeNewGeneratedFile(OUTPUT_DIR, fileName, code);
 
   console.log('┌─────────────────────────────────────────────────────────────┐');
   console.log('│  GENERATED TEST SPEC:                                       │');
   console.log('├─────────────────────────────────────────────────────────────┤');
-  console.log(`│  File: tests/generated/nl-authored/${fileName}`);
+  console.log(`│  File: tests/tc2/nl-authored/${fileName}`);
   console.log('├─────────────────────────────────────────────────────────────┤');
   console.log('│  CODE:                                                      │');
   console.log('└─────────────────────────────────────────────────────────────┘');
@@ -236,7 +234,7 @@ async function main() {
   console.log('─'.repeat(65));
   console.log('');
   console.log(`To run this test:`);
-  console.log(`  npx playwright test tests/generated/nl-authored/${fileName} --headed`);
+  console.log(`  npx playwright test tests/tc2/nl-authored/${fileName} --headed`);
   console.log('');
 
   // Auto-run if --run flag was specified
@@ -261,4 +259,8 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main().catch(error => { console.error(error.message); process.exitCode = 1; });
+}
+
+module.exports = { main, SYSTEM_PROMPT };

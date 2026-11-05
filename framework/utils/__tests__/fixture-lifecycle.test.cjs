@@ -54,6 +54,7 @@ test('login setup captures evidence before close and preserves errors when captu
       },
     });
     await assert.rejects(createLoginSession({
+      username: 'synthetic', password: 'synthetic',
       onFailure: async failedPage => {
         assert.equal(failedPage, page);
         events.push('capture');
@@ -64,7 +65,7 @@ test('login setup captures evidence before close and preserves errors when captu
   }
 });
 
-function sessionFixtures(env = {}) {
+function sessionFixtures(env = { TC_USERNAME: 'synthetic', TC_PASSWORD: 'synthetic' }) {
   return loadWithDependencies('../../fixtures/tc.fixture.js', {
     '@playwright/test': { test: { extend: fixtures => fixtures }, expect: {} },
     '../utils/login-session': { createLoginSession: async () => { throw new Error('Unexpected real login'); } },
@@ -72,6 +73,71 @@ function sessionFixtures(env = {}) {
     '../utils/pageLoadMetrics': {},
   }, env).test;
 }
+
+test('live guard blocks before use and offline projects do not need credentials', async () => {
+  for (const scenario of [
+    { env: {}, offline: false, allowed: false },
+    { env: {}, offline: true, allowed: true },
+    { env: { RUN_LIVE_TESTS: 'true' }, offline: false, allowed: true },
+  ]) {
+    const { liveAccess } = loadWithDependencies('../../fixtures/live-access.js', {}, scenario.env);
+    let used = false;
+    const action = liveAccess({}, async () => { used = true; }, { project: { metadata: { offline: scenario.offline } } });
+    if (scenario.allowed) await action;
+    else await assert.rejects(action, /RUN_LIVE_TESTS=true/);
+    assert.equal(used, scenario.allowed);
+  }
+});
+
+test('named account and project options reach the session factory; panel aliases cannot bypass approval', async () => {
+  const fixtures = sessionFixtures({ ACCOUNT_SECONDARY_USERNAME: 'synthetic', ACCOUNT_SECONDARY_PASSWORD: 'synthetic' });
+  const info = { project: { use: { headless: false, channel: 'chrome', actionTimeout: 1234, navigationTimeout: 5678, baseURL: 'https://fixture.test', viewport: { width: 1000, height: 700 } } }, tags: [] };
+  const args = {
+    credentialProfile: 'approved-monitor', account: 'secondary', sessionArtifacts: false,
+    sessionFactory: async options => {
+      assert.equal(options.username, 'synthetic');
+      assert.equal(options.launchOptions.headless, false);
+      assert.equal(options.launchOptions.actionTimeout, 1234);
+      assert.equal(options.launchOptions.navigationTimeout, 5678);
+      assert.equal(options.launchOptions.contextOptions.viewport.width, 1000);
+      assert.equal(options.loginUrl, 'https://fixture.test/login');
+      return { close: async () => {} };
+    },
+  };
+  await fixtures.authenticatedSession[0](args, async () => {}, info);
+  for (const selection of [{ account: 'secondary' }, { account: undefined, credentialProfile: 'configured' }]) {
+    await assert.rejects(fixtures.authenticatedSession[0]({ ...args, ...selection }, async () => {}, { ...info, tags: ['@panel'] }), /approved_monitor account/);
+  }
+});
+
+test('session helper rejects missing credentials before acquiring a browser', async () => {
+  const { createLoginSession } = loadWithDependencies('../login-session.js', {
+    './browser-launcher': { launchBrowser: () => assert.fail('Must validate credentials before launch') },
+    '../config/test-data.config': { testDataConfig: {} },
+  });
+  await assert.rejects(createLoginSession(), /explicit username and password/);
+  await assert.rejects(createLoginSession({ username: 'synthetic', password: '' }), /explicit username and password/);
+});
+
+test('local launcher honors passed headless, context and timeout settings', async () => {
+  const calls = {};
+  const context = {
+    setDefaultNavigationTimeout: value => { calls.navigationTimeout = value; },
+    setDefaultTimeout: value => { calls.actionTimeout = value; },
+    addCookies: async () => {}, newPage: async () => ({}),
+  };
+  const { launchBrowser } = loadWithDependencies('../browser-launcher.js', {
+    '@playwright/test': { chromium: { launch: async options => {
+      calls.launch = options;
+      return { newContext: async settings => { calls.context = settings; return context; } };
+    } } },
+  }, { HEADLESS: 'true' });
+  await launchBrowser({ headless: false, channel: 'chrome', navigationTimeout: 9876, actionTimeout: 1234, contextOptions: { viewport: { width: 1000, height: 700 } } });
+  assert.equal(calls.launch.headless, false);
+  assert.equal(calls.navigationTimeout, 9876);
+  assert.equal(calls.actionTimeout, 1234);
+  assert.equal(calls.context.viewport.width, 1000);
+});
 
 test('session fixture attaches masked setup failure evidence even while status is passed', async () => {
   const fixtures = sessionFixtures();
@@ -147,7 +213,7 @@ test('security pacing runs once after success or failure without authenticating'
   const fixtures = loadWithDependencies('../../fixtures/login-security.fixture.js', {
     '@playwright/test': { test: { extend: definitions => definitions }, expect: {} },
     'node:timers/promises': { setTimeout: async interval => events.push(interval) },
-    '../pages/generated/smoke/LoginPage': { LoginPage: class {} },
+    '../pages/tc2/LoginPage': { LoginPage: class {} },
     '../utils/login-security': { securitySettings: () => ({ intervalMs: 5000 }) },
   }).test;
   const pacing = fixtures._securityPacing[0];
@@ -158,21 +224,25 @@ test('security pacing runs once after success or failure without authenticating'
   assert.equal(fixtures.authenticatedSession, undefined);
 });
 
-test('configured profile preserves helper defaults and teardown failures still fail a passing test', async () => {
+test('configured profile passes explicit credentials and teardown failures still fail a passing test', async () => {
   const fixtures = sessionFixtures();
   const cleanupFailure = new Error('cleanup failed');
   await assert.rejects(fixtures.authenticatedSession[0]({
     credentialProfile: 'configured', sessionArtifacts: false,
     sessionFactory: async options => {
-      assert.equal(Object.keys(options).length, 0);
+      assert.equal(options.username, 'synthetic');
+      assert.equal(options.password, 'synthetic');
       return { close: async () => { throw cleanupFailure; } };
     },
   }, async () => {}, { status: 'passed', expectedStatus: 'passed' }), error => error === cleanupFailure);
   await assert.rejects(fixtures.authenticatedSession[0]({ credentialProfile: 'typo' }, async () => {}, {}), /Unknown credential profile/);
 });
 
-test('smoke healing is conditional and precedes page object construction', async () => {
-  for (const enabled of [false, true]) {
+test('smoke healing is explicit, ordered and disabled for CI and panel operations', async () => {
+  for (const scenario of [
+    { enabled: false }, { enabled: true }, { enabled: true, ci: true }, { enabled: true, panel: true },
+  ]) {
+    const { enabled, ci, panel } = scenario;
     const events = [];
     const page = {};
     class FakePageObject {
@@ -181,21 +251,20 @@ test('smoke healing is conditional and precedes page object construction', async
     }
     const fixtures = loadWithDependencies('../../fixtures/smoke.fixture.js', {
       './tc.fixture': { test: { extend: definitions => definitions }, expect: {} },
-      '../pages/generated/smoke/LoginPage': { LoginPage: FakePageObject },
-      '../pages/generated/smoke/TotalConnectHomePage': { TotalConnectHomePage: FakePageObject },
-      '../pages/generated/smoke/DevicesPage': { DevicesPage: FakePageObject },
-      '../pages/generated/smoke/CamerasPage': { CamerasPage: FakePageObject },
-      '../pages/generated/smoke/ActivityPage': { ActivityPage: FakePageObject },
-      '../ai/config/ai.config': { loadAIConfig: () => ({ enabled }) },
+      '../pages/tc2/LoginPage': { LoginPage: FakePageObject },
+      '../pages/tc2/TotalConnectHomePage': { TotalConnectHomePage: FakePageObject },
+      '../pages/tc2/DevicesPage': { DevicesPage: FakePageObject },
+      '../pages/tc2/CamerasPage': { CamerasPage: FakePageObject },
+      '../pages/tc2/ActivityPage': { ActivityPage: FakePageObject },
       '../ai/fixtures/tc.ai.fixture': {
-        healerAgent: enabled ? {} : null,
+        createHealer: () => enabled ? { healerAgent: {}, config: {} } : null,
         patchPageWithHealing: owner => { assert.equal(owner, page); events.push('patch'); },
       },
-    }).test;
+    }, { AI_HEALING_ENABLED: String(enabled), CI: String(!!ci) }).test;
     await fixtures.authenticatedPage({ authenticatedPage: page }, async owner => {
       await fixtures.homePage({ authenticatedPage: owner }, async home => assert.equal(home.page, page));
-    });
-    assert.deepEqual(events, enabled ? ['patch', 'construct', 'popups'] : ['construct', 'popups']);
+    }, { tags: panel ? ['@panel'] : [] });
+    assert.deepEqual(events, enabled && !ci && !panel ? ['patch', 'construct', 'popups'] : ['construct', 'popups']);
   }
 });
 
@@ -225,11 +294,11 @@ test('camera fixture retains state evidence but attaches screenshots only on fai
     }
     const fixtures = loadWithDependencies('../../fixtures/smoke.fixture.js', {
       './tc.fixture': { test: { extend: definitions => definitions }, expect: {} },
-      '../pages/generated/smoke/LoginPage': {},
-      '../pages/generated/smoke/TotalConnectHomePage': {},
-      '../pages/generated/smoke/DevicesPage': {},
-      '../pages/generated/smoke/CamerasPage': { CamerasPage: FakeCamera },
-      '../pages/generated/smoke/ActivityPage': {},
+      '../pages/tc2/LoginPage': {},
+      '../pages/tc2/TotalConnectHomePage': {},
+      '../pages/tc2/DevicesPage': {},
+      '../pages/tc2/CamerasPage': { CamerasPage: FakeCamera },
+      '../pages/tc2/ActivityPage': {},
       '../ai/config/ai.config': {},
       '../ai/fixtures/tc.ai.fixture': {},
     }).test;

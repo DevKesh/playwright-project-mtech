@@ -1,16 +1,16 @@
 const base = require('./tc.fixture');
-const { LoginPage } = require('../pages/generated/smoke/LoginPage');
-const { TotalConnectHomePage } = require('../pages/generated/smoke/TotalConnectHomePage');
-const { DevicesPage } = require('../pages/generated/smoke/DevicesPage');
-const { CamerasPage } = require('../pages/generated/smoke/CamerasPage');
-const { ActivityPage } = require('../pages/generated/smoke/ActivityPage');
-const { patchPageWithHealing, healerAgent } = require('../ai/fixtures/tc.ai.fixture');
-const { loadAIConfig } = require('../ai/config/ai.config');
+const { LoginPage } = require('../pages/tc2/LoginPage');
+const { TotalConnectHomePage } = require('../pages/tc2/TotalConnectHomePage');
+const { DevicesPage } = require('../pages/tc2/DevicesPage');
+const { CamerasPage } = require('../pages/tc2/CamerasPage');
+const { ActivityPage } = require('../pages/tc2/ActivityPage');
 
 const test = base.test.extend({
-  authenticatedPage: async ({ authenticatedPage }, use) => {
-    if (healerAgent) {
-      patchPageWithHealing(authenticatedPage, { healerAgent, config: loadAIConfig() });
+  authenticatedPage: async ({ authenticatedPage }, use, testInfo) => {
+    if (!testInfo?.project?.metadata?.offline && process.env.CI !== 'true' && process.env.AI_HEALING_ENABLED === 'true' && !testInfo?.tags?.includes('@panel')) {
+      const { createHealer, patchPageWithHealing } = require('../ai/fixtures/tc.ai.fixture');
+      const healing = createHealer();
+      if (healing) patchPageWithHealing(authenticatedPage, healing);
     }
     await use(authenticatedPage);
   },

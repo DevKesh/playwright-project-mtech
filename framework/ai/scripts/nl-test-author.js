@@ -34,25 +34,17 @@
  *
  * Outputs:
  *   framework/pages/generated/   — Generated Page Object files
- *   tests/generated/             — Generated test spec files
+ *   tests/tc2/nl-authored/        — Generated test spec files
  *   ai-reports/nl-authoring/     — Recording reports + suite results
  */
 
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const { loadAIConfig } = require('../config/ai.config');
-const { createNLAuthoringGraph } = require('../graph/nl-authoring-graph');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 const { parseMdSuite } = require('../utils/md-suite-parser');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
-
-let testDataConfig = {};
-try {
-  testDataConfig = require('../../config/test-data.config').testDataConfig;
-} catch {
-  // Config not created yet
-}
 
 /** IST timestamp for logging */
 function istTimestamp() {
@@ -190,7 +182,7 @@ function writeSuiteReport(suiteName, suiteFile, results) {
     lines.push(`${icon} [${tc.status.padEnd(5)}] ${tc.id}: ${tc.title}  (${dur})`);
     if (tc.actions.failed > 0) lines.push(`         Actions: ${tc.actions.passed} passed, ${tc.actions.failed} failed`);
     if (tc.assertions.total > 0) lines.push(`         Assertions: ${tc.assertions.passed}/${tc.assertions.total} passed`);
-    if (tc.testSpecs.length > 0) lines.push(`         Spec: tests/generated/${tc.testSpecs[0]}`);
+    if (tc.testSpecs.length > 0) lines.push(`         Spec: tests/tc2/nl-authored/${tc.testSpecs[0]}`);
     if (tc.errors.length > 0) lines.push(`         Error: ${tc.errors[0].substring(0, 80)}`);
   }
   lines.push('─'.repeat(70));
@@ -199,7 +191,7 @@ function writeSuiteReport(suiteName, suiteFile, results) {
   const allPOs = results.flatMap(r => r.pageObjects);
   const allSpecs = results.flatMap(r => r.testSpecs);
   for (const po of [...new Set(allPOs)]) lines.push(`  PO:   framework/pages/generated/${po}`);
-  for (const sp of [...new Set(allSpecs)]) lines.push(`  Spec: tests/generated/${sp}`);
+  for (const sp of [...new Set(allSpecs)]) lines.push(`  Spec: tests/tc2/nl-authored/${sp}`);
 
   const txtPath = path.join(reportDir, `suite-${baseName}-${timestamp}.txt`);
   fs.writeFileSync(txtPath, lines.join('\n'), 'utf-8');
@@ -208,6 +200,8 @@ function writeSuiteReport(suiteName, suiteFile, results) {
 }
 
 async function main() {
+  const { testDataConfig } = require('../../config/test-data.config');
+  const { createNLAuthoringGraph } = require('../graph/nl-authoring-graph');
   const args = process.argv.slice(2);
   let instructions = '';
   let suitePath = '';
@@ -276,7 +270,7 @@ async function main() {
     }
 
     const config = loadAIConfig();
-    if (!config.openaiApiKey) { console.error('OPENAI_API_KEY not set. Add it to your .env file.'); process.exit(1); }
+    validateAIConfig(config);
 
     console.log('╔══════════════════════════════════════════════════════════╗');
     console.log('║   AI NL Test Author — Suite Mode                        ║');
@@ -365,11 +359,11 @@ async function main() {
     if (allSpecs.length > 0) {
       console.log('');
       console.log('To run ALL generated tests:');
-      console.log('  npx playwright test tests/generated/ --headed');
+      console.log('  npx playwright test tests/tc2/nl-authored/ --headed');
       console.log('');
       console.log('To run individual tests:');
       for (const spec of [...new Set(allSpecs)]) {
-        console.log(`  npx playwright test tests/generated/${spec} --headed`);
+        console.log(`  npx playwright test tests/tc2/nl-authored/${spec} --headed`);
       }
     }
 
@@ -396,7 +390,7 @@ async function main() {
 
   // Load config
   const config = loadAIConfig();
-  if (!config.openaiApiKey) { console.error('OPENAI_API_KEY not set. Add it to your .env file.'); process.exit(1); }
+  validateAIConfig(config);
 
   const configSource = url === testDataConfig?.targetApp?.baseUrl ? 'test-data.config.js' : 'CLI argument';
 
@@ -465,7 +459,7 @@ async function main() {
       console.log('║                                                          ║');
       console.log('║  Generated Test Specs:                                   ║');
       for (const spec of result.generatedTestSpecs) {
-        console.log(`║    → tests/generated/${(spec.fileName || '').padEnd(36)} ║`);
+        console.log(`║    → tests/tc2/nl-authored/${(spec.fileName || '').padEnd(36)} ║`);
       }
     }
 
@@ -481,7 +475,7 @@ async function main() {
       console.log('');
       console.log('To run the generated test:');
       for (const spec of result.generatedTestSpecs) {
-        console.log(`  npx playwright test tests/generated/${spec.fileName} --headed`);
+        console.log(`  npx playwright test tests/tc2/nl-authored/${spec.fileName} --headed`);
       }
       console.log('');
       console.log('Or run all generated tests:');
@@ -495,4 +489,7 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) main().catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

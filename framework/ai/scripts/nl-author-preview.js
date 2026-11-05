@@ -19,16 +19,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const { loadAIConfig } = require('../config/ai.config');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 const { buildParseInstructionsPrompt } = require('../prompts/nl-test-authoring.prompt');
 const { createAIClient } = require('../core/ai-client-factory');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
-
-let testDataConfig = {};
-try {
-  testDataConfig = require('../../config/test-data.config').testDataConfig;
-} catch { /* fallback */ }
 
 /**
  * Generate a Playwright code template from structured steps (no GPT needed).
@@ -36,7 +31,7 @@ try {
 function generateCodeTemplate(parsed) {
   const lines = [];
   lines.push(`const { test, expect } = require('@playwright/test');`);
-  lines.push(`const { testDataConfig } = require('../../framework/config/test-data.config');`);
+  lines.push(`const { testDataConfig } = require('../../../framework/config/test-data.config');`);
   lines.push(``);
   lines.push(`test('${parsed.testTitle}', async ({ page }) => {`);
 
@@ -102,10 +97,8 @@ async function main() {
   }
 
   const config = loadAIConfig();
-  if (!config.openaiApiKey) {
-    console.error('OPENAI_API_KEY not set. Add it to your .env file.');
-    process.exit(1);
-  }
+  validateAIConfig(config);
+  const { testDataConfig } = require('../../config/test-data.config');
 
   console.log('');
   console.log('╔══════════════════════════════════════════════════════════╗');
@@ -237,7 +230,7 @@ async function main() {
   md += `|---|----------|----------|\n`;
   md += `| 1 | **Approve test scenario?** | Does this flow cover a valid user journey? |\n`;
   md += `| 2 | **Selector refinement needed?** | Template uses generic selectors — refine with actual DOM |\n`;
-  md += `| 3 | **Add to regression suite?** | If approved, add to \`tests/generated/smoke/\` |\n`;
+  md += `| 3 | **Add to regression suite?** | If approved, add to \`tests/tc2/nl-authored/\` |\n`;
   md += `| 4 | **Data dependencies?** | Check if \`testDataConfig\` values are current |\n`;
   md += `| 5 | **Environment constraints?** | Verify target pages are accessible in QA staging |\n\n`;
 
@@ -264,7 +257,9 @@ async function main() {
   console.log(`\n  📄 Full report: ${reportPath}`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error(`Preview failed: ${err.message}`);
   process.exit(1);
 });
+
+module.exports = { main, generateCodeTemplate };

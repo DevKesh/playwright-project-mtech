@@ -16,28 +16,37 @@
  */
 
 const base = require('@playwright/test');
-const { createLocatorProxy } = require('../core/locator-proxy');
-const { LocatorHealerAgent } = require('../agents/locator-healer.agent');
-const { loadAIConfig } = require('../config/ai.config');
 const { attachFailureArtifacts } = require('../../utils/test-artifacts');
 
-const config = loadAIConfig();
+function createHealer() {
+  if (process.env.AI_HEALING_ENABLED !== 'true' ||
+      (process.env.CI && process.env.CI !== 'false') || process.env.GITHUB_ACTIONS === 'true') {
+    return null;
+  }
+  const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
+  const config = loadAIConfig();
+  validateAIConfig(config);
+  if (!config.locatorHealing) return null;
+  const { LocatorHealerAgent } = require('../agents/locator-healer.agent');
+  return { healerAgent: new LocatorHealerAgent(config), config };
+}
 
-// Create healer agent once per worker (only if healing is enabled + key present)
-let healerAgent = null;
-if (config.enabled && config.locatorHealing && config.openaiApiKey) {
-  healerAgent = new LocatorHealerAgent(config);
-  console.log('[AI-FIXTURE] Healer agent created — locator self-healing is ACTIVE');
-} else {
-  console.log(`[AI-FIXTURE] Healer agent NOT created — enabled:${config.enabled} locator:${config.locatorHealing} key:${!!config.openaiApiKey}`);
+async function withoutHealing(page, action) {
+  page.__aiHealingSuppressed = (page.__aiHealingSuppressed || 0) + 1;
+  try {
+    return await action();
+  } finally {
+    page.__aiHealingSuppressed -= 1;
+  }
 }
 
 const test = base.test.extend({
   page: async ({ page }, use, testInfo) => {
-    if (healerAgent) {
+    const healing = createHealer();
+    if (healing) {
       // Monkey-patch locator-creating methods directly on the page object
       // (Playwright's fixture system strips JS Proxies, so we patch instead)
-      patchPageWithHealing(page, { healerAgent, config });
+      patchPageWithHealing(page, healing);
       // Give the healing graph enough time (DOM extract → GPT → retry)
       testInfo.setTimeout(120_000);
     }
@@ -52,6 +61,8 @@ const test = base.test.extend({
  * Monkey-patch all locator-creating methods on a Page to return healing-capable locators.
  */
 function patchPageWithHealing(page, { healerAgent, config }) {
+  if (!healerAgent || !config?.locatorHealing || page.__rawLocatorMethods) return;
+  const { createLocatorProxy } = require('../core/locator-proxy');
   const LOCATOR_CREATORS = ['locator', 'getByRole', 'getByText', 'getByLabel', 'getByPlaceholder', 'getByAltText', 'getByTitle', 'getByTestId'];
 
   // Store unpatched originals so the healer agent can create locators
@@ -72,4 +83,4 @@ function patchPageWithHealing(page, { healerAgent, config }) {
   }
 }
 
-module.exports = { test, expect: base.expect, patchPageWithHealing, healerAgent };
+module.exports = { test, expect: base.expect, createHealer, patchPageWithHealing, withoutHealing };

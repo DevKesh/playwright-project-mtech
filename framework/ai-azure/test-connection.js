@@ -16,13 +16,8 @@
 const { loadAzureAIConfig, validateAzureAIConfig } = require('./config/ai.azure.config');
 const { AzureAIClient } = require('./core/azure-ai-client');
 
-function redact(s) {
-  if (!s) return '(empty)';
-  if (s.length <= 8) return '***';
-  return `${s.slice(0, 4)}...${s.slice(-4)}`;
-}
-
-(async () => {
+if (require.main === module) (async () => {
+  require('../config/environment').loadEnvironment();
   console.log('--- Azure Anthropic connectivity test ---');
 
   let cfg;
@@ -37,7 +32,6 @@ function redact(s) {
   console.log('Endpoint   :', cfg.endpoint);
   console.log('Model      :', cfg.model);
   console.log('API version:', cfg.anthropicVersion);
-  console.log('API key    :', redact(cfg.apiKey));
   console.log('Timeout    :', cfg.timeout, 'ms');
   console.log('');
 

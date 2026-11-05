@@ -6,6 +6,109 @@ const { CamerasPage } = require('../../pages/generated/smoke/CamerasPage');
 const { DevicesPage } = require('../../pages/generated/smoke/DevicesPage');
 const { ActivityPage } = require('../../pages/generated/smoke/ActivityPage');
 
+test('physical POM operations suppress healing across every step and restore state', async () => {
+  const fs = require('node:fs');
+  const vm = require('node:vm');
+  const { createRequire } = require('node:module');
+  const { createLocatorProxy } = require('../../ai/core/locator-proxy');
+  const canonicalPath = require.resolve('../../pages/tc2/TotalConnectHomePage');
+  const localRequire = createRequire(canonicalPath);
+  const operations = ['ensureDisarmed', 'selectAllPartitions', 'armHome', 'armAway', 'disarm'];
+
+  for (const name of ['LoginPage', 'TotalConnectHomePage', 'DevicesPage', 'CamerasPage', 'ActivityPage']) {
+    assert.equal(require(`../../pages/generated/smoke/${name}`), require(`../../pages/tc2/${name}`));
+  }
+
+  async function exercise(operation, { failAt = -1, patched = true, individual = true, initialDepth = 0 } = {}) {
+    const events = [];
+    const failure = Object.assign(new Error('waiting for locator'), { name: 'TimeoutError' });
+    const page = patched ? { __rawLocatorMethods: {}, __aiHealingSuppressed: initialDepth } : {};
+    let helperLoads = 0;
+    let healerCalls = 0;
+    let currentStatus = 'Armed Home';
+    const config = { locatorHealing: true };
+    const healerAgent = new Proxy({}, { get() { healerCalls++; throw new Error('Healer must not be used'); } });
+    function observe(label) {
+      events.push({ label, depth: page.__aiHealingSuppressed || 0 });
+      assert.equal(Boolean(page.__aiHealingSuppressed), patched, label);
+      if (events.length - 1 === failAt) throw failure;
+    }
+    function locator(label) {
+      const raw = {
+        first: () => locator(label),
+        filter: () => locator(label),
+        or: () => locator(label),
+        getByRole: () => locator('partitions'),
+        all: async () => { observe('selection:all'); return individual ? [locator('checkbox')] : []; },
+        isVisible: async () => { observe(`${label}:visible`); return !['error', 'communication'].includes(label); },
+        isChecked: async () => { observe('checkbox:checked'); return true; },
+        setChecked: async checked => { observe('checkbox:setChecked'); assert.equal(checked, true); },
+        waitFor: async () => { observe('selection:wait'); },
+        click: async () => {
+          observe(`${label}:click`);
+          currentStatus = { armHome: 'Armed Home', armAway: 'Armed Away', disarm: 'Disarmed' }[label] || currentStatus;
+        },
+        allTextContents: async () => { observe('statuses:read'); return [currentStatus]; },
+      };
+      return patched ? createLocatorProxy(raw, { page, config, healerAgent, selectorDescription: label }) : raw;
+    }
+    page.getByText = text => locator(text === 'Communication Failure' ? 'communication' : 'selection');
+    page.getByRole = () => locator('partitions');
+    const mockedExpect = target => ({
+      toBeVisible: async () => assert.equal(await target.isVisible(), true),
+      toBeChecked: async () => assert.equal(await target.isChecked(), true),
+    });
+    mockedExpect.poll = callback => ({ toBe: async expected => assert.equal(await callback(), expected) });
+    const sandbox = {
+      module: { exports: {} },
+      require(request) {
+        if (request === '@playwright/test') return { expect: mockedExpect };
+        if (request === '../../utils/assertion-helper') return {
+          withFailureContext: action => action(),
+          classifyAndThrow: error => { throw error; },
+        };
+        if (request === '../../ai/fixtures/tc.ai.fixture') helperLoads++;
+        return localRequire(request);
+      },
+    };
+    vm.runInNewContext(fs.readFileSync(canonicalPath, 'utf8'), sandbox, { filename: canonicalPath });
+    const home = Object.create(sandbox.module.exports.TotalConnectHomePage.prototype);
+    Object.assign(home, {
+      page,
+      selectAllCheckbox: locator('selection'),
+      partitionCheckboxes: locator('partitions'),
+      partitionStatusText: locator('statuses'),
+      actionError: locator('error'),
+      armHomeButton: locator('armHome'),
+      armAwayButton: locator('armAway'),
+      disarmButton: locator('disarm'),
+    });
+    if (failAt < 0) await home[operation]();
+    else {
+      await assert.rejects(home[operation](), error => error === failure);
+      assert.equal(events.slice(failAt + 1).some(event => /:click$|:setChecked$/.test(event.label)), false,
+        'Failure diagnostics must not replay commands or selection');
+    }
+    assert.equal(healerCalls, 0);
+    assert.equal(page.__aiHealingSuppressed, patched ? initialDepth : undefined);
+    assert.equal(helperLoads > 0, patched);
+    return events;
+  }
+
+  for (const operation of operations) {
+    for (const individual of [true, false]) {
+      const events = await exercise(operation, { individual });
+      assert.ok(events.length > 0, operation);
+      if (operation === 'ensureDisarmed') assert.ok(events.some(event => event.depth === 2));
+      for (let failAt = 0; failAt < events.length; failAt++) {
+        await exercise(operation, { individual, failAt });
+      }
+    }
+    await exercise(operation, { patched: false });
+    await exercise(operation, { initialDepth: 2 });
+  }
+});
+
 // Only synthetic DOM: no login, app server, credentials, or physical commands.
 // Retain production assertion timeouts; run independent negative cases concurrently.
 describe('smoke page objects against isolated synthetic pages', { concurrency: true }, () => {

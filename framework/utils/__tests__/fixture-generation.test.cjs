@@ -26,7 +26,12 @@ function promptSources() {
 test('all authoring contracts specify isolated authenticated and public fixtures', () => {
   for (const prompt of promptSources()) {
     assert.match(prompt, /framework\/fixtures\/smoke\.fixture/);
-    assert.match(prompt, /LOGIN_MONITOR_USERNAME/);
+    assert.match(prompt, /ACCOUNT_(?:APPROVED_MONITOR|<UPPER_NAME>)_USERNAME/);
+    assert.match(prompt, /ACCOUNT_(?:APPROVED_MONITOR|<UPPER_NAME>)_PASSWORD/);
+    assert.doesNotMatch(prompt, /LOGIN_MONITOR_USERNAME|LOGIN_MONITOR_PASSWORD/);
+    assert.match(prompt, /framework\/pages\/tc2/);
+    assert.match(prompt, /login-security\.fixture/);
+    assert.match(prompt, /RUN_LIVE_TESTS=true/);
     assert.match(prompt, /unauthenticated/i);
     assert.match(prompt, /90000/);
     assert.match(prompt, /300000/);

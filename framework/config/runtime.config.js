@@ -11,30 +11,7 @@
  *   if (runtime.browser.headless) { ... }
  */
 
-const path = require('path');
-const fs = require('fs');
-
-// ─── Load .env file (zero-dependency, no dotenv needed) ─────────────────────
-const envPath = path.resolve(__dirname, '../../.env');
-try {
-  if (fs.existsSync(envPath)) {
-    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const eqIdx = trimmed.indexOf('=');
-      if (eqIdx === -1) continue;
-      const key = trimmed.slice(0, eqIdx).trim();
-      const value = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
-      // Don't override existing env vars (CI secrets take precedence)
-      if (!process.env[key]) {
-        process.env[key] = value;
-      }
-    }
-  }
-} catch (e) {
-  // .env parsing is best-effort
-}
+const { getAccount } = require('./accounts');
 
 // ─── Detect execution mode ──────────────────────────────────────────────────
 const isCI = process.env.CI === 'true';
@@ -76,10 +53,8 @@ module.exports = {
     slackWebhookUrl: process.env.SLACK_WEBHOOK_URL || '',
   },
 
-  credentials: {
-    username: process.env.TC_USERNAME || 'newQA3',
-    password: process.env.TC_PASSWORD || 'Password@5',
-    displayName: process.env.TC_DISPLAY_NAME || 'Keshav QA_Testt',
+  get credentials() {
+    return { ...getAccount('configured'), displayName: process.env.TC_DISPLAY_NAME || '' };
   },
 
   ai: {

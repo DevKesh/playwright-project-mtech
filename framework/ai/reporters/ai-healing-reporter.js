@@ -18,15 +18,16 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { loadAIConfig } = require('../config/ai.config');
-const { createHealingGraph } = require('../graph/healing-graph');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 const { appendRunHistory } = require('../storage/healing-history');
 const { AuditTrail } = require('../audit/audit-trail');
 const { getCostSummary, clearCostLog } = require('../metrics/cost-tracker');
 
 class AIHealingReporter {
   constructor() {
-    this.config = loadAIConfig();
+    const enabled = process.env.AI_HEALING_ENABLED === 'true' &&
+      (!process.env.CI || process.env.CI === 'false') && process.env.GITHUB_ACTIONS !== 'true';
+    this.config = enabled ? loadAIConfig() : { enabled: false, auditEnabled: false };
     this.testResults = [];
     this.healedTests = [];
     this.healingGraph = null;
@@ -35,12 +36,10 @@ class AIHealingReporter {
     this.runId = this.auditTrail.generateRunId();
     this.allureResultsDir = path.join(process.cwd(), 'allure-results');
 
-    if (this.config.enabled && this.config.openaiApiKey) {
-      try {
-        this.healingGraph = createHealingGraph(this.config);
-      } catch (err) {
-        console.log(`[AI-REPORTER] Failed to create healing graph: ${err.message}`);
-      }
+    if (this.config.enabled) {
+      validateAIConfig(this.config);
+      const { createHealingGraph } = require('../graph/healing-graph');
+      this.healingGraph = createHealingGraph(this.config);
     }
   }
 

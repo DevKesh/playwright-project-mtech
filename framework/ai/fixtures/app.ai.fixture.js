@@ -16,22 +16,14 @@ const { createCheckoutFlow } = require('../../flows/checkout/CheckoutFlow');
 const { createOrdersFlow } = require('../../flows/orders/OrdersFlow');
 const { scenarioData } = require('../../data/authAndCart.data');
 const { createPageProxy } = require('../core/page-proxy');
-const { LocatorHealerAgent } = require('../agents/locator-healer.agent');
-const { loadAIConfig } = require('../config/ai.config');
-
-const config = loadAIConfig();
-
-// Create the healer agent once (shared across all tests in the worker)
-let healerAgent = null;
-if (config.enabled && config.locatorHealing && config.openaiApiKey) {
-  healerAgent = new LocatorHealerAgent(config);
-}
+const { createHealer } = require('./tc.ai.fixture');
 
 const test = base.test.extend({
   // Override the page fixture to wrap it with the AI proxy
   aiPage: async ({ page }, use) => {
-    if (healerAgent) {
-      const proxiedPage = createPageProxy(page, { healerAgent, config });
+    const healing = createHealer();
+    if (healing) {
+      const proxiedPage = createPageProxy(page, healing);
       await use(proxiedPage);
     } else {
       await use(page);

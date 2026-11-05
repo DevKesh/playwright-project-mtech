@@ -1,14 +1,35 @@
-const { test, expect } = require('../../../framework/fixtures/login-security.fixture');
+const { test: securityTest, expect } = require('../../framework/fixtures/login-security.fixture');
 const { randomUUID } = require('node:crypto');
 const {
   securitySettings, uniqueInvalidCredentials,
-} = require('../../../framework/utils/login-security');
+} = require('../../framework/utils/login-security');
 
 const ALARMNET_LOGIN_URL = 'https://services.qa.alarmnet.com/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn?lang=en-US';
 const settings = securitySettings();
 const runId = randomUUID();
 
-test.describe('@nl-authored @login-security @alarmnet-login-security AlarmNet Sign In (/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn) synthetic invalid credentials', () => {
+const test = securityTest.extend({
+  storageState: async ({ browser }, use) => {
+    securityTest.skip(process.env.RUN_LIVE_TESTS !== 'true', 'Set RUN_LIVE_TESTS=true for live security tests.');
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    let state;
+    try {
+      const page = await context.newPage();
+      await page.goto(ALARMNET_LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      const acceptAll = page.getByRole('button', { name: /^Accept All$/i });
+      if (await acceptAll.isVisible().catch(() => false)) {
+        await acceptAll.click({ timeout: 10000 });
+        await expect(acceptAll).toBeHidden({ timeout: 10000 });
+      }
+      state = await context.storageState();
+    } finally {
+      await context.close();
+    }
+    await use(state);
+  },
+});
+
+test.describe('@nl-authored @login-security @alarmnet-login-security AlarmNet Sign In (/AlarmNet360/AlarmNetDirectV/Login/Login/SignIn) synthetic invalid credentials', { tag: ['@security', '@authentication'] }, () => {
   Array.from({ length: settings.attempts }, (_, index) => {
     const attempt = index + 1;
     test(`Attempt ${String(attempt).padStart(3, '0')}: submit unique synthetic credentials to AlarmNet`, async ({ page, loginPage: login }) => {

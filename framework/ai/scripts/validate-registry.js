@@ -16,7 +16,7 @@
  * With --fix: Attempts to auto-fix broken locators using Playwright's locator resolution.
  */
 
-require('dotenv').config();
+if (require.main === module) require('../../config/environment').loadEnvironment();
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('@playwright/test');
@@ -25,9 +25,9 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 const REGISTRY_DIR = path.join(PROJECT_ROOT, 'framework', 'pages', 'registry');
 
 let testDataConfig = {};
-try {
+if (require.main === module) {
   testDataConfig = require('../../config/test-data.config').testDataConfig;
-} catch {}
+}
 
 const args = process.argv.slice(2);
 const getArg = (flag) => {
@@ -418,7 +418,7 @@ async function main() {
   }
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('[VALIDATOR] Fatal:', err.message);
   process.exit(1);
 });

@@ -8,17 +8,14 @@
  * Until you swap that one line, the existing framework is 100% untouched.
  */
 
-const { AzureAIClient } = require('./azure-ai-client');
-const { loadAzureAIConfig, validateAzureAIConfig } = require('../config/ai.azure.config');
+const { createAIClient: createProviderClient } = require('../../ai/core/ai-client-factory');
 
 /**
  * @param {object} [overrides] Optional partial config to merge over env-loaded config.
  * @returns {AzureAIClient}
  */
 function createAIClient(overrides = {}) {
-  const cfg = { ...loadAzureAIConfig(), ...overrides };
-  validateAzureAIConfig(cfg);
-  return new AzureAIClient(cfg);
+  return createProviderClient({ ...overrides, provider: 'azure' });
 }
 
 module.exports = { createAIClient };

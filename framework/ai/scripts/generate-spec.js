@@ -13,8 +13,6 @@
 const path = require('path');
 const fs = require('fs');
 
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
-
 const { generateAndWriteSpec } = require('../agents/spec-generator');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -129,7 +127,7 @@ async function main() {
     // Parse suite file and generate for specific TC or all
     const { suiteConfig, testCases } = parseSuiteFile(args.suite);
     const tags = (suiteConfig.tags || '@smoke @tc @tc-plan').split(' ').map(t => t.trim());
-    const output = args.output || suiteConfig.output || 'tests/generated';
+    const output = args.output || suiteConfig.output || 'tests/tc2/nl-authored';
     const pages = args.pages || suiteConfig.pages || 'framework/pages/generated';
 
     if (args.tcNumber) {
@@ -169,7 +167,7 @@ async function main() {
         entry: 'User is on login page',
         exit: 'Test assertions pass',
       },
-      output: args.output ? path.resolve(PROJECT_ROOT, args.output) : path.join(PROJECT_ROOT, 'tests', 'generated'),
+      output: args.output ? path.resolve(PROJECT_ROOT, args.output) : path.join(PROJECT_ROOT, 'tests', 'tc2', 'nl-authored'),
       pages: args.pages ? path.resolve(PROJECT_ROOT, args.pages) : path.join(PROJECT_ROOT, 'framework', 'pages', 'generated'),
     });
   } else {
@@ -187,7 +185,7 @@ async function main() {
 
     const { suiteConfig, testCases } = parseSuiteFile(args.suite);
     const tags = (suiteConfig.tags || '@smoke @tc @tc-plan').split(' ').map(t => t.trim());
-    const output = args.output || suiteConfig.output || 'tests/generated/smoke';
+    const output = args.output || suiteConfig.output || 'tests/tc2/nl-authored';
     const pages = args.pages || suiteConfig.pages || 'framework/pages/generated/smoke';
 
     // Combine all test cases into a single instruction block
@@ -253,7 +251,7 @@ async function main() {
   console.log(`${'═'.repeat(60)}`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

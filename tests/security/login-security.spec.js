@@ -1,13 +1,13 @@
-const { test } = require('../../../framework/fixtures/login-security.fixture');
+const { test } = require('../../framework/fixtures/login-security.fixture');
 const { randomUUID } = require('node:crypto');
 const {
   securitySettings, uniqueInvalidCredentials,
-} = require('../../../framework/utils/login-security');
+} = require('../../framework/utils/login-security');
 
 const settings = securitySettings();
 const runId = randomUUID();
 
-test.describe('@nl-authored @login-security Synthetic invalid credentials', () => {
+test.describe('@nl-authored @login-security Synthetic invalid credentials', { tag: ['@security', '@authentication'] }, () => {
   // Standard page fixture: every attempt is independent, even after a failure.
   Array.from({ length: settings.attempts }, (_, index) => {
     const attempt = index + 1;

@@ -3,6 +3,8 @@ test-results/
 playwright-report/
 blob-report/
 .env
+.env.*
+!.env.example
 ai-reports/
 allure-results/
 allure-report/

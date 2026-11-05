@@ -11,7 +11,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const { DriftDetectionAgent } = require('../agents/drift-detection.agent');
-const { loadAIConfig } = require('../config/ai.config');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 const { writeReport } = require('../storage/report-writer');
 
 // Map page objects to the URLs they target
@@ -57,10 +57,7 @@ async function main() {
   // Override: always enable for CLI scripts
   config.enabled = true;
 
-  if (!config.openaiApiKey) {
-    console.error('Error: OPENAI_API_KEY environment variable is required.');
-    process.exit(1);
-  }
+  validateAIConfig(config);
 
   const agent = new DriftDetectionAgent(config);
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
@@ -128,7 +125,7 @@ async function main() {
   console.log('Drift detection complete.');
 }
 
-main().catch((err) => {
+if (require.main === module) main().catch((err) => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

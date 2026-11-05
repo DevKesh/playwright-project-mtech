@@ -19,26 +19,8 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const runtime = require('../config/runtime.config');
 
-function readReportSummary(directory) {
-  for (const relativePath of ['summary.json', path.join('widgets', 'summary.json')]) {
-    try {
-      const data = JSON.parse(fs.readFileSync(path.join(directory, relativePath), 'utf8'));
-      if (data.stats?.total > 0) {
-        const { passed = 0, failed = 0, broken = 0, skipped = 0, unknown = 0, total } = data.stats;
-        const unaccounted = Math.max(0, total - passed - failed - broken - skipped - unknown);
-        return {
-          statistic: { passed, failed, broken, skipped, unknown: unknown + unaccounted, total },
-          time: { duration: data.duration || 0 },
-          reportStatus: data.status,
-        };
-      }
-      if (data.statistic?.total > 0) return data;
-    } catch {}
-  }
-  return null;
-}
+const { inspectResults, readReportSummary } = require('./validate-allure-results');
 
 function loadSummary() {
   const reportDir = path.resolve(process.cwd(), process.env.SLACK_REPORT_DIR || 'allure-report');
@@ -46,23 +28,8 @@ function loadSummary() {
   const report = readReportSummary(reportDir);
   if (report) return report;
 
-  try {
-    const files = fs.readdirSync(resultsDir, { recursive: true }).filter(file => file.endsWith('-result.json'));
-    if (files.length > 0) {
-      const statistic = { passed: 0, failed: 0, broken: 0, skipped: 0, unknown: 0, total: 0 };
-      let minStart = Infinity, maxStop = 0;
-      for (const file of files) {
-        const result = JSON.parse(fs.readFileSync(path.join(resultsDir, file), 'utf8'));
-        const status = ['passed', 'failed', 'broken', 'skipped'].includes(result.status) ? result.status : 'unknown';
-        statistic[status]++;
-        statistic.total++;
-        if (Number.isFinite(result.start)) minStart = Math.min(minStart, result.start);
-        if (Number.isFinite(result.stop)) maxStop = Math.max(maxStop, result.stop);
-      }
-      console.log(`[SlackNotify] Built summary from ${resultsDir}: ${statistic.total} results`);
-      return { statistic, time: { duration: Number.isFinite(minStart) ? Math.max(0, maxStop - minStart) : 0 } };
-    }
-  } catch {}
+  const results = inspectResults(resultsDir);
+  if (results.summary) return results.summary;
 
   if (process.env.CI !== 'true' && !process.env.SLACK_REPORT_DIR && !process.env.SLACK_RESULTS_DIR &&
       !fs.existsSync(reportDir) && !fs.existsSync(resultsDir)) {
@@ -94,30 +61,40 @@ function buildMessage(summary) {
   } else {
     outcome = process.env.TEST_OUTCOME || 'unknown';
   }
+  const jobOutcome = process.env.JOB_OUTCOME;
+  const testOutcome = process.env.TEST_OUTCOME;
+  const reportOutcome = process.env.REPORT_OUTCOME;
+  const incomplete = Boolean(summary?.incomplete) || process.env.RUN_INCOMPLETE === 'true' ||
+    [jobOutcome, testOutcome].some(value => ['cancelled', 'skipped', 'timed_out'].includes(value));
+  const pipelineFailed = [jobOutcome, testOutcome, reportOutcome].some(value => value && value !== 'success');
+  if (pipelineFailed || incomplete || summary?.statistic?.passed !== totalTests ||
+      summary?.statistic?.failed > 0 || summary?.statistic?.broken > 0) outcome = 'failure';
   const passed = outcome === 'success';
   const color = passed ? '#2eb886' : '#e01e5a';
   const icon = passed ? ':large_green_circle:' : ':red_circle:';
   const status = totalTests === 0
     ? (outcome === 'failure' ? 'TESTS FAILED - RESULTS UNAVAILABLE' : 'RESULTS UNAVAILABLE')
+    : incomplete ? 'RUN FAILED / INCOMPLETE'
+    : pipelineFailed ? 'PIPELINE / TESTS FAILED'
     : passed ? 'ALL TESTS PASSED' : 'TESTS FAILED';
 
   const runUrl = process.env.GITHUB_RUN_URL || '';
-  const reportUrl = process.env.REPORT_URL || '';
+  const reportUrl = totalTests > 0 && process.env.REPORT_PUBLISHED === 'true' ? process.env.REPORT_URL || '' : '';
   const suiteName = process.env.TEST_SUITE_NAME || 'Playwright Smoke Suite';
   const healEnabled = process.env.HEAL_ENABLED !== undefined
     ? process.env.HEAL_ENABLED === 'true'
-    : runtime.ai.healingEnabled;
+    : process.env.AI_HEALING_ENABLED === 'true';
   const timestamp = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
   // Execution platform detection
-  const isLambda = runtime.lambda && runtime.lambda.isLambda;
+  const isLambda = process.env.EXECUTION_PLATFORM === 'lambda';
   const isCI = process.env.CI === 'true';
   const platformLabel = isLambda
     ? ':cloud: LambdaTest Cloud'
     : isCI
       ? ':github: GitHub Actions (CI)'
       : ':computer: Local';
-  const ltBuild = isLambda ? (runtime.lambda.buildName || process.env.LT_BUILD_NAME || '') : '';
+  const ltBuild = isLambda ? (process.env.LT_BUILD_NAME || '') : '';
 
   // Build stats
   let total = 0, pass = 0, fail = 0, broken = 0, skipped = 0;
@@ -174,13 +151,18 @@ function buildMessage(summary) {
       fields: [
         { type: 'mrkdwn', text: `*:clock1: Duration*\n${duration}` },
         { type: 'mrkdwn', text: `*:rocket: Platform*\n${platformLabel}` },
-        { type: 'mrkdwn', text: `*:gear: Environment*\n\`${runtime.mode.toUpperCase()}\`` },
+        { type: 'mrkdwn', text: '*:gear: Environment*\n`QA`' },
         { type: 'mrkdwn', text: `*:robot_face: AI Healing*\n${healEnabled ? ':white_check_mark: Active' : ':no_entry_sign: Disabled'}` },
         { type: 'mrkdwn', text: `*:calendar: Executed*\n${timestamp}` },
         ...(isLambda ? [{ type: 'mrkdwn', text: `*:label: LT Build*\n\`${ltBuild}\`` }] : []),
       ],
     },
   ];
+
+  blocks.push({
+    type: 'section',
+    text: { type: 'mrkdwn', text: `*Execution:* ${jobOutcome || testOutcome || 'unknown'} | *Tests:* ${testOutcome || 'unknown'} | *Reporting:* ${reportOutcome || 'unknown'}${incomplete ? '\n_Run incomplete; counts may be partial. Check cleanup and panel state before another run._' : ''}` },
+  });
 
   // Add action buttons only when URLs exist
   if (runUrl || reportUrl) {
@@ -198,7 +180,7 @@ function buildMessage(summary) {
   blocks.push({
     type: 'context',
     elements: [
-      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Platform: ${isLambda ? 'LambdaTest' : isCI ? 'GitHub Actions' : 'Local'}  •  Browser: ${runtime.browser.channel}  •  Headless: ${runtime.browser.headless}_` },
+      { type: 'mrkdwn', text: `_Sent by QA Playwright Execution Pipeline  •  Platform: ${isLambda ? 'LambdaTest' : isCI ? 'GitHub Actions' : 'Local'}_` },
     ],
   });
 
@@ -241,24 +223,28 @@ function sendWebhook(webhookUrl, payload) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(body);
         } else {
-          reject(new Error(`Slack responded with ${res.statusCode}: ${body}`));
+          reject(new Error(`Slack responded with HTTP ${res.statusCode}`));
         }
       });
     });
 
     req.on('error', reject);
+    req.setTimeout(15000, () => req.destroy(new Error('Slack request timed out')));
     req.write(data);
     req.end();
   });
 }
 
 async function main() {
-  if (!runtime.reporting.slackEnabled) {
+  if (process.env.CI !== 'true' && process.env.GITHUB_ACTIONS !== 'true') {
+    require('../config/environment').loadEnvironment();
+  }
+  if (process.env.SLACK_ENABLED === 'false') {
     console.log('[SlackNotify] Slack notifications disabled in runtime config — skipping.');
     process.exit(0);
   }
 
-  const webhookUrl = runtime.reporting.slackWebhookUrl || process.env.SLACK_WEBHOOK_URL;
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) {
     if (process.env.SLACK_REQUIRED === 'true') {
       console.error('[SlackNotify] SLACK_WEBHOOK_URL is required for this workflow.');
@@ -272,8 +258,8 @@ async function main() {
   const payload = buildMessage(summary);
 
   try {
-    const response = await sendWebhook(webhookUrl, payload);
-    console.log(`[SlackNotify] Notification sent successfully. Response: ${response}`);
+    await sendWebhook(webhookUrl, payload);
+    console.log('[SlackNotify] Notification sent successfully.');
   } catch (err) {
     console.error('[SlackNotify] Failed to send notification:', err.message);
     process.exit(1);

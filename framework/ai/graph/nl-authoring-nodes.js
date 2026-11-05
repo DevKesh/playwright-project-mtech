@@ -770,15 +770,14 @@ function createNLAuthoringNodes(config) {
    * Phase 5: Write generated files to disk.
    */
   async function writeFiles(state) {
+    const { resolveSpecOutputDir, writeNewGeneratedFile } = require('../utils/generated-output');
     console.log(`[NL-AUTHOR] [${istTimestamp()}] Phase 5: Writing generated files...`);
 
     // Use custom output dirs from suite config, or default paths
     const poDir = state.pagesDir
       ? path.resolve(PROJECT_ROOT, state.pagesDir)
       : path.join(PROJECT_ROOT, 'framework', 'pages', 'generated');
-    const specDir = state.outputDir
-      ? path.resolve(PROJECT_ROOT, state.outputDir)
-      : path.join(PROJECT_ROOT, 'tests', 'generated');
+    const specDir = resolveSpecOutputDir(state.outputDir);
     fs.mkdirSync(poDir, { recursive: true });
     fs.mkdirSync(specDir, { recursive: true });
 
@@ -790,8 +789,7 @@ function createNLAuthoringNodes(config) {
         console.log(`[NL-AUTHOR] [${istTimestamp()}]   ⚠ Skipped PO ${po.fileName} — GPT returned placeholder instead of real code`);
         continue;
       }
-      const filePath = path.join(poDir, po.fileName);
-      fs.writeFileSync(filePath, po.code, 'utf-8');
+      writeNewGeneratedFile(poDir, po.fileName, po.code);
       console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Wrote PO: framework/pages/generated/${po.fileName}`);
     }
 
@@ -803,9 +801,9 @@ function createNLAuthoringNodes(config) {
         console.log(`[NL-AUTHOR] [${istTimestamp()}]   ⚠ Skipped spec ${spec.fileName} — GPT returned placeholder instead of real code`);
         continue;
       }
-      const filePath = path.join(specDir, spec.fileName);
-      fs.writeFileSync(filePath, spec.code, 'utf-8');
-      console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Wrote spec: tests/generated/${spec.fileName}`);
+      const code = spec.code.replace(/require\(['"]\.\.\/\.\.\/framework\//g, "require('../../../framework/");
+      writeNewGeneratedFile(specDir, spec.fileName, code);
+      console.log(`[NL-AUTHOR] [${istTimestamp()}]   → Wrote spec: tests/tc2/nl-authored/${spec.fileName}`);
     }
 
     // Write recording report

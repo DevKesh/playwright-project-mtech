@@ -1,10 +1,10 @@
-const { test, expect } = require('../../../framework/fixtures/smoke.fixture');
+const { test, expect } = require('../../framework/fixtures/smoke.fixture');
 
-test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
+test.describe('@smoke @tc @tc-plan TC Smoke Suite', { tag: ['@smoke', '@regression'] }, () => {
   // Tests continue executing even if one fails — gives full report with all 8 results
   test.describe.configure({ mode: 'default' });
 
-  test('TC-001: Verify home page is loaded after login', async ({ authenticatedPage: page, homePage, loginPage }) => {
+  test('TC-001: Verify home page is loaded after login', { tag: '@authentication' }, async ({ authenticatedPage: page, homePage, loginPage }) => {
     await test.step('Verify authenticated home content', async () => {
       await expect.poll(() => new URL(page.url()).pathname).toBe('/home');
       await expect(homePage.devicesNav).toBeVisible();
@@ -15,7 +15,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-002: Arm Home and Disarm partitions', async ({ homePage }) => {
+  test('TC-002: Arm Home and Disarm partitions', { tag: '@panel' }, async ({ homePage }) => {
     test.setTimeout(300000); // Precondition, arm, and disarm each await panel confirmation.
     await test.step('Navigate back to home page', async () => {
       await homePage.navigateToHome();
@@ -54,7 +54,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-003: Navigate to Devices page', async ({ homePage, devicesPage }) => {
+  test('TC-003: Navigate to Devices page', { tag: '@devices' }, async ({ homePage, devicesPage }) => {
     await test.step('Navigate back to home page', async () => {
       await homePage.navigateToHome();
     });
@@ -68,7 +68,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-004: Navigate to Cameras page', async ({ homePage, camerasPage }) => {
+  test('TC-004: Navigate to Cameras page', { tag: '@cameras' }, async ({ homePage, camerasPage }) => {
     test.setTimeout(90000); // Cameras load async — first visit takes longer
     await test.step('Navigate back to home page', async () => {
       await homePage.navigateToHome();
@@ -83,7 +83,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-005: Navigate to Activity page and verify log', async ({ homePage, activityPage }) => {
+  test('TC-005: Navigate to Activity page and verify log', { tag: '@activity' }, async ({ homePage, activityPage }) => {
     await test.step('Navigate back to home page', async () => {
       await homePage.navigateToHome();
     });
@@ -97,7 +97,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-006: Verify all cameras are visible on Cameras page', async ({ homePage, camerasPage }) => {
+  test('TC-006: Verify all cameras are visible on Cameras page', { tag: '@cameras' }, async ({ homePage, camerasPage }) => {
     test.setTimeout(90000);
     await test.step('Navigate back to home page', async () => {
       await homePage.navigateToHome();
@@ -113,7 +113,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-007: Verify camera names are displayed on Cameras page', async ({ homePage, camerasPage }) => {
+  test('TC-007: Verify camera names are displayed on Cameras page', { tag: '@cameras' }, async ({ homePage, camerasPage }) => {
     test.setTimeout(90000);
     await test.step('Navigate to Cameras page', async () => {
       await homePage.navigateToCameras();
@@ -125,7 +125,7 @@ test.describe('@smoke @tc @tc-plan TC Smoke Suite', () => {
     });
   });
 
-  test('TC-008: Verify camera feed sections load on Cameras page', async ({ homePage, camerasPage }) => {
+  test('TC-008: Verify camera feed sections load on Cameras page', { tag: '@cameras' }, async ({ homePage, camerasPage }) => {
     test.setTimeout(90000);
     await test.step('Navigate to Cameras page', async () => {
       await homePage.navigateToCameras();

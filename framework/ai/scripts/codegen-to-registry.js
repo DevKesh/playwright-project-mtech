@@ -19,7 +19,7 @@
  *   3. Updates the registry
  */
 
-require('dotenv').config();
+if (require.main === module) require('../../config/environment').loadEnvironment();
 const fs = require('fs');
 const path = require('path');
 const { execSync, spawn } = require('child_process');
@@ -29,8 +29,10 @@ const REGISTRY_DIR = path.join(PROJECT_ROOT, 'framework', 'pages', 'registry');
 const CODEGEN_OUTPUT_DIR = path.join(PROJECT_ROOT, 'ai-reports', 'codegen-recordings');
 
 // Ensure directories exist
-fs.mkdirSync(REGISTRY_DIR, { recursive: true });
-fs.mkdirSync(CODEGEN_OUTPUT_DIR, { recursive: true });
+if (require.main === module) {
+  fs.mkdirSync(REGISTRY_DIR, { recursive: true });
+  fs.mkdirSync(CODEGEN_OUTPUT_DIR, { recursive: true });
+}
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -259,7 +261,7 @@ async function main() {
   console.log(`\n[CODEGEN] ✓ Done. Run 'npm run ai:gen:smoke' to generate specs from this registry.\n`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('[CODEGEN] Error:', err.message);
   process.exit(1);
 });

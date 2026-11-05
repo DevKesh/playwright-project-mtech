@@ -2,9 +2,19 @@
 
 Reviewed: 19 October 2026. Baseline: Keshav TN's supplied May 2026 dissertation, *Transforming Software Testing Through Multi-Agent AI: An Advanced Framework for Reducing QA Cycle Time While Maintaining Quality*.
 
+Operational reconciliation updated 5 November 2026 for the single-config revamp.
+The dated research findings and test evidence below retain their original scope.
+This documentation/customization update ran no terminal tests and establishes no
+new live QA, provider, cloud, Slack or deployment verification.
+
 This revision uses the dissertation as the source for the research purpose, terminology, and six-phase lifecycle. Current source code determines implementation claims. Where the two disagree, the difference is recorded rather than changing working code to fit an older description. This is a source review, not a new live benchmark or a replacement for the signed academic certificate.
 
 Read [PROJECT_GUIDE.md](PROJECT_GUIDE.md) for the plain-language walkthrough and interview preparation. The [README](../README.md) is the operational entry point. Older dated documents and screenshots are historical evidence, not current guarantees.
+
+Start with [FRAMEWORK_NAVIGATION_GUIDE.md](FRAMEWORK_NAVIGATION_GUIDE.md) for short
+onboarding, named accounts and old-to-new commands/paths. One repository-shared
+`framework-maintainer` Copilot agent and five task prompts support development;
+these are separate from runtime AI agents and do not form a security sandbox.
 
 ## 1. Introduction and Scope
 
@@ -36,8 +46,8 @@ An AI suggestion is not a verified fact. A passing UI action is not proof of the
 | Five tests / 8.9-second baseline establishes current performance | Current smoke has eight tests and different account/data checks. Historical runs do not establish current duration or cycle-time savings. |
 | Camera names establish loaded feeds | Current code distinguishes inventory from rendered player sections. It does not prove streaming playback, frame progression, or recording correctness. |
 | Native CI/CD and multimodal work are wholly future scope | GitHub Actions, publishing, artifacts, Slack, and screenshot-assisted failure analysis exist. Automatic repair PRs and visual locator healing remain future work. |
-| Secrets come only from environment variables | Some legacy configuration has fallback credentials. Do not reproduce them; remove fallbacks and review exposure before production use. Current smoke requires explicit approved-account variables. |
-| Only OpenAI is supported | The common factory supports `AI_PROVIDER=azure`, but OpenAI-key checks and caller model overrides prevent treating this as a completed provider-independent migration. |
+| Secrets come only from environment variables | The October review found literal fallbacks. The November contract resolves named accounts from ignored `.env.qa` or CI secrets with no literal credentials. Legacy variable aliases are conditional, not credential defaults. Historical exposure still needs owner review; do not reproduce values. |
+| Only OpenAI is supported | OpenAI and Azure Anthropic-compatible routing are retained for explicit local AI use. Live parity is unverified; OpenAI-specific embedding/RAG work remains incomplete. Do not equate route availability with end-to-end parity. |
 | Every repair has complete correlation evidence | Post-mortem uses run/failure IDs. Runtime events have a generic title; cache recoveries are not equivalently logged. Full action-to-test-to-run linkage is incomplete. |
 
 Evidence: [fixture](../framework/ai/fixtures/tc.ai.fixture.js), [interceptor](../framework/ai/core/locator-proxy.js), [routing](../framework/ai/graph/conditions.js), [lifecycle nodes](../framework/ai/graph/lifecycle-nodes.js), [test-case healer](../framework/ai/agents/test-case-healer.agent.js), [provider factory](../framework/ai/core/ai-client-factory.js), [registry healer](../framework/ai/agents/healer-agent.js).
@@ -46,8 +56,9 @@ Evidence: [fixture](../framework/ai/fixtures/tc.ai.fixture.js), [interceptor](..
 
 ```mermaid
 flowchart TD
-    Entry[Explicit test command or CI workflow] --> Runner[Playwright runner and configuration]
-    Runner --> Session[Fixture page OR manual login session]
+    Entry[Explicit test command or CI workflow] --> Runner[One root config and native project]
+    Runner --> Guard[Live opt-in or offline contract]
+    Guard --> Session[Guarded public page OR named-account session fixture]
     Session --> Pages[Page objects and business assertions]
     Pages --> App[Approved QA application]
     Pages --> Patch[Optional locator action patch]
@@ -56,44 +67,71 @@ flowchart TD
     Patch --> Runtime[Runtime healing graph]
     Runtime --> Client[AI client factory]
     Client --> OpenAI[OpenAI client]
-    Client --> Azure[Azure Anthropic client: partial integration]
+    Client --> Azure[Azure Anthropic client: live parity unverified]
     Runner --> Results[Playwright and Allure results]
     Results --> Post[Optional post-mortem graph]
     Post --> Suggestions[Suggestions and audit records]
-    Results --> Publish[Reports and optional Slack]
+    Results --> Validate[Nonempty results and summary validation]
+    Validate --> Publish[Approved report deployment]
+    Publish --> Slack[Report link only after validated deployment]
     Author[Authoring and exploration] --> Client
     Author --> Drafts[Generated source requiring review]
     Lifecycle[Optional lifecycle commands] --> Knowledge[Metrics and knowledge indexing]
 ```
 
-### Configuration Is Layered
+### One Runner, Explicit Ownership
 
 | Owner | Responsibility |
 |---|---|
 | [package.json](../package.json) | Available commands; many old demo and authoring aliases were removed. |
-| [playwright.config.js](../playwright.config.js) | Projects, discovery, runner retries, fixture-page options, reporters, global cleanup. |
-| [runtime.config.js](../framework/config/runtime.config.js) | Shared environment-derived settings for consumers that import it. |
+| [playwright.config.js](../playwright.config.js) | Six native projects, disjoint discovery, retries zero, runner/fixture-page options and raw reporters; no import-time env/provider loading or old global cleanup. |
+| [environment.js](../framework/config/environment.js), [accounts.js](../framework/config/accounts.js) | Explicit env loading and named credential resolution at authenticated execution, never test collection. |
+| [runtime.config.js](../framework/config/runtime.config.js) | Compatibility settings API for remaining callers; not another Playwright config or credential store. |
 | [test-data.config.js](../framework/config/test-data.config.js) | Target URLs, test data, exploration settings. |
 | [ai.config.js](../framework/ai/config/ai.config.js) | AI flags, models, thresholds, retry and DOM limits. |
-| [browser-launcher.js](../framework/utils/browser-launcher.js) | Manual local/cloud sessions and context timeouts. |
+| [browser-launcher.js](../framework/utils/browser-launcher.js) | Helper-created local/cloud sessions and context timeouts. |
+| [tc.fixture.js](../framework/fixtures/tc.fixture.js) | Live guard, named-account authenticated session/page, 180-second fixture budget, cleanup and safe artifacts; guarded public page stays unauthenticated. |
+| [smoke.fixture.js](../framework/fixtures/smoke.fixture.js) | Named test-scoped POMs and optional healing before locator construction. |
 
-There is no universally enforced timeout/configuration object. Runner `use` settings do not automatically configure manual contexts. Explicit method options override defaults. This also affects screenshots, trace, video, and `--headed` behavior for manually launched browsers.
+`smoke.fixture` intentionally owns named POMs over `tc.fixture` session lifecycle.
+Do not add aliases or duplicate session owners. Canonical POMs live in
+`framework/pages/tc2/`; old generated/smoke modules are transitional thin re-exports.
+Manual authenticated browsers consume passed headless/channel/action/navigation
+settings; artifact capture remains explicitly fixture-owned. Native `--headed`
+works through this forwarding, not automatic inheritance by manual contexts.
 
-The main runner uses one worker, local test timeout 90 seconds, cloud test timeout 120 seconds, and CI retries 2. Fixture action timeouts are 30/45 seconds local/cloud; navigation is 60/45 seconds. The manual launcher uses action timeouts 30/45 seconds and navigation 90/60 seconds. Smoke setup is 180 seconds, panel test 300 seconds, camera tests 90 seconds.
+Projects are `tc2`, `monitoring`, `alarmnet-login-security`,
+`alarmnet-mobile-security`, `alarmnet-forgot-login-security`, and `framework`.
+The root default test timeout is 90 seconds and retries are zero. `tc2` and
+`monitoring` use one worker; smoke is not fully parallel. Security commands select
+five workers. Smoke setup is 180 seconds, panel tests 300 seconds, camera tests
+90 seconds. These are budgets, not measured timings. Routine tests use native tags
+in an existing project folder, without config/YAML edits.
+
+`getAccount(name)` accepts `^[a-z][a-z0-9_]*$` and resolves
+`ACCOUNT_<UPPER_NAME>_USERNAME/PASSWORD`. Default `approved_monitor` is mandatory
+for `@panel`; non-panel tests can use `test.use({ account: 'secondary' })`.
+Only ignored `.env.qa` or CI secrets hold values; the committed template is blank.
+Legacy `LOGIN_MONITOR_*` / `TC_*` map to `approved_monitor` / `configured` only if
+the entire corresponding canonical pair is absent. Empty/partial pairs fail.
+No credentials in config/specs/prompts, no provider loading at root import time,
+and no authenticated fixture or credentials for public tests.
 
 ## 4. Execution and Current Coverage
 
 ### Smoke Path
 
-1. Select `tc-smoke` explicitly to avoid overlapping project discovery.
-2. Main global setup removes shared current Allure results/report, not timestamped history.
-3. Smoke setup requires `LOGIN_MONITOR_USERNAME` and `LOGIN_MONITOR_PASSWORD`; it does not silently choose the older account.
-4. The helper launches a browser, handles consent, logs in, waits for the home URL, then waits for Devices content.
-5. Optional healing patches the authenticated page before page-object construction.
-6. Eight tests check state/navigation; teardown closes the browser.
-7. Reporters collect results; configured CI steps publish reports and send notifications.
+1. Use `npm run test:smoke` for the `tc2` project and native `@smoke` selection, only after live/panel approval. `npm test` is offline Node validation.
+2. The live fixture guard requires `RUN_LIVE_TESTS=true` (set by the script) before network/account use. Shared CI owns isolated current-run outputs; local report cleanup is deliberate, not a root global setup side effect.
+3. Each test resolves `approved_monitor` from canonical account variables, with the conditional legacy-name compatibility described above. `@panel` cannot select another account.
+4. The helper launches a fresh browser/context, handles consent, logs in, waits for the home URL, then waits for Devices content. Setup failures clean up acquired resources.
+5. Explicit local AI can patch eligible non-panel interactions before page-object construction; never generically heal/replay physical actions. Normal CI has healing off and no rerun.
+6. Eight independent tests check state/navigation; each fixture teardown closes its browser. The physical panel remains shared, so single-worker execution and test-owned disarm cleanup remain mandatory.
+7. Reporters collect results; shared CI validates nonempty results/summary, publishes eligible reports, and supplies Slack links only after validated deployment. Failed/incomplete runs are not passes.
 
-Source: [smoke suite](../tests/generated/smoke/smoke-suite.spec.js), [login helper](../framework/utils/login-session.js), [global setup](../global-setup.js).
+Source: [smoke suite](../tests/tc2/smoke-suite.spec.js), [login helper](../framework/utils/login-session.js), [shared execution](../.github/workflows/test-execution.yml).
+
+Fixture adoption increases smoke login attempts from one per successful suite to one per test; it does not introduce authentication-state caching. See the [fixture assessment](PROJECT_GUIDE.md#fixture-reuse-assessment-27-october-2026) for measured source changes and offline checks. The login/logout monitor reuses session ownership without changing its logout/recovery workflow. Security uses a separate unauthenticated fixture for pacing and optional POM construction. Existing demo fixtures share artifact capture, with raw HTML remaining an explicit legacy opt-in.
 
 | Test | Current assertion boundary |
 |---|---|
@@ -102,23 +140,24 @@ Source: [smoke suite](../tests/generated/smoke/smoke-suite.spec.js), [login help
 | TC-003 | At least one visible device-category label; not every device's operation. |
 | TC-004 | Cameras route, iframe, visible Cameras heading. |
 | TC-005 | Events route and a timestamped entry; not proof that this test's command produced that event. |
-| TC-006 | Every configured camera is visible in live inventory, with older-UI fallback. |
-| TC-007 | Camera names through inventory verification; overlaps TC-006. |
+| TC-006 | Nonempty modern live-camera inventory with every discovered card visible; no fixed names or count. |
+| TC-007 | Nonempty visible names on each live card; renames and duplicates are allowed. |
 | TC-008 | Rendered feed sections; not playback. |
 
-Smoke supplies eight expected camera names. The camera page object's older default inventory differs, so callers must select inventory for their approved account/location. Camera content is in an iframe, a separate document accessed through a frame locator.
+Smoke uses dynamic inventory rather than expected camera names or a fixed count. It waits for at least one modern live card, discovers the current count for each check, and checks each card's visible name and, for TC-008, its own feed section. Inventory additions, removals, and renames are allowed; empty inventory, hidden cards, blank names, and missing per-card feed sections fail. DOM-only discovery cannot identify omitted backend cameras or prove inventory completeness; backend device IDs would be required for that contract. Fixed-count and explicit-name modes remain available to other callers, with older-UI fallback in the explicit-name mode. Camera content is in an iframe, a separate document accessed through a frame locator.
 
-The [home page object](../framework/pages/generated/smoke/TotalConnectHomePage.js) uses `setChecked(true)` for individual partitions when available, supports SELECT ALL fallback, handles mixed-state disarm, observes pending states, and surfaces rejected commands/offline-panel errors. It does not intentionally retry physical commands itself. Generic AI interception and whole-test retries can still repeat actions; exactly-once execution is not guaranteed.
+On failure, the camera fixture captures state before closing the authenticated session: current labels, feed text, a filtered live-section DOM (maximum 16,000 characters), and a cropped screenshot. Missing sections produce unavailable-state evidence; capture exceptions are annotated without masking failures. Optional post-failure AI analysis receives scoped evidence. Capture and name verification make no AI calls; suggestions are not verified repairs. Generate local Allure reports after execution and optional augmentation; root raw reporting is not an automatic AI-finalization barrier.
+
+The [home page object](../framework/pages/tc2/TotalConnectHomePage.js) uses `setChecked(true)` for individual partitions when available, supports SELECT ALL fallback, handles mixed-state disarm, observes pending states, and surfaces rejected commands/offline-panel errors. Preserve `ensureDisarmed`, partition selection, arm/status inside `try`, re-selection/disarm inside `finally`, then Disarmed verification. It does not intentionally retry physical commands. CI/runner retries are zero; generic AI replay is prohibited for physical actions. Hard cancellation can prevent cleanup, so exactly-once execution/restoration is not guaranteed and an operator check may be needed.
 
 ### Other Lanes
 
 | Lane | Implementation and boundary |
 |---|---|
-| Isolated smoke validation | [Configuration](../playwright.smoke-validation.config.js): local/headless, no AI/retries, separate artifacts. Still reaches real QA and can arm/disarm. |
-| Login/logout and recovery monitor | [Configuration](../playwright.login-monitor.config.js): one worker, no retries, default 20 repetitions of each of two tests; supported setting 1-100. Recovery does not submit a reset. |
-| Continuous monitor | [Runner](../framework/utils/run-login-monitor.js): next batch starts after completion plus default 30-second interval; test failures can continue, runner interruptions stop; optional batch limit. |
-| Negative-login observation | [Configuration](../playwright.login-security.config.js): selects AlarmNet, not the older TC negative spec; five workers, synthetic credentials, no dotenv/AI, separate output, masked input screenshots. Requires authorized use and rate review. |
-| Clip export | [Spec](../tests/export-clip.spec.js): account-specific camera ID, timeline coordinates, export clicks; no downloaded-file or backend-completion assertion. |
+| Offline checks | `npm test` for Node checks; `npm run test:framework:browser` for synthetic fixture contracts. Neither reaches live QA. |
+| Login/logout and recovery monitor | Root `monitoring` project: one worker, no retries, default 20 repetitions per test; environment setting 1-100. Recovery is public and does not submit a reset. Use finite native repetitions. |
+| Negative-login observation | Three root AlarmNet projects: synthetic credentials, no account/provider loading, separate test outputs and masked input screenshots. Live request-rate approval is still required. |
+| Clip export | [Spec](../tests/tc2/export-clip.spec.js): account-specific camera ID, timeline coordinates, export clicks; no downloaded-file or backend-completion assertion. |
 | Demo flows | [App fixture](../framework/fixtures/app.fixture.js) and auth/cart/checkout/order flows demonstrate reuse on another app, not TC coverage. |
 | Older performance specs | Files under the Total Connect test directory end in `.disabled`; they are not active normal-suite coverage. |
 
@@ -182,7 +221,7 @@ Six conceptual roles remain: locator healer, failure analyzer, test-case healer,
 
 Full NL authoring uses `new Function` to execute generated JavaScript; this is not a sandbox. Use approved environments, reviewed input, and restricted credentials. Failed recorded steps can still be followed by artifact generation. Cached DOM snapshots require invalidation and are not application truth.
 
-The generator's API description and [.github/copilot-instructions.md](../.github/copilot-instructions.md) are maintained separately from page objects. They lag some additions, including stronger error handling, explicit camera inventory, and home navigation. Prompts guide generation but do not enforce contracts mechanically.
+The generator API description and [.github/copilot-instructions.md](../.github/copilot-instructions.md) are maintained separately from POM code; check for drift before generation. New TC2 output uses `tests/tc2/nl-authored/`, named POM fixtures, native `@nl-authored`/`@regression` tags, and preserves the eight smoke assertions. Never overwrite human-maintained specs silently. The one maintainer agent and five task prompts reference this shared contract; they guide generation rather than enforcing it mechanically. Live/public, panel, paid AI, cloud, Slack and deployment actions require explicit approval independently of authoring permission.
 
 Source: [preview](../framework/ai/scripts/nl-author-preview.js), [generator](../framework/ai/scripts/nl-author-generate.js), [NL nodes](../framework/ai/graph/nl-authoring-nodes.js), [exploration graph](../framework/ai/graph/exploration-graph.js), [registry generator](../framework/ai/agents/spec-generator.js).
 
@@ -192,7 +231,7 @@ Source: [preview](../framework/ai/scripts/nl-author-preview.js), [generator](../
 
 OpenAI defaults: `gpt-4o-mini` for healing and `gpt-4o` for analysis. JSON and screenshot-analysis clients exist. The common factory can select Azure AI Foundry through an Anthropic Messages endpoint, `x-api-key`, version header, timeout, retries/backoff, and JSON extraction.
 
-Azure requires `AZURE_ANTHROPIC_ENDPOINT`, `AZURE_ANTHROPIC_API_KEY`, and `AZURE_ANTHROPIC_MODEL`. It is not Azure OpenAI under another name. Fixture/reporter/CLI guards still require an OpenAI key, and callers can override Azure's model with OpenAI defaults. Separate router/factory experiments coexist. Treat routing as partially integrated until entry-point tests verify keys, models, metrics, and errors. Do not use dummy secrets as a workaround.
+Azure requires `AZURE_ANTHROPIC_ENDPOINT`, `AZURE_ANTHROPIC_API_KEY`, and `AZURE_ANTHROPIC_MODEL`. It is not Azure OpenAI under another name. The October review identified OpenAI-only guards/model overrides; the November revamp retains optional provider-aware local routing with lazy initialization. This does not establish live entry-point parity for keys, models, metrics or errors. Separate router/factory experiments and OpenAI-specific embedding consumers remain; do not use dummy secrets as a workaround or describe all routes as interchangeable.
 
 ### Knowledge Store
 
@@ -213,23 +252,21 @@ Cost tracking estimates price from usage and model pricing; it is not a provider
 
 ## 10. Reporting, Cloud, and CI/CD
 
-Allure stores raw results; a custom reporter generates timestamped reports. HTML, screenshots, optional traces/videos, JSON diagnostics, and AI records serve different purposes. Manual sessions need their own artifact capture.
+The root runner writes raw Allure results. Local generation is explicit; the optional timestamped auto-reporter is not the shared CI publisher. HTML, screenshots, JSON diagnostics and AI records serve different purposes. Manual sessions own artifact capture. Generate reports after execution/optional AI augmentation; report availability alone does not prove complete evidence.
 
-The auto-reporter is configured before the AI reporter, with no explicit publication barrier awaiting all AI attachments. Regenerate Allure after execution when final evidence matters. CI report stages follow test jobs. Slack supports Allure 3 root summaries, older widgets summaries, archive fallback, and raw results; confirm current-run scope to avoid stale fallback data.
+Shared CI validates nonempty parseable test records and the generated summary before publishing current-run results. Valid failed-test reports can publish; metadata-only, corrupt or zero-result outputs cannot replace latest. Preserve raw evidence where the runner remains available and retain failed/timed-out/incomplete execution state even when partial counts pass. Slack supports multiple summary layouts, but CI must not use archive fallback as current evidence; supply a report URL only after validated deployment.
 
 LambdaTest uses `chromium.connect()` with WebSocket capabilities; the endpoint's `cdp` hostname does not mean the code calls `connectOverCDP()`. Manual cloud sessions request a 1920x1080 viewport; separate tooling updates status. Remote execution is implemented, not demonstrated parallel scalability.
 
-Five workflows exist:
+Thin trigger wrappers call [test-execution.yml](../.github/workflows/test-execution.yml):
 
-- [General Playwright](../.github/workflows/playwright.yml): configured triggers, execution, optional healing rerun, reports, publishing, notifications.
-- [Daily smoke](../.github/workflows/smoke-daily.yml): weekdays at 02:00 UTC; healing job on failure.
-- [Login/recovery](../.github/workflows/login-monitor.yml): manual repetitions, isolated artifacts, no healing.
-- [Login/logout](../.github/workflows/login-logout.yml): manual monitor subset.
-- [Negative login](../.github/workflows/login-security.yml): every ten minutes plus manual dispatch; currently AlarmNet. A schedule is not proof of execution or approved request rates.
+- [General Playwright](../.github/workflows/playwright.yml) and [daily smoke](../.github/workflows/smoke-daily.yml).
+- [Login/recovery](../.github/workflows/login-monitor.yml) and [login/logout](../.github/workflows/login-logout.yml).
+- [AlarmNet Sign In](../.github/workflows/alarmnet-login-security.yml), [Mobile](../.github/workflows/alarmnet-mobile-security.yml), and [Forgot Login](../.github/workflows/alarmnet-forgot-login-security.yml); the [legacy security runner](../.github/workflows/alarmnet-security-runner.yml) is a compatibility wrapper.
 
-Publishing supports versioned run paths and a latest pointer, with shared concurrency locks. Original/healing artifacts are separated; final reporting prefers the healing run rather than merging UUID results and doubling counts. Preserve both when evaluating recovery. Evaluate workflow failure propagation separately from successful report publication.
+All CI suites execute once, retries zero and no healing rerun. Explicit monitor/security repetitions are not failure retries. CI allowlists suite/account secret bindings and maps existing monitor secret names to canonical variables; public security receives no account secrets. Shared concurrency protects panel/account execution and Pages writes; hard cancellation can still prevent cleanup/upload. A schedule is not proof of approved request rates or successful execution.
 
-Local `execute:smoke` scripts use single `&`: sequential separators under the usual Windows npm command shell but background execution on POSIX shells. Other chains use `&&`, skipping later steps on failure. These are not universally portable, failure-safe pipelines. Prefer explicit commands and deliberate report/notification steps.
+Publishing retains versioned run paths and a latest pointer, not a choice between original and healing-run results. Routine tests need no workflow edit; only schedules/policies do. Optional local lifecycle chains can still skip later work on failure, so do not treat those tools as the shared CI executor.
 
 ## 11. Evaluation and Remaining Work
 
@@ -237,7 +274,7 @@ The supplied report demonstrates a locator mutation and historical screenshots, 
 
 Compare unchanged tests with AI off/on, controlled mutations with AI off/on, and genuine defects with healing on. Manually label correct versus false recovery. Measure unrecovered defects, wall time including setup, AI time/cost, and human diagnosis/repair time. Separate cache/model results. Use multiple runs and disclose sample size and variability.
 
-Priorities: action-specific no-retry policies; removing credential fallbacks and redacting DOM/logs; provider-aware guards/models; enforced flags; durable event IDs and correct metric denominators; validated retrieval; gated permanent repairs; guaranteed post-run reporting; sandboxed/reviewed generation. Visual locator repair, repair PRs, Appium, backend telemetry, and production-journey prioritization remain extension opportunities.
+Priorities after the revamp: explicitly approved live acceptance of panel cleanup, account/CI gates and provider parity; historical secret-exposure/redaction review; durable event IDs and correct metric denominators; validated retrieval; reviewed permanent repairs and generated-code isolation. No software path guarantees cleanup/report delivery after hard runner termination. Visual locator repair, repair PRs, Appium, backend telemetry, and production-journey prioritization remain extension opportunities.
 
 This revision checks source/document consistency without contacting QA, cloud browsers, AI providers, or Slack. It does not certify live performance, deployed workflows, or provider connectivity.
 

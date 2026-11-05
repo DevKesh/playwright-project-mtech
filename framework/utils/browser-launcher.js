@@ -22,7 +22,6 @@
 const { chromium } = require('@playwright/test');
 
 function getConfig() {
-  // Read directly from process.env (already populated by dotenv/config in playwright.config.js)
   const isCI = process.env.CI === 'true';
 
   return {
@@ -94,7 +93,8 @@ function buildLambdaTestEndpoint() {
  * @returns {Promise<{ browser: import('@playwright/test').Browser, context: import('@playwright/test').BrowserContext, page: import('@playwright/test').Page }>}
  */
 async function launchBrowser(options = {}) {
-  const platform = process.env.EXECUTION_PLATFORM || 'local';
+  const platform = options.platform || process.env.EXECUTION_PLATFORM || 'local';
+  if (!['local', 'lambda'].includes(platform)) throw new Error('EXECUTION_PLATFORM must be local or lambda.');
 
   let browser;
 
@@ -125,31 +125,26 @@ async function launchBrowser(options = {}) {
   }
 
   try {
-    return await createBrowserContext(browser, platform);
+    return await createBrowserContext(browser, platform, options);
   } catch (error) {
     await browser.close().catch(() => {});
     throw error;
   }
 }
 
-async function createBrowserContext(browser, platform) {
+async function createBrowserContext(browser, platform, options) {
   // Viewport:
   // LAMBDA: 1920x1080 matching the cloud VM resolution for full-screen execution.
   // LOCAL: default (no override) — browser opens at normal size.
   const contextOptions = platform === 'lambda'
     ? { viewport: { width: 1920, height: 1080 } }
     : {};
-  const context = await browser.newContext(contextOptions);
+  const context = await browser.newContext({ ...contextOptions, ...options.contextOptions });
 
   // Set default timeouts on context — config's `use:` timeouts do NOT apply to
   // manually-created contexts, only to Playwright fixture pages.
-  if (platform === 'lambda') {
-    context.setDefaultNavigationTimeout(60000);
-    context.setDefaultTimeout(45000);
-  } else {
-    context.setDefaultNavigationTimeout(90000);
-    context.setDefaultTimeout(30000);
-  }
+  context.setDefaultNavigationTimeout(options.navigationTimeout ?? 60000);
+  context.setDefaultTimeout(options.actionTimeout ?? 30000);
 
   // Pre-inject cookie consent cookies to bypass the "We Value Your Privacy" banner.
   // Covers both TrustArc and OneTrust implementations.

@@ -4,14 +4,14 @@
  *
  * Run: node framework/ai-azure/test-factory-routing.js
  */
-require('dotenv').config();
 
 const { createAIClient } = require('../ai/core/ai-client-factory');
 const { loadAIConfig } = require('../ai/config/ai.config');
 const { AzureAIClient } = require('./core/azure-ai-client');
 const { AIClient } = require('../ai/core/openai-client');
 
-(async () => {
+if (require.main === module) (async () => {
+  require('../config/environment').loadEnvironment();
   const provider = process.env.AI_PROVIDER || '(unset)';
   console.log(`AI_PROVIDER = ${provider}`);
 

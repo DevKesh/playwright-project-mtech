@@ -1,6 +1,151 @@
-# Framework Navigation Guide
+# Framework Onboarding
 
-> Historical navigation notes. For the current execution lanes, use [PROJECT_GUIDE.md](PROJECT_GUIDE.md) and [TEST_FRAMEWORK_ARCHITECTURE.md](TEST_FRAMEWORK_ARCHITECTURE.md), reviewed on 19 October 2026. The two-lane description below predates the dedicated monitoring/security configurations and newer smoke behavior.
+Updated 5 November 2026. One root [Playwright config](../playwright.config.js)
+owns native projects; routine test additions need no config or YAML change.
+No live application, provider, cloud or deployment verification is claimed here.
+
+## Start Locally
+
+Use Node.js 22, `npm ci`, and `npx playwright install chrome` for browser checks.
+
+```powershell
+npm test
+npm run test:framework:browser
+npx playwright test --project tc2 --list
+```
+
+The first command runs offline Node checks; the second uses synthetic browser
+contracts. Neither is live smoke. Live fixtures require `RUN_LIVE_TESTS=true`;
+approved live scripts set it. Do not set it globally or run broad live discovery.
+
+## Choose the Owner
+
+| Work | Folder / project |
+|---|---|
+| Business tests | `tests/tc2/`, project `tc2` |
+| New NL-authored business tests | `tests/tc2/nl-authored/`, project `tc2` |
+| Login/logout and public recovery monitoring | `tests/monitoring/`, project `monitoring` |
+| Synthetic public security observations | `tests/security/`, projects `alarmnet-login-security`, `alarmnet-mobile-security`, `alarmnet-forgot-login-security` |
+| Canonical TC2 POMs | `framework/pages/tc2/`; old generated/smoke modules only re-export |
+| Offline browser contracts | Existing `framework/utils/__tests__/fixtures/`, project `framework` |
+
+## Add a Test
+
+Use [the smoke suite](../tests/tc2/smoke-suite.spec.js) as a fixture example.
+Keep its eight assertions; default new coverage to native `@regression` plus
+feature tags such as `@devices`. Add `@panel` for physical actions. A normal
+new test or tagged suite in an existing project needs no config/YAML edits.
+
+Example for a file directly under `tests/tc2/`:
+
+```javascript
+const { test } = require('../../framework/fixtures/smoke.fixture');
+
+test('Device categories are visible', { tag: ['@regression', '@devices'] },
+    async ({ homePage, devicesPage }) => {
+        await test.step('Navigate to Devices', async () => {
+            await homePage.navigateToDevices();
+        });
+        await test.step('Verify categories', async () => {
+            await devicesPage.verifyDeviceCategoriesVisible();
+        });
+    });
+```
+
+`smoke.fixture` intentionally owns named POMs over `tc.fixture` session lifecycle.
+The latter manually launches a fresh browser/context per authenticated test and
+honors passed config settings. Do not log in or construct those POMs in specs.
+Public tests use guarded native `page` from `tc.fixture` or `login-security.fixture`,
+never authenticated fixtures or raw Playwright `test` that bypasses the live guard.
+See [the authoring contract](../.github/copilot-instructions.md) for APIs, timeouts,
+and exact arm/disarm `try/finally`. Smoke stays single-worker, not fully parallel.
+
+## Select an Account
+
+Privately provision one ignored `.env.qa` using the blank committed template.
+`approved_monitor` is the default and the only allowed `@panel` account; its
+variables are `ACCOUNT_APPROVED_MONITOR_USERNAME` / `ACCOUNT_APPROVED_MONITOR_PASSWORD`.
+For a non-panel account, add `ACCOUNT_SECONDARY_USERNAME` / `ACCOUNT_SECONDARY_PASSWORD`
+privately, then use `test.use({ account: 'secondary' })`. Never put values in chat,
+config, specs or prompts. Names match `^[a-z][a-z0-9_]*$`.
+
+Shell variables take precedence over local env; CI uses injected secrets. Account
+resolution happens only for authenticated execution, not config imports/collection.
+Legacy `LOGIN_MONITOR_*` maps to `approved_monitor` and `TC_*` to `configured` only
+when the entire corresponding canonical pair is absent. Empty/partial pairs fail.
+CI maps existing monitor secret names to canonical variable names.
+
+## Commands and Migration
+
+Live commands below require explicit target/rate approval and panel approval where relevant:
+
+```powershell
+npm run test:smoke -- --headed
+npm run test:regression -- --grep @devices --headed
+npm run test:monitoring -- --repeat-each 1
+npm run test:alarmnet-login-security
+```
+
+Use native tags and `--grep`, `--headed`, `--list`, `--repeat-each`. Repetition is
+deliberate coverage, not retry-on-failure. Do not restore old runner configs.
+
+| Old entry | Current entry |
+|---|---|
+| `npm test` for broad live execution | `npm test` is offline; select an explicit live script |
+| `--project tc-smoke` / smoke-validation config | `npm run test:smoke`; collection: `npx playwright test --project tc2 --grep @smoke --list` |
+| login-monitor config / `test:login-pages:once` | `npm run test:monitoring -- --repeat-each 1` |
+| login-security config | `test:alarmnet-login-security`, `test:alarmnet-mobile-security`, or `test:alarmnet-forgot-login-security` via `npm run` |
+| internal fixture-contract config | `npm run test:framework:browser` |
+| `tests/generated/smoke/smoke-suite.spec.js` | `tests/tc2/smoke-suite.spec.js` |
+| `tests/export-clip.spec.js` | `tests/tc2/export-clip.spec.js` |
+| generated login/recovery spec | `tests/monitoring/login-forgot-password-repeat.spec.js` |
+| generated security specs | `tests/security/*.spec.js` |
+| new generated NL output | `tests/tc2/nl-authored/` |
+| `framework/pages/generated/smoke/` | `framework/pages/tc2/`; old modules are thin re-exports |
+
+## Follow the Flow
+
+```mermaid
+flowchart TD
+        Command[Explicit command] --> Config[One root config and project]
+        Config --> Guard[Live guard or offline contract]
+        Guard --> Public[Guarded public page: no auth]
+        Guard --> Session[tc.fixture: named account and fresh session]
+        Session --> POM[smoke.fixture: named POMs]
+        POM --> Spec[Actions and original assertions]
+        Public --> Spec
+        Spec --> Cleanup[Fixture evidence and cleanup]
+        Cleanup --> Raw[Current-run raw results]
+        Raw --> Validate[Nonempty results and summary validation]
+        Validate --> Deploy[Approved deployment]
+        Deploy --> Slack[Report link only after validated deployment]
+```
+
+CI wrappers call [test-execution.yml](../.github/workflows/test-execution.yml).
+Only new schedules/policies require workflow changes. CI retries are zero, with
+no healing rerun. Failed/incomplete runs remain distinct even if some tests pass.
+
+## Use Copilot
+
+Select `framework-maintainer` in the VS Code agent picker. Run `/add-test`,
+`/add-suite`, `/add-account`, `/configure-ci`, or `/diagnose-failure` in Chat
+(or **Chat: Run Prompt**). Supply scenario, project, account NAME, risk and allowed
+validation, never secrets. Live/public, panel, paid AI, cloud, Slack and deployment
+actions require explicit approval; these instructions guide behavior, not sandbox it.
+
+This single development agent is separate from runtime AI/LangGraph modules.
+OpenAI/Azure local routing is retained, live parity remains unverified, and
+OpenAI-specific embeddings do not establish connected live RAG retrieval.
+Research context remains in [PROJECT_GUIDE.md](PROJECT_GUIDE.md) and
+[TEST_FRAMEWORK_ARCHITECTURE.md](TEST_FRAMEWORK_ARCHITECTURE.md).
+
+<details>
+<summary>Historical demo navigation, retained for research context only</summary>
+
+The text below predates the November revamp. Its direct Playwright imports,
+generated paths, two-lane ownership, demo-only healing description and old source
+links are historical, not current authoring or execution instructions. Use the
+onboarding above for new work; do not recreate missing legacy modules from these examples.
 
 This guide explains how the framework actually runs, where to add new tests, and how to explain the self-healing behavior without overselling it.
 
@@ -287,3 +432,5 @@ When you need to explain the project quickly, start from these files in this ord
 10. [framework/ai/agents/locator-healer.agent.js](../framework/ai/agents/locator-healer.agent.js)
 
 If you can narrate those ten files cleanly, you can explain the framework to most reviewers.
+
+</details>

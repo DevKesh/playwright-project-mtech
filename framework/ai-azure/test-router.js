@@ -15,11 +15,6 @@
  * Does NOT touch any existing framework files.
  */
 
-const path = require('path');
-
-// Ensure .env is loaded for the Azure provider path
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-
 function setProvider(p) {
   if (p === undefined) delete process.env.AI_PROVIDER;
   else process.env.AI_PROVIDER = p;
@@ -27,7 +22,8 @@ function setProvider(p) {
   delete require.cache[require.resolve('./router')];
 }
 
-(async () => {
+if (require.main === module) (async () => {
+  require('../config/environment').loadEnvironment();
   let failures = 0;
 
   // ---------------------------------------------------------------- 1 / 2

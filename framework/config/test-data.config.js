@@ -20,10 +20,9 @@ const testDataConfig = {
     name: 'Total Connect 2.0 Home Security System',
     baseUrl: 'https://qa2.totalconnect2.com/',
     loginUrl: 'https://qa2.totalconnect2.com/login',
-    credentials: {
-      email: runtime.credentials.username,
-      password: runtime.credentials.password,
-      userName: runtime.credentials.displayName,
+    get credentials() {
+      const account = runtime.credentials;
+      return { email: account.username, password: account.password, userName: account.displayName };
     },
 
     /**

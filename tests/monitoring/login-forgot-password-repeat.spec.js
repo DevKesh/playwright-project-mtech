@@ -1,12 +1,11 @@
-const { test, expect } = require('../../../framework/fixtures/tc.fixture');
+const { test, expect } = require('../../framework/fixtures/tc.fixture');
 const allure = require('allure-js-commons');
-const { LoginPage } = require('../../../framework/pages/generated/smoke/LoginPage');
+const { LoginPage } = require('../../framework/pages/generated/smoke/LoginPage');
 
-// Run using playwright.login-monitor.config.js to avoid smoke/Allure side effects.
 // These worker-scoped options must be at file level. Do not record credential entry.
 test.use({ trace: 'off', video: 'off' });
 
-test.describe('@nl-authored @login-monitor Configured login and logout', () => {
+test.describe('@nl-authored @login-monitor Configured login and logout', { tag: ['@monitoring', '@authentication'] }, () => {
   test('@login-logout Successfully login and logout with configured credentials', async ({ authenticatedSession: session }, testInfo) => {
     test.setTimeout(180000);
     await allure.epic('Authentication');
@@ -126,7 +125,7 @@ test.describe('@nl-authored @login-monitor Configured login and logout', () => {
 });
 
 // Password recovery deliberately uses an unauthenticated fixture, not a login session.
-test.describe('@nl-authored @login-monitor Forgot Password flow', () => {
+test.describe('@nl-authored @login-monitor Forgot Password flow', { tag: ['@monitoring', '@recovery'] }, () => {
   test('@forgot-password Open recovery form and return to login without requesting a reset', async ({ page }, testInfo) => {
     test.setTimeout(90000);
     await allure.epic('Authentication');

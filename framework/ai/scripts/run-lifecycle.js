@@ -15,10 +15,7 @@
  */
 
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
-
-const { loadAIConfig } = require('../config/ai.config');
-const { createLifecycleGraph } = require('../graph/lifecycle-graph');
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 
 async function main() {
   // Parse --phase argument
@@ -53,12 +50,10 @@ async function main() {
   // Override enabled for lifecycle scripts
   config.enabled = true;
 
-  if (!config.openaiApiKey) {
-    console.error('ERROR: OPENAI_API_KEY is required. Set it in .env');
-    process.exit(1);
-  }
+  validateAIConfig(config);
 
   // Create and invoke the lifecycle graph
+  const { createLifecycleGraph } = require('../graph/lifecycle-graph');
   const graph = createLifecycleGraph(config);
   const result = await graph.invoke({ mode });
 
@@ -100,7 +95,7 @@ async function main() {
   console.log('\nReports saved to: ai-reports/lifecycle/');
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('Lifecycle orchestration failed:', err.message);
   process.exit(1);
 });

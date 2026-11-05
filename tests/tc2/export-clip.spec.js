@@ -1,8 +1,8 @@
-const { test, expect } = require('../framework/fixtures/tc.fixture');
+const { test, expect } = require('../../framework/fixtures/tc.fixture');
 
-test.use({ credentialProfile: 'configured' });
+test.use({ account: 'configured' });
 
-test.describe('@tc Camera Clip Export', () => {
+test.describe('@tc Camera Clip Export', { tag: ['@regression', '@cameras'] }, () => {
   test('Export camera clip from timeline', async ({ authenticatedPage: page }) => {
     test.setTimeout(180000);
 

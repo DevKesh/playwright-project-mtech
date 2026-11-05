@@ -11,18 +11,11 @@
  *   ai-reports/exploration/      — Site map, flows, metadata
  */
 
-const { loadAIConfig } = require('../config/ai.config');
-const { createExplorationGraph } = require('../graph/exploration-graph');
-
-// Load centralized test data config for defaults
-let testDataConfig = {};
-try {
-  testDataConfig = require('../../config/test-data.config').testDataConfig;
-} catch {
-  // Config not created yet — CLI args are required
-}
+const { loadAIConfig, validateAIConfig } = require('../config/ai.config');
 
 async function main() {
+  const { testDataConfig } = require('../../config/test-data.config');
+  const { createExplorationGraph } = require('../graph/exploration-graph');
   // Parse CLI arguments (override config defaults)
   const args = process.argv.slice(2);
   let url = testDataConfig?.targetApp?.baseUrl || '';
@@ -63,10 +56,7 @@ async function main() {
 
   // Load config
   const config = loadAIConfig();
-  if (!config.openaiApiKey) {
-    console.error('OPENAI_API_KEY not set. Add it to your .env file.');
-    process.exit(1);
-  }
+  validateAIConfig(config);
 
   const configSource = testDataConfig?.targetApp?.baseUrl === url ? 'test-data.config.js' : 'CLI argument';
 
@@ -124,4 +114,7 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) main().catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

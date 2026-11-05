@@ -1,8 +1,6 @@
 name: '@alarmnet-mobile-security | AlarmNet Mobile Login'
 
 on:
-  schedule:
-    - cron: '3-59/10 * * * *'
   workflow_dispatch:
     inputs:
       iterations:
@@ -26,10 +24,10 @@ jobs:
     name: '/AlarmNet360/Mobile'
     permissions:
       contents: write
-    uses: ./.github/workflows/alarmnet-security-runner.yml
+    uses: ./.github/workflows/test-execution.yml
     with:
       suite: alarmnet-mobile-security
-      iterations: 100
-      iteration_override: ${{ inputs.iterations || '' }}
+      iterations: ${{ inputs.iterations || '100' }}
       interval_ms: ${{ fromJSON(format('{0}', inputs.interval_ms || 10000)) }}
-    secrets: inherit
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

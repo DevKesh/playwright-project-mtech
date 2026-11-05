@@ -11,6 +11,8 @@
 const base = require('@playwright/test');
 const { createLoginSession } = require('../utils/login-session');
 const { attachFailureArtifacts } = require('../utils/test-artifacts');
+const { getAccount } = require('../config/accounts');
+const { liveAccess } = require('./live-access');
 const {
   attachLoadMetrics,
   assertOptionalLoadThreshold,
@@ -18,23 +20,45 @@ const {
 } = require('../utils/pageLoadMetrics');
 
 const test = base.test.extend({
+  _liveAccess: [liveAccess, { auto: true }],
+  account: [undefined, { option: true }],
+  accountCredentials: async ({ _liveAccess, account, credentialProfile }, use) => {
+    const { loadEnvironment } = require('../config/environment');
+    loadEnvironment();
+    const name = account || (credentialProfile === 'approved-monitor' ? 'approved_monitor' : credentialProfile);
+    await use(getAccount(name, process.env));
+  },
   credentialProfile: ['approved-monitor', { option: true }],
   sessionArtifacts: [true, { option: true }],
   pageArtifacts: [true, { option: true }],
   sessionFactory: async ({}, use) => {
     await use(createLoginSession);
   },
-  authenticatedSession: [async ({ credentialProfile, sessionFactory, sessionArtifacts }, use, testInfo) => {
+  authenticatedSession: [async ({ _liveAccess, account, accountCredentials, credentialProfile, sessionFactory, sessionArtifacts }, use, testInfo) => {
+    const selectedAccount = account || (credentialProfile === 'approved-monitor' ? 'approved_monitor' : credentialProfile);
+    if (testInfo.tags?.includes('@panel') && selectedAccount !== 'approved_monitor') {
+      throw new Error('Physical panel tests require the approved_monitor account.');
+    }
     let options = {};
     if (credentialProfile === 'approved-monitor') {
-      const username = process.env.LOGIN_MONITOR_USERNAME;
-      const password = process.env.LOGIN_MONITOR_PASSWORD;
-      if (!username || !password) {
-        throw new Error('Authenticated tests require LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD for the approved equipment-enabled account.');
-      }
-      options = { username, password };
+      const name = account || 'approved_monitor';
+      options = accountCredentials || getAccount(name, process.env);
     } else if (credentialProfile !== 'configured') {
       throw new Error(`Unknown credential profile: ${credentialProfile}`);
+    } else {
+      options = accountCredentials || getAccount(account || 'configured', process.env);
+    }
+    if (testInfo.project) {
+      const { headless, channel, actionTimeout, navigationTimeout, baseURL, launchOptions, ...contextSettings } = testInfo.project.use;
+      const contextOptions = {};
+      for (const key of ['viewport', 'screen', 'deviceScaleFactor', 'isMobile', 'hasTouch', 'locale', 'timezoneId', 'colorScheme', 'ignoreHTTPSErrors', 'userAgent', 'acceptDownloads', 'serviceWorkers', 'permissions']) {
+        if (contextSettings[key] !== undefined) contextOptions[key] = contextSettings[key];
+      }
+      options = {
+        ...options,
+        launchOptions: { ...launchOptions, headless, channel, actionTimeout, navigationTimeout, contextOptions },
+        loginUrl: baseURL ? `${baseURL.replace(/\/$/, '')}/login` : undefined,
+      };
     }
     if (sessionArtifacts) {
       options.onFailure = page => attachFailureArtifacts(page, testInfo, {
@@ -62,7 +86,7 @@ const test = base.test.extend({
     await use(authenticatedSession.page);
   },
   /* ── failure artifacts (screenshot + URL + HTML) ────────────────── */
-  page: async ({ page, pageArtifacts }, use, testInfo) => {
+  page: async ({ page, pageArtifacts, _liveAccess }, use, testInfo) => {
     await use(page);
     if (pageArtifacts) await attachFailureArtifacts(page, testInfo);
   },

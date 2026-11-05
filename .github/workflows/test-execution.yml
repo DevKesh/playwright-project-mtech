@@ -1,0 +1,347 @@
+name: Reusable test execution and reporting
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        type: string
+        required: true
+      platform:
+        type: string
+        default: local
+      runner:
+        type: string
+        default: ubuntu-latest
+      headed:
+        type: boolean
+        default: false
+      repetitions:
+        type: number
+        default: 1
+      iterations:
+        type: string
+        default: '100'
+      interval_ms:
+        type: number
+        default: 10000
+    secrets:
+      LOGIN_MONITOR_USERNAME:
+        required: false
+      LOGIN_MONITOR_PASSWORD:
+        required: false
+      LT_USERNAME:
+        required: false
+      LT_ACCESS_KEY:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+  AI_HEALING_ENABLED: 'false'
+  HEAL_ENABLED: 'false'
+
+jobs:
+  execute:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ startsWith(inputs.suite, 'alarmnet-') && 360 || startsWith(inputs.suite, 'login-') && 135 || 45 }}
+    concurrency:
+      group: ${{ startsWith(inputs.suite, 'alarmnet-') && format('alarmnet-execution-{0}', github.repository) || format('physical-panel-approved-monitor-{0}', github.repository) }}
+      cancel-in-progress: false
+    outputs:
+      test_outcome: ${{ steps.business.outcome == 'success' && 'success' || steps.security.outcome == 'success' && 'success' || 'failure' }}
+      incomplete: ${{ steps.business.outputs.incomplete || steps.security.outputs.incomplete || 'true' }}
+      expected: ${{ steps.scope.outputs.expected }}
+      prefix: ${{ steps.scope.outputs.prefix }}
+      selection: ${{ steps.scope.outputs.args }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        timeout-minutes: 2
+      - name: Clear current-run evidence before any setup can fail
+        id: clean
+        timeout-minutes: 1
+        run: |
+          rm -rf allure-results allure-report playwright-report test-results
+          mkdir -p allure-results
+      - uses: actions/setup-node@v4
+        timeout-minutes: 2
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Validate and map the requested suite
+        id: scope
+        timeout-minutes: 1
+        env:
+          SUITE: ${{ inputs.suite }}
+          PLATFORM: ${{ inputs.platform }}
+          RUNNER: ${{ inputs.runner }}
+          REPETITIONS: ${{ inputs.repetitions }}
+          ITERATIONS: ${{ inputs.iterations }}
+          INTERVAL_MS: ${{ inputs.interval_ms }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const suite = process.env.SUITE;
+          const repetitions = Number(process.env.REPETITIONS);
+          const security = ['alarmnet-login-security', 'alarmnet-mobile-security', 'alarmnet-forgot-login-security'].includes(suite);
+          const monitor = ['login-monitor', 'login-logout'].includes(suite);
+          if (!['local', 'lambda'].includes(process.env.PLATFORM)) throw new Error('Unsupported platform');
+          if (!['ubuntu-latest', 'self-hosted'].includes(process.env.RUNNER)) throw new Error('Unsupported runner');
+          if ((security || monitor) && process.env.PLATFORM !== 'local') throw new Error('Monitoring/security require local execution');
+          if (!Number.isInteger(repetitions) || repetitions < 1 || repetitions > 100) throw new Error('Repetitions must be 1-100');
+          let args;
+          let expected = 0;
+          let prefix = '';
+          if (security) {
+            require('./framework/utils/login-security').securitySettings({
+              LOGIN_SECURITY_ATTEMPTS: process.env.ITERATIONS,
+              LOGIN_SECURITY_INTERVAL_MS: process.env.INTERVAL_MS,
+            });
+            args = `--project ${suite} --workers 5`;
+            prefix = `${suite}/`;
+          } else if (monitor) {
+            args = `--project monitoring --workers 1 --repeat-each ${repetitions}${suite === 'login-logout' ? ' --grep @login-logout' : ''}`;
+            expected = repetitions * (suite === 'login-logout' ? 1 : 2);
+            prefix = `${suite}/`;
+          } else {
+            const selections = { smoke: '--grep @smoke', regression: '--grep @regression', tc2: '', generated: '', 'total-connect': '', all: '' };
+            if (!Object.hasOwn(selections, suite)) throw new Error('Unknown suite');
+            args = `--project tc2 --workers 1 ${selections[suite]}`.trim();
+            expected = suite === 'smoke' ? 8 : 0;
+          }
+          const globalTimeout = security ? 19800000 : monitor ? 6000000 : 1200000;
+          const wallTimeout = security ? 20100 : monitor ? 6300 : 1320;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `args=${args}\nexpected=${expected}\nprefix=${prefix}\nsecurity=${security}\nglobal_timeout=${globalTimeout}\nwall_timeout=${wallTimeout}\n`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Selected **${suite}**: \`npx playwright test ${args} --retries 0\`. Legacy generated/total-connect/all select tc2 only; monitoring and security are excluded.\n`);
+          NODE
+      - run: npm ci
+        timeout-minutes: 5
+      - name: Install local browser dependencies
+        if: ${{ inputs.platform == 'local' }}
+        timeout-minutes: 3
+        run: npx playwright install-deps chrome
+      - name: Execute business or monitoring tests once
+        id: business
+        if: ${{ steps.scope.outputs.security == 'false' }}
+        continue-on-error: true
+        timeout-minutes: ${{ startsWith(inputs.suite, 'login-') && 110 || 25 }}
+        env:
+          TEST_ARGS: ${{ steps.scope.outputs.args }}
+          GLOBAL_TIMEOUT: ${{ steps.scope.outputs.global_timeout }}
+          WALL_TIMEOUT: ${{ steps.scope.outputs.wall_timeout }}
+          ACCOUNT_APPROVED_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+          ACCOUNT_APPROVED_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
+          EXECUTION_PLATFORM: ${{ inputs.platform }}
+          LT_USERNAME: ${{ inputs.platform == 'lambda' && secrets.LT_USERNAME || '' }}
+          LT_ACCESS_KEY: ${{ inputs.platform == 'lambda' && secrets.LT_ACCESS_KEY || '' }}
+          HEADLESS: ${{ !inputs.headed }}
+          HEADED: ${{ inputs.headed }}
+          RUN_LIVE_TESTS: 'true'
+          LOGIN_MONITOR_REPETITIONS: '1'
+        run: |
+          read -r -a args <<< "$TEST_ARGS"
+          set +e
+          timeout --signal=INT --kill-after=60s "${WALL_TIMEOUT}s" npx playwright test "${args[@]}" --retries 0 --global-timeout "$GLOBAL_TIMEOUT"
+          code=$?
+          echo "incomplete=$([ "$code" -eq 0 ] && echo false || echo true)" >> "$GITHUB_OUTPUT"
+          exit "$code"
+      - name: Execute synthetic security tests once without account or AI secrets
+        id: security
+        if: ${{ steps.scope.outputs.security == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 340
+        env:
+          TEST_ARGS: ${{ steps.scope.outputs.args }}
+          GLOBAL_TIMEOUT: ${{ steps.scope.outputs.global_timeout }}
+          WALL_TIMEOUT: ${{ steps.scope.outputs.wall_timeout }}
+          LOGIN_SECURITY_SUITE: ${{ inputs.suite }}
+          LOGIN_SECURITY_ATTEMPTS: ${{ inputs.iterations }}
+          LOGIN_SECURITY_INTERVAL_MS: ${{ inputs.interval_ms }}
+          EXECUTION_PLATFORM: local
+          HEADLESS: 'true'
+          RUN_LIVE_TESTS: 'true'
+        run: |
+          read -r -a args <<< "$TEST_ARGS"
+          set +e
+          timeout --signal=INT --kill-after=60s "${WALL_TIMEOUT}s" npx playwright test "${args[@]}" --retries 0 --global-timeout "$GLOBAL_TIMEOUT"
+          code=$?
+          echo "incomplete=$([ "$code" -eq 0 ] && echo false || echo true)" >> "$GITHUB_OUTPUT"
+          exit "$code"
+      - name: Upload available raw evidence before restoring failure
+        if: ${{ always() && steps.clean.outcome == 'success' }}
+        timeout-minutes: 4
+        uses: actions/upload-artifact@v4
+        with:
+          name: execution-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            allure-results/
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Preserve execution failure
+        if: ${{ always() && steps.business.outcome != 'success' && steps.security.outcome != 'success' }}
+        run: |
+          echo 'Execution failed or did not complete. Available evidence was uploaded; verify panel cleanup if interrupted.'
+          exit 1
+
+  report:
+    needs: execute
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      ready: ${{ steps.summary.outputs.valid == 'true' && steps.artifact.outcome == 'success' }}
+      incomplete: ${{ steps.raw.outputs.incomplete || 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Remove checked-out or stale reports
+        run: rm -rf incoming allure-report
+      - name: Download current-run evidence if available
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: execution-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: incoming
+      - name: Validate actual test records, including missing-artifact diagnosis
+        id: raw
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          EXPECTED_RESULTS: ${{ needs.execute.outputs.expected }}
+        run: node framework/utils/validate-allure-results.js results incoming/allure-results
+      - name: Install reporting dependencies
+        if: ${{ steps.raw.outputs.valid == 'true' }}
+        run: npm ci
+      - name: Generate report only from validated records
+        id: generate
+        if: ${{ success() && steps.raw.outputs.valid == 'true' }}
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          mapfile -d '' result_dirs < <(find incoming/allure-results -type f -name '*-result.json' -printf '%h\0' | sort -zu)
+          npx allure generate -o allure-report "${result_dirs[@]}"
+      - name: Validate generated nonzero summary
+        id: summary
+        if: ${{ success() && steps.generate.outcome == 'success' }}
+        env:
+          EXPECTED_RESULTS: ${{ steps.raw.outputs.count }}
+        run: node framework/utils/validate-allure-results.js summary allure-report
+      - name: Bundle portable report
+        if: ${{ steps.summary.outputs.valid == 'true' }}
+        run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
+      - name: Upload validated report
+        id: artifact
+        if: ${{ always() && steps.summary.outputs.valid == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            allure-report/
+            allure-report-portable.html
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve missing, invalid or incomplete results failure
+        if: ${{ always() && (steps.raw.outputs.valid != 'true' || steps.summary.outputs.valid != 'true' || steps.raw.outputs.incomplete == 'true') }}
+        run: |
+          echo 'Results are missing, malformed or incomplete. Only valid reports can publish; partial execution remains a failure.'
+          exit 1
+
+  publish:
+    needs: [execute, report]
+    if: ${{ always() && needs.report.outputs.ready == 'true' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: allure-gh-pages-${{ github.repository }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    outputs:
+      published: ${{ steps.deploy.outcome == 'success' && steps.validated.outcome == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: rm -rf downloaded publish
+      - uses: actions/download-artifact@v4
+        with:
+          name: allure-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: downloaded
+      - name: Revalidate downloaded report before Pages write
+        id: validated
+        run: node framework/utils/validate-allure-results.js summary downloaded/allure-report
+      - name: Stage immutable attempt and compatible latest paths
+        env:
+          PREFIX: ${{ needs.execute.outputs.prefix }}
+        run: |
+          mkdir -p "publish/${PREFIX}runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}" "publish/${PREFIX}latest"
+          cp -r downloaded/allure-report/. "publish/${PREFIX}runs/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/"
+          cp -r downloaded/allure-report/. "publish/${PREFIX}latest/"
+          printf '<!doctype html><meta http-equiv="refresh" content="0;url=./%s/"><a href="./%s/">Report attempt</a>' "$GITHUB_RUN_ATTEMPT" "$GITHUB_RUN_ATTEMPT" > "publish/${PREFIX}runs/${GITHUB_RUN_ID}/index.html"
+          if [ -z "$PREFIX" ]; then
+            printf '<!doctype html><meta http-equiv="refresh" content="0;url=./latest/"><a href="./latest/">Latest report</a>' > publish/index.html
+          fi
+      - name: Publish validated report
+        id: deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish
+          keep_files: true
+          commit_message: 'deploy: run ${{ github.run_id }} attempt ${{ github.run_attempt }}'
+
+  notify:
+    needs: [execute, report, publish]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: rm -rf notification
+      - name: Download available raw evidence
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: execution-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: notification/raw
+      - name: Download validated report if available
+        if: ${{ always() && needs.report.outputs.ready == 'true' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: notification/report
+      - name: Notify Slack even when results or publication are unavailable
+        if: ${{ always() }}
+        run: node framework/utils/slack-notify.js
+        env:
+          SLACK_ENABLED: 'true'
+          SLACK_REQUIRED: ${{ startsWith(inputs.suite, 'alarmnet-') || startsWith(inputs.suite, 'login-') }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_REPORT_DIR: notification/report/allure-report
+          SLACK_RESULTS_DIR: notification/raw/allure-results
+          TEST_SUITE_NAME: '${{ inputs.suite }} (repetitions=${{ inputs.repetitions }}, security iterations=${{ inputs.iterations }})'
+          EXECUTION_PLATFORM: ${{ inputs.platform }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          JOB_OUTCOME: ${{ needs.execute.result }}
+          TEST_OUTCOME: ${{ needs.execute.outputs.test_outcome || 'failure' }}
+          RUN_INCOMPLETE: ${{ needs.execute.outputs.incomplete != 'false' || needs.report.outputs.incomplete != 'false' }}
+          REPORT_OUTCOME: ${{ needs.report.result != 'success' && needs.report.result || needs.publish.result == 'failure' && 'failure' || needs.publish.result == 'cancelled' && 'cancelled' || 'success' }}
+          REPORT_PUBLISHED: ${{ needs.publish.outputs.published == 'true' }}
+          REPORT_URL: ${{ needs.publish.outputs.published == 'true' && format('https://{0}.github.io/{1}/{2}runs/{3}/{4}/', github.repository_owner, github.event.repository.name, needs.execute.outputs.prefix, github.run_id, github.run_attempt) || '' }}

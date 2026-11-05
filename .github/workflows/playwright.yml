@@ -2,373 +2,41 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   schedule:
-    # Nightly run at 2:00 AM UTC (7:30 AM IST)
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       test_suite:
-        description: 'Test suite to run'
+        description: 'Suite (generated/total-connect/all are compatibility aliases for tc2)'
         required: false
-        default: 'generated'
+        default: generated
         type: choice
-        options:
-          - generated
-          - total-connect
-          - smoke
-          - all
-      enable_healing:
-        description: 'Enable AI self-healing'
-        required: false
-        default: true
-        type: boolean
+        options: [generated, total-connect, smoke, regression, tc2, all]
       platform:
-        description: 'Execution platform'
+        description: Execution platform
         required: false
-        default: 'local'
+        default: local
         type: choice
-        options:
-          - local
-          - lambda
+        options: [local, lambda]
 
-# Cancel in-progress runs for the same branch
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  # ────────────────────────────────────────────────────────
-  # Stage 1: Execute tests
-  # ────────────────────────────────────────────────────────
-  test:
-    name: Execute Tests
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    outputs:
-      test_outcome: ${{ steps.run_tests.outcome }}
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Cache Playwright browsers
-      if: ${{ github.event.inputs.platform != 'lambda' }}
-      uses: actions/cache@v4
-      id: playwright-cache-test
-      with:
-        path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-    - name: Install browser system deps
-      if: ${{ github.event.inputs.platform != 'lambda' }}
-      run: npx playwright install-deps chrome
-
-    - name: Clean previous results
-      run: |
-        rm -rf allure-results allure-report playwright-report test-results
-        mkdir -p allure-results
-
-    - name: Determine test scope
-      id: scope
-      run: |
-        SUITE="${{ github.event.inputs.test_suite || 'generated' }}"
-        case "$SUITE" in
-          generated)     echo "test_args=tests/generated/ --project chrome" >> $GITHUB_OUTPUT ;;
-          total-connect) echo "test_args=tests/total-connect --project total-connect" >> $GITHUB_OUTPUT ;;
-          smoke)         echo "test_args=--project tc-smoke" >> $GITHUB_OUTPUT ;;
-          all)           echo "test_args=--project chrome" >> $GITHUB_OUTPUT ;;
-        esac
-        echo "Running suite: $SUITE"
-
-    - name: Run Playwright tests
-      id: run_tests
-      continue-on-error: true
-      run: npx playwright test ${{ steps.scope.outputs.test_args }}
-      env:
-        LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
-        LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
-        CI: 'true'
-        TC_USERNAME: ${{ secrets.TC_USERNAME }}
-        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
-        EXECUTION_PLATFORM: ${{ github.event.inputs.platform || 'local' }}
-        LT_USERNAME: ${{ secrets.LT_USERNAME }}
-        LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
-
-    - name: Upload test artifacts
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: |
-          allure-results/
-          playwright-report/
-          test-results/
-        retention-days: 30
-
-  # ────────────────────────────────────────────────────────
-  # Stage 2: Self-heal broken tests (only when Stage 1 has failures)
-  # ────────────────────────────────────────────────────────
-  heal:
-    name: Self-Heal Failed Tests
-    needs: test
-    if: ${{ needs.test.outputs.test_outcome == 'failure' && (github.event.inputs.enable_healing != 'false') }}
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Cache Playwright browsers
-      if: ${{ github.event.inputs.platform != 'lambda' }}
-      uses: actions/cache@v4
-      id: playwright-cache-heal
-      with:
-        path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-    - name: Install browser system deps
-      if: ${{ github.event.inputs.platform != 'lambda' }}
-      run: npx playwright install-deps chrome
-
-    # Download prior artifact into a side folder ONLY for ai-reports/ context.
-    # We must NOT let stale allure-results/ leak into the workspace, otherwise
-    # the re-run appends UUID-named results on top of the old ones and the
-    # final report shows duplicates of both old failures and new healed runs.
-    - name: Download test results from Stage 1 (side folder)
-      uses: actions/download-artifact@v4
-      with:
-        name: test-results
-        path: ./prior-results
-      continue-on-error: true
-
-    - name: Reset workspace results before heal run
-      run: |
-        rm -rf allure-results test-results playwright-report
-        mkdir -p allure-results
-        # Preserve ai-reports/ history if present (heal reporter appends to it)
-        if [ -d "./prior-results/ai-reports" ]; then
-          mkdir -p ai-reports
-          cp -r ./prior-results/ai-reports/* ai-reports/ 2>/dev/null || true
-        fi
-
-    - name: Determine test scope
-      id: scope
-      run: |
-        SUITE="${{ github.event.inputs.test_suite || 'generated' }}"
-        case "$SUITE" in
-          generated)     echo "test_args=tests/generated/ --project chrome" >> $GITHUB_OUTPUT ;;
-          total-connect) echo "test_args=tests/total-connect --project total-connect" >> $GITHUB_OUTPUT ;;
-          smoke)         echo "test_args=--project tc-smoke" >> $GITHUB_OUTPUT ;;
-          all)           echo "test_args=--project chrome" >> $GITHUB_OUTPUT ;;
-        esac
-
-    - name: Re-run with AI healing enabled
-      id: heal_run
-      continue-on-error: true
-      run: npx playwright test ${{ steps.scope.outputs.test_args }} --retries 1
-      env:
-        LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
-        LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
-        CI: 'true'
-        AI_HEALING_ENABLED: 'true'
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        TC_USERNAME: ${{ secrets.TC_USERNAME }}
-        TC_PASSWORD: ${{ secrets.TC_PASSWORD }}
-        AI_HEALING_LOCATOR: 'true'
-        AI_HEALING_ANALYSIS: 'true'
-        EXECUTION_PLATFORM: ${{ github.event.inputs.platform || 'local' }}
-        LT_USERNAME: ${{ secrets.LT_USERNAME }}
-        LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
-
-    - name: Upload healed results
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: healed-results
-        path: |
-          allure-results/
-          ai-reports/
-          test-results/
-        retention-days: 30
-
-  # ────────────────────────────────────────────────────────
-  # Stage 3: Generate reports
-  # ────────────────────────────────────────────────────────
-  report:
-    name: Generate & Publish Reports
-    # Serialize gh-pages writes with the smoke and authentication workflows.
-    concurrency:
-      group: allure-gh-pages-${{ github.repository }}
-      cancel-in-progress: false
-    needs: [test, heal]
-    if: ${{ !cancelled() }}
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
+  tests:
     permissions:
       contents: write
-    steps:
-    - uses: actions/checkout@v4
-
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    # Download results from whichever stage ran last
-    - name: Download test results
-      uses: actions/download-artifact@v4
-      with:
-        name: test-results
-        path: ./stage1-results
-      continue-on-error: true
-
-    - name: Download healed results
-      uses: actions/download-artifact@v4
-      with:
-        name: healed-results
-        path: ./stage2-results
-      continue-on-error: true
-
-    # Pick the FINAL allure-results — healed run is a complete re-execution and
-    # represents the latest verdict, so it must REPLACE (not merge with) the
-    # original. Allure JSON files use UUIDs; merging would duplicate every test.
-    - name: Select final allure-results (healed overrides initial)
-      run: |
-        rm -rf allure-results
-        mkdir -p allure-results
-        if [ -d "./stage2-results/allure-results" ] && [ -n "$(ls -A ./stage2-results/allure-results 2>/dev/null)" ]; then
-          echo "::notice::Using HEALED results from Stage 2 for report"
-          cp -r ./stage2-results/allure-results/. allure-results/ 2>/dev/null || true
-        elif [ -d "./stage1-results/allure-results" ] && [ -n "$(ls -A ./stage1-results/allure-results 2>/dev/null)" ]; then
-          echo "::notice::Using INITIAL results from Stage 1 for report (heal did not run)"
-          cp -r ./stage1-results/allure-results/. allure-results/ 2>/dev/null || true
-        else
-          echo "::warning::No allure-results found in either stage artifact"
-        fi
-        echo "Allure results count: $(ls allure-results/*.json 2>/dev/null | wc -l)"
-
-    # Download previous Allure history for trend charts
-    - name: Download previous Allure history
-      uses: actions/download-artifact@v4
-      with:
-        name: allure-history
-        path: allure-history
-      continue-on-error: true
-
-    - name: Copy history to results
-      run: |
-        if [ -d "allure-history" ]; then
-          mkdir -p allure-results/history
-          cp -r allure-history/* allure-results/history/ 2>/dev/null || true
-        fi
-
-    - name: Generate Allure Report
-      run: |
-        rm -rf allure-report
-        npx allure generate -o allure-report allure-results
-
-    - name: Save Allure history for next run
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-history
-        path: allure-report/history/
-        retention-days: 90
-
-    # Copy AI reports into the Allure report directory for unified viewing
-    - name: Bundle AI reports
-      run: |
-        mkdir -p allure-report/ai-reports
-        if [ -d "./stage2-results/ai-reports" ]; then
-          cp -r ./stage2-results/ai-reports/* allure-report/ai-reports/ 2>/dev/null || true
-        fi
-
-    # Stage the report for versioned publish:
-    #   publish/runs/<run_id>/  — permanent per-run report (Slack links here)
-    #   publish/latest/         — rolling pointer to the latest report
-    #   publish/index.html      — redirects root → /latest/
-    # With keep_files: true on the deploy, older runs remain accessible forever.
-    - name: Stage report for versioned publish
-      if: github.ref == 'refs/heads/main'
-      run: |
-        rm -rf publish
-        mkdir -p "publish/runs/${{ github.run_id }}"
-        mkdir -p publish/latest
-        cp -r allure-report/. "publish/runs/${{ github.run_id }}/"
-        cp -r allure-report/. publish/latest/
-        cat > publish/index.html <<'HTML'
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta http-equiv="refresh" content="0; url=./latest/">
-            <title>Allure Report — redirecting…</title>
-          </head>
-          <body>
-            <p>Redirecting to the <a href="./latest/">latest Allure report</a>.</p>
-          </body>
-        </html>
-        HTML
-        echo "Staged: $(find publish -maxdepth 2 -type d)"
-
-    # Publish to GitHub Pages (gh-pages branch).
-    # keep_files: true preserves runs/<old_run_id>/ from prior workflow runs.
-    - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./publish
-        keep_files: true
-        commit_message: "deploy: run ${{ github.run_id }} (${{ github.sha }})"
-
-    - name: Report URL
-      run: |
-        echo "Per-run report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/runs/${{ github.run_id }}/"
-        echo "Latest report:  https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest/"
-
-    # Generate portable single-file report
-    - name: Bundle portable report
-      run: node framework/utils/bundle-allure-report.js ./allure-report ./allure-report-portable.html
-
-    # Also keep as downloadable artifact
-    - name: Upload report artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-report
-        path: |
-          allure-report/
-          allure-report-portable.html
-        retention-days: 30
-
-    # Slack notification
-    - name: Notify Slack
-      if: always()
-      run: node framework/utils/slack-notify.js
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        SLACK_REPORT_DIR: allure-report
-        SLACK_RESULTS_DIR: allure-results
-        GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        # Per-run permanent URL — does NOT change when later runs deploy.
-        REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/runs/${{ github.run_id }}/
-        TEST_OUTCOME: ${{ needs.test.outputs.test_outcome }}
-        HEAL_ENABLED: ${{ github.event.inputs.enable_healing }}
+    uses: ./.github/workflows/test-execution.yml
+    with:
+      suite: ${{ inputs.test_suite || 'generated' }}
+      platform: ${{ inputs.platform || 'local' }}
+    secrets:
+      LOGIN_MONITOR_USERNAME: ${{ secrets.LOGIN_MONITOR_USERNAME }}
+      LOGIN_MONITOR_PASSWORD: ${{ secrets.LOGIN_MONITOR_PASSWORD }}
+      LT_USERNAME: ${{ secrets.LT_USERNAME }}
+      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

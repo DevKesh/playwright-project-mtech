@@ -102,17 +102,13 @@ const LOCATOR_RETURNING_METHODS = new Set([
 ]);
 
 // Cache the compiled graph per config to avoid recompiling for every locator
-let _cachedGraph = null;
-let _cachedConfigKey = null;
+const runtimeGraphs = new WeakMap();
 
 function getRuntimeGraph(config) {
-  const configKey = `${config.healingModel}-${config.maxRetries}`;
-  if (_cachedGraph && _cachedConfigKey === configKey) {
-    return _cachedGraph;
+  if (!runtimeGraphs.has(config)) {
+    runtimeGraphs.set(config, createRuntimeHealingGraph(config));
   }
-  _cachedGraph = createRuntimeHealingGraph(config);
-  _cachedConfigKey = configKey;
-  return _cachedGraph;
+  return runtimeGraphs.get(config);
 }
 
 /**
@@ -147,13 +143,16 @@ function createLocatorProxy(locator, context) {
     const original = locator[action];
     if (typeof original !== 'function') continue;
     locator[action] = async function (...args) {
+      if (context.page.__aiHealingSuppressed || !context.config.locatorHealing || !context.healerAgent) {
+        return original.apply(locator, args);
+      }
       try {
         const quickArgs = injectQuickTimeout(action, args);
         return await original.apply(locator, quickArgs);
       } catch (error) {
         console.log(`[AI-HEAL-DEBUG] Action "${action}" failed on "${context.selectorDescription}": ${error.name} — ${error.message?.substring(0, 120)}`);
 
-        if (!context.config.locatorHealing || !context.healerAgent) {
+        if (context.page.__aiHealingSuppressed || !context.config.locatorHealing || !context.healerAgent) {
           throw error;
         }
 

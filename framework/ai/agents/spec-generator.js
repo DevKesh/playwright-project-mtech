@@ -16,7 +16,10 @@
 const fs = require('fs');
 const path = require('path');
 const { createAIClient } = require('../core/ai-client-factory');
-const { testDataConfig } = require('../../config/test-data.config');
+const { loadAIConfig } = require('../config/ai.config');
+const { qa } = require('../../config/environment');
+const { resolveSpecOutputDir, writeNewGeneratedFile } = require('../utils/generated-output');
+const testDataConfig = { targetApp: { baseUrl: qa.baseURL, loginUrl: `${qa.baseURL}/login` } };
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
 const REGISTRY_DIR = path.join(PROJECT_ROOT, 'framework', 'pages', 'registry');
@@ -126,14 +129,14 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 3. For optional elements (popups, banners), wrap in: if (await element.isVisible({ timeout: 3000 }).catch(() => false)) { await element.click(); }
 4. After clicks that trigger arming/state change, use the waitFor from stateTransitions
 5. Authentication is owned by fixtures; never hardcode or read credentials in generated specs
-6. Generate a complete Page Object class + test spec file
+6. Generate a complete test spec using existing canonical framework/pages/tc2 page objects through fixtures; never duplicate their implementations.
 7. Follow Playwright best practices: auto-waiting, no artificial delays
 
 ## Output Format (STRICT JSON):
 {
   "testName": "kebab-case-name",
   "testTitle": "Human readable title",
-  "tags": ["@smoke", "@tc", "@tc-plan"],
+  "tags": ["@nl-authored", "@regression"],
   "testId": "TC-SMOKE-XXX",
   "pageObject": {
     "className": "PascalCasePage",
@@ -165,11 +168,12 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 - Authenticated business tests import { test, expect } from '../../../framework/fixtures/smoke.fixture'.
 - Request named fixtures as destructured test parameters: authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage.
 - Every test gets a fresh browser/context and authenticated /home page. The fixture owns createLoginSession and cleanup, with a separate 180000ms setup/teardown budget.
-- LOGIN_MONITOR_USERNAME and LOGIN_MONITOR_PASSWORD must supply the approved account; no fallback. Do not import testDataConfig, chromium, or manually construct smoke POMs in business specs.
-- Public login/recovery uses @playwright/test and its native unauthenticated page, never smoke.fixture. Synthetic security may use '../../../framework/fixtures/login-security.fixture' for page, loginPage, and pacing. Do not authenticate or heal these flows.
-- CRITICAL IMPORT PATHS: The spec file lives at tests/generated/smoke/. Relative paths MUST use '../../../framework/...' (3 levels up). NEVER use '../../framework/...' (2 levels). NEVER invent paths like 'pages/total-connect/'.
+- The default approved_monitor account uses ACCOUNT_APPROVED_MONITOR_USERNAME and ACCOUNT_APPROVED_MONITOR_PASSWORD, resolved only by the fixture. Do not import testDataConfig, chromium, or manually construct smoke POMs in business specs.
+- Public login/recovery uses the guarded unauthenticated page from '../../../framework/fixtures/tc.fixture', never raw @playwright/test or smoke.fixture. Synthetic security uses '../../../framework/fixtures/login-security.fixture' for page, loginPage, and pacing. Do not authenticate or heal these flows.
+- These native fixtures enforce RUN_LIVE_TESTS=true for live execution. Never bypass this safety guard; live runs require explicit approval.
+- CRITICAL IMPORT PATHS: The spec file lives at tests/tc2/nl-authored/. Relative paths MUST use '../../../framework/...' (3 levels up). NEVER use '../../framework/...' (2 levels). NEVER invent paths like 'pages/total-connect/'.
 - Use ONLY page object classes that exist in the "Existing Page Objects" list below. Match the EXACT class names and file names.
-- Use test.describe with tags in title
+- Use native test.describe tags @nl-authored and @regression. Do not expand the eight-test smoke inventory.
 - Use default describe mode with independent tests, not serial skip-on-failure.
 - Do not use shared mutable pages or beforeAll/afterAll sessions. Smoke remains single-worker, fullyParallel false, because the physical panel is shared.
 - Each test case is a separate test() block inside the describe
@@ -178,7 +182,7 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 - Add meaningful expect() assertions for verification steps
 - Business navigation must use homePage methods; no manual goto/waitForURL/URL assertions. Public navigation assertions are allowed when they are the tested behavior.
 - Camera tests call test.setTimeout(90000); arm/disarm tests call test.setTimeout(300000), as their first statement.
-- Arm/disarm: ensureDisarmed, selectAllPartitions, then try { armHome/armAway; verify matching Armed Home/Armed Away status; } finally { selectAllPartitions; disarm; }. Verify Disarmed afterward. Preserve assertions and do not retry physical commands.
+- Arm/disarm: ensureDisarmed, selectAllPartitions, then try { armHome/armAway; verify matching Armed Home/Armed Away status; } finally { selectAllPartitions; disarm; }. Verify Disarmed afterward. Preserve assertions and do not heal or retry physical commands. Every physical-action test must use the native @panel tag and approved_monitor account.
 - Include Allure epic/feature/story/severity/tag inside each test.
 
 ## CONSOLIDATED SUITE TEMPLATE (follow this pattern exactly):
@@ -186,7 +190,7 @@ function buildSingleShotPrompt({ instructions, registries, testMeta, existingPag
 const { test, expect } = require('../../../framework/fixtures/smoke.fixture');
 const allure = require('allure-js-commons');
 
-test.describe('@smoke @tc @tc-plan Suite Name', () => {
+test.describe('Suite Name', { tag: ['@nl-authored', '@regression'] }, () => {
   test('TC-XXX: Verify device categories', async ({ homePage, devicesPage }) => {
     await allure.epic('Total Connect');
     await allure.feature('Devices');
@@ -211,19 +215,19 @@ ${registryContext}
 
 ## Test Metadata:
 - Test ID: ${testMeta.testId || 'TC-SMOKE-002'}
-- Tags: ${(testMeta.tags || ['@smoke', '@tc', '@tc-plan']).join(' ')}
+- Tags: ${(testMeta.tags || ['@nl-authored', '@regression']).join(' ')}
 - Entry Criteria: ${testMeta.entry || 'User is on login page'}
 - Exit Criteria: ${testMeta.exit || 'Test assertions pass'}
 
 ## Test Environment:
 - Credentials belong to the authenticated fixture and must not be emitted in generated code.
-- testDataConfig.targetApp.loginUrl = "${testDataConfig.targetApp.loginUrl}"
-- testDataConfig.targetApp.baseUrl = "${testDataConfig.targetApp.baseUrl}"
+- Login URL = "${testDataConfig.targetApp.loginUrl}"
+- Base URL = "${testDataConfig.targetApp.baseUrl}"
 
 ## Existing Page Objects (reuse if applicable):
 ${existingPageObjects || 'None — generate fresh page objects'}
 
-Generate the complete test spec and page object. Use ONLY registry selectors.`;
+Generate the complete test spec using existing canonical POMs through fixtures. Do not emit duplicate canonical page object implementations. Use ONLY registry selectors for genuinely new page objects.`;
 
   return { systemPrompt, userPrompt };
 }
@@ -244,7 +248,7 @@ async function generateSpecFromRegistry({ instructions, testMeta, config: config
   
   // Load AI client
   const config = {
-    analysisModel: 'gpt-4o',
+    ...loadAIConfig(),
     ...configOverrides,
   };
   const aiClient = createAIClient(config);
@@ -262,10 +266,10 @@ async function generateSpecFromRegistry({ instructions, testMeta, config: config
     const poFiles = fs.readdirSync(poDir).filter(f => f.endsWith('.js'));
     existingPOs = poFiles.map(f => `- ${f} (import: '../../../framework/pages/generated/${f}')`).join('\n');
   }
-  const poSmokeDir = path.join(poDir, 'smoke');
+  const poSmokeDir = path.join(PROJECT_ROOT, 'framework', 'pages', 'tc2');
   if (fs.existsSync(poSmokeDir)) {
     const smokeFiles = fs.readdirSync(poSmokeDir).filter(f => f.endsWith('.js'));
-    existingPOs += '\n' + smokeFiles.map(f => `- smoke/${f} (import: '../../../framework/pages/generated/smoke/${f}')`).join('\n');
+    existingPOs += '\n' + smokeFiles.map(f => `- tc2/${f} (canonical: '../../../framework/pages/tc2/${f}'; consume through smoke.fixture)`).join('\n');
   }
 
   // Build prompt and call GPT ONCE
@@ -280,7 +284,7 @@ async function generateSpecFromRegistry({ instructions, testMeta, config: config
   console.log(`[SPEC-GEN] Calling GPT-4o (single-shot generation)...`);
 
   const result = await aiClient.chatCompletionJSON(systemPrompt, userPrompt, {
-    model: config.analysisModel,
+    model: aiClient.config?.analysisModel || config.analysisModel,
     maxTokens: 8192,
   });
 
@@ -307,28 +311,26 @@ async function generateSpecFromRegistry({ instructions, testMeta, config: config
  * Generate and write spec + PO files to disk.
  */
 async function generateAndWriteSpec({ instructions, testMeta, outputDir, pagesDir, config }) {
+  const specDir = resolveSpecOutputDir(outputDir);
   const result = await generateSpecFromRegistry({ instructions, testMeta, config });
 
   // Ensure output directories exist
-  const specDir = outputDir || path.join(PROJECT_ROOT, 'tests', 'generated');
   const pageDir = pagesDir || path.join(PROJECT_ROOT, 'framework', 'pages', 'generated');
   fs.mkdirSync(specDir, { recursive: true });
   fs.mkdirSync(pageDir, { recursive: true });
 
   // Write page object
-  const poPath = path.join(pageDir, result.pageObject.fileName);
-  fs.writeFileSync(poPath, result.pageObject.code, 'utf-8');
+  const poPath = writeNewGeneratedFile(pageDir, result.pageObject.fileName, result.pageObject.code);
   console.log(`[SPEC-GEN] ✓ Page Object written: ${poPath}`);
 
   // Write spec (with import path validation)
   let specCode = result.spec.code;
-  // Fix common GPT import path mistakes: ensure 3-level relative path from tests/generated/smoke/
+  // Fix common GPT import path mistakes at the canonical depth-three destination.
   specCode = specCode.replace(/require\(['"]\.\.\/\.\.\/framework\//g, "require('../../../framework/");
   specCode = specCode.replace(/require\(['"]\.\.\/\.\.\/\.\.\/\.\.\/framework\//g, "require('../../../framework/");
   specCode = specCode.replace(/require\(['"](?:\.\.\/)*framework\/pages\/total-connect\//g, "require('../../../framework/pages/generated/smoke/");
 
-  const specPath = path.join(specDir, result.spec.fileName);
-  fs.writeFileSync(specPath, specCode, 'utf-8');
+  const specPath = writeNewGeneratedFile(specDir, result.spec.fileName, specCode);
   console.log(`[SPEC-GEN] ✓ Spec written: ${specPath}`);
 
   // Log to audit trail

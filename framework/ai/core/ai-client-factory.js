@@ -8,19 +8,19 @@
  * Provider selection:
  *   Set AI_PROVIDER=azure in .env to route ALL calls to the Azure AI Foundry
  *   Anthropic passthrough (see framework/ai-azure/). When AI_PROVIDER is unset
- *   or any other value, the original OpenAI path is used unchanged.
+ *   the OpenAI path is used. Unknown explicit providers are rejected.
  */
 
-const { AIClient } = require('./openai-client');
 const { wrapWithLatencyTracking } = require('../metrics/latency-tracker');
+const { getAIProvider, validateAIConfig } = require('../config/ai.config');
 
 /**
  * Create an AIClient instance, optionally wrapped with latency tracking.
  * @param {object} config - AI config from ai.config.js
  * @returns {AIClient} A ready-to-use AI client.
  */
-function createAIClient(config) {
-  const provider = (process.env.AI_PROVIDER || 'openai').trim().toLowerCase();
+function createAIClient(config = {}) {
+  const provider = getAIProvider(config.provider);
 
   if (provider === 'azure') {
     // Lazy-require so the original code path doesn't load the Azure module
@@ -32,7 +32,11 @@ function createAIClient(config) {
       validateAzureAIConfig,
     } = require('../../ai-azure/config/ai.azure.config');
 
-    const azureCfg = { ...loadAzureAIConfig(), ...(config || {}) };
+    const azureDefaults = loadAzureAIConfig();
+    const azureCfg = { ...azureDefaults, ...config, provider };
+    azureCfg.healingModel = azureCfg.model;
+    azureCfg.analysisModel = azureCfg.model;
+    azureCfg.openaiTimeout = azureCfg.timeout;
     validateAzureAIConfig(azureCfg);
     const azureClient = new AzureAIClient(azureCfg);
 
@@ -42,6 +46,8 @@ function createAIClient(config) {
     return azureClient;
   }
 
+  validateAIConfig({ ...config, provider });
+  const { AIClient } = require('./openai-client');
   const client = new AIClient(config);
 
   if (config.metricsEnabled) {

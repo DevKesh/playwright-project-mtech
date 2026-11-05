@@ -3,6 +3,7 @@ const { test: smokeTest, expect } = require('../../../fixtures/smoke.fixture');
 const sessions = [];
 let cameraTestInfo;
 const test = smokeTest.extend({
+  accountCredentials: [{ username: 'offline-fixture-user', password: 'offline-fixture-password' }, { option: true }],
   sessionFactory: async ({ browser }, use) => {
     await use(async options => {
       expect(options.username).toBe('offline-fixture-user');

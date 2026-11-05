@@ -13,9 +13,6 @@
  *   AZURE_ANTHROPIC_TIMEOUT    Request timeout in ms, default 60000
  */
 
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
-
 function loadAzureAIConfig() {
   // Trim and strip stray markdown link brackets in case the value was pasted as [url](url)
   const cleanUrl = (v) => {
@@ -55,7 +52,7 @@ function validateAzureAIConfig(cfg) {
   if (missing.length) {
     throw new Error(
       `[ai-azure] Missing required env vars: ${missing.join(', ')}. ` +
-      `Set them in .env at the project root.`
+      `Configure the selected Azure provider before use.`
     );
   }
 }

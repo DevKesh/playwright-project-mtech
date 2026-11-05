@@ -12,7 +12,6 @@
 
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
 
 const { loadAIConfig } = require('../config/ai.config');
 const { ChromaStore } = require('../rag/chroma-client');
@@ -114,7 +113,7 @@ async function main() {
   console.log(`\nIndex summary saved to: ${filePath}`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('Failed to index knowledge base:', err.message);
   process.exit(1);
 });

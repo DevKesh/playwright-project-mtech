@@ -1,16 +1,35 @@
 /**
  * Central configuration for the AI Self-Healing framework.
  * All settings are driven by environment variables with sensible defaults.
- * Loads .env file from project root automatically.
+ * Environment loading occurs only when loadAIConfig() is called explicitly.
  */
 
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+const { loadEnvironment } = require('../../config/environment');
+
+function getAIProvider(provider = process.env.AI_PROVIDER) {
+  const selected = provider === undefined ? 'openai' : String(provider).trim().toLowerCase();
+  if (!['openai', 'azure'].includes(selected)) {
+    throw new Error('AI_PROVIDER must be openai or azure');
+  }
+  return selected;
+}
+
+function validateAIConfig(config) {
+  const provider = getAIProvider(config.provider);
+  if (provider === 'azure') {
+    require('../../ai-azure/config/ai.azure.config').validateAzureAIConfig(config);
+  } else if (!config.openaiApiKey?.trim()) {
+    throw new Error('Missing required env var: OPENAI_API_KEY');
+  }
+}
 
 function loadAIConfig() {
+  loadEnvironment();
+  const provider = getAIProvider();
   const enabled = process.env.AI_HEALING_ENABLED === 'true';
 
-  return {
+  const config = {
+    provider,
     enabled,
     openaiApiKey: process.env.OPENAI_API_KEY || '',
 
@@ -49,6 +68,11 @@ function loadAIConfig() {
     // Exploratory test generation
     explorationEnabled: enabled && process.env.AI_EXPLORATION_ENABLED === 'true',
   };
+  if (provider === 'azure') {
+    const azure = require('../../ai-azure/config/ai.azure.config').loadAzureAIConfig();
+    return { ...config, ...azure, metricsEnabled: config.metricsEnabled };
+  }
+  return config;
 }
 
-module.exports = { loadAIConfig };
+module.exports = { loadAIConfig, getAIProvider, validateAIConfig };

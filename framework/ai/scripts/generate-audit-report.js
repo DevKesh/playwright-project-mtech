@@ -10,7 +10,7 @@
  */
 
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+if (require.main === module) require('../../config/environment').loadEnvironment();
 
 const { AuditReportGenerator } = require('../audit/audit-report-generator');
 
@@ -92,7 +92,7 @@ async function main() {
   console.log(`Report saved to: ${report._savedTo}`);
 }
 
-main().catch(err => {
+if (require.main === module) main().catch(err => {
   console.error('Failed to generate audit report:', err.message);
   process.exit(1);
 });

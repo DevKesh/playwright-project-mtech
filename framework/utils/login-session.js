@@ -10,28 +10,7 @@
  *   - "Signing in..." intermediate state before home page renders
  *   - Cookie/notification popups after login
  *
- * Usage (in any test file):
- *
- *   const { createLoginSession } = require('../../framework/utils/login-session');
- *
- *   test.describe('My Business Logic Tests', () => {
- *     let session;
- *
- *     test.beforeAll(async () => {
- *       test.setTimeout(180000);
- *       session = await createLoginSession();
- *     });
- *
- *     test.afterAll(async () => {
- *       await session.close();
- *     });
- *
- *     test('my test', async () => {
- *       const { page } = session;
- *       // page is on /home, fully loaded, ready for interaction
- *       await page.getByRole('button', { name: 'Cameras' }).click();
- *     });
- *   });
+ * Owned by tc.fixture; business tests request named POMs from smoke.fixture.
  */
 
 const { launchBrowser } = require('./browser-launcher');
@@ -42,12 +21,16 @@ const { testDataConfig } = require('../config/test-data.config');
  * for the home page to fully render.
  *
  * @param {object} [options]
- * @param {string} [options.username] - Override username (defaults to .env credentials)
- * @param {string} [options.password] - Override password (defaults to .env credentials)
+ * @param {string} options.username - Username resolved by the authenticated fixture
+ * @param {string} options.password - Password resolved by the authenticated fixture
  * @param {object} [options.launchOptions] - Override browser launch options (headless, channel, slowMo)
  * @returns {Promise<{ browser, context, page, close: () => Promise<void> }>}
  */
 async function createLoginSession(options = {}) {
+  if (typeof options.username !== 'string' || !options.username.trim() ||
+      typeof options.password !== 'string' || !options.password.trim()) {
+    throw new Error('createLoginSession requires an explicit username and password from the selected account.');
+  }
   const { browser, context, page } = await launchBrowser(options.launchOptions);
   try {
     return await authenticateSession({ browser, context, page }, options);
@@ -61,9 +44,8 @@ async function createLoginSession(options = {}) {
 }
 
 async function authenticateSession({ browser, context, page }, options) {
-  const loginUrl = testDataConfig.targetApp.loginUrl;
-  const username = options.username || testDataConfig.targetApp.credentials.email;
-  const password = options.password || testDataConfig.targetApp.credentials.password;
+  const loginUrl = options.loginUrl || testDataConfig.targetApp.loginUrl;
+  const { username, password } = options;
 
   // 1. Navigate to login page
   await page.goto(loginUrl, { waitUntil: 'domcontentloaded' });
