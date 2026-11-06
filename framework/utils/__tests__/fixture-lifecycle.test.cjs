@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
+const { EventEmitter } = require('node:events');
 
 function loadWithDependencies(relativePath, dependencies, env = {}) {
   const filename = path.resolve(__dirname, relativePath);
@@ -42,7 +43,7 @@ test('login setup captures evidence before close and preserves errors when captu
   for (const captureFails of [false, true]) {
     const failure = new Error('login failed before test body');
     const events = [];
-    const page = { goto: async () => { throw failure; } };
+    const page = { goto: async () => { events.push('navigate'); throw failure; } };
     const { createLoginSession } = loadWithDependencies('../login-session.js', {
       './browser-launcher': {
         launchBrowser: async () => ({
@@ -55,13 +56,14 @@ test('login setup captures evidence before close and preserves errors when captu
     });
     await assert.rejects(createLoginSession({
       username: 'synthetic', password: 'synthetic',
+      onPage: async createdPage => { assert.equal(createdPage, page); events.push('listen'); },
       onFailure: async failedPage => {
         assert.equal(failedPage, page);
         events.push('capture');
         if (captureFails) throw new Error('screenshot failed');
       },
     }), error => error === failure);
-    assert.deepEqual(events, ['capture', 'close']);
+    assert.deepEqual(events, ['listen', 'navigate', 'capture', 'close']);
   }
 });
 
@@ -73,6 +75,43 @@ function sessionFixtures(env = { TC_USERNAME: 'synthetic', TC_PASSWORD: 'synthet
     '../utils/pageLoadMetrics': {},
   }, env).test;
 }
+
+test('smoke setup failure attaches network evidence without masking the login error', async () => {
+  for (const attachFails of [false, true]) {
+    const fixtures = sessionFixtures();
+    const page = new EventEmitter();
+    const failure = new Error('original login setup failure');
+    const attachments = [];
+    const info = {
+      tags: ['@smoke'], annotations: [], status: 'failed', expectedStatus: 'passed',
+      attach: async (name, attachment) => {
+        if (attachFails) throw new Error('evidence write failed');
+        attachments.push({ name, ...attachment });
+      },
+    };
+    await assert.rejects(fixtures.authenticatedSession[0]({
+      credentialProfile: 'configured', sessionArtifacts: false,
+      sessionFactory: async options => {
+        await options.onPage(page);
+        page.emit('response', {
+          url: () => 'https://fixture.test/login',
+          request: () => ({ resourceType: () => 'document', method: () => 'GET' }),
+          status: () => 403,
+          headers: () => ({ 'content-type': 'text/html', 'cf-mitigated': 'challenge' }),
+          body: () => assert.fail('Setup body must not be read'),
+        });
+        throw failure;
+      },
+    }, async () => assert.fail('Test body must not run'), info), error => error === failure);
+    assert.equal(page.listenerCount('response'), 0);
+    if (attachFails) assert.equal(info.annotations[0].type, 'network-capture');
+    else {
+      assert.equal(attachments.length, 1);
+      assert.equal(attachments[0].name, 'Smoke network responses');
+      assert.equal(JSON.parse(attachments[0].body).responses[0].status, 403);
+    }
+  }
+});
 
 test('live guard blocks before use and offline projects do not need credentials', async () => {
   for (const scenario of [

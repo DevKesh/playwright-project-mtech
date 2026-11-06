@@ -68,3 +68,24 @@ test('empty collection still attaches a truthful summary and attachment failures
   } }), /attachment failed/);
   assert.equal(page.listenerCount('response'), 0);
 });
+
+test('setup challenge metadata is captured without reading any setup response body', async () => {
+  const page = new EventEmitter();
+  let authenticated = false;
+  const attach = startNetworkEvidence(page, { isAuthenticated: () => authenticated });
+  page.emit('response', response({
+    headers: () => ({ 'content-type': 'application/json', 'content-length': '200', 'cf-mitigated': 'challenge' }),
+    body: () => assert.fail('Setup bodies must never be read, even on non-authentication URLs'),
+  }));
+  authenticated = true;
+  page.emit('response', response());
+  await attach({ attach: async (_name, attachment) => {
+    const report = JSON.parse(attachment.body);
+    assert.equal(report.responses[0].phase, 'login-setup');
+    assert.equal(report.responses[0].status, 403);
+    assert.equal(report.responses[0].securityChallengeDetected, true);
+    assert.match(report.responses[0].body.omitted, /Login setup/);
+    assert.equal(report.responses[1].phase, 'test');
+    assert.equal(report.responses[1].body.code, 403);
+  } });
+});

@@ -33,6 +33,7 @@ async function createLoginSession(options = {}) {
   }
   const { browser, context, page } = await launchBrowser(options.launchOptions);
   try {
+    await options.onPage?.(page);
     return await authenticateSession({ browser, context, page }, options);
   } catch (error) {
     try {

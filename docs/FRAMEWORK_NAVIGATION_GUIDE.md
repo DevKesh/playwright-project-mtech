@@ -64,9 +64,14 @@ and exact arm/disarm `try/finally`. Smoke stays single-worker, not fully paralle
 
 Every authenticated `@smoke` test adds **Smoke network responses** under the
 test's Allure attachments on success or failure. Expand the JSON attachment to
-inspect post-login document, XHR and fetch URLs, methods, HTTP statuses and safe
-JSON diagnostic fields. Login setup traffic, request bodies, headers, query strings,
-authentication responses and arbitrary personal/device data are not recorded.
+inspect login-setup and test document, XHR and fetch URLs, methods and HTTP statuses.
+Capture starts before login navigation and survives login failure. During setup,
+only metadata is recorded; after login, safe JSON diagnostic fields may be included.
+The `securityChallengeDetected` flag is based only on an explicit Cloudflare
+challenge response header, not a guess from HTTP status. Request bodies, raw headers,
+query strings, setup/authentication bodies and arbitrary personal/device data are
+not recorded. Credentials/browser-launch failures before a page exists cannot
+produce network responses. Existing reports are not updated retroactively.
 
 Capture is limited to 100 responses per test and a two-second teardown drain.
 JSON bodies must declare a size of at most 32 KiB; only status/code/count fields

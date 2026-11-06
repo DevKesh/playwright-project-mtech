@@ -3,6 +3,9 @@ const { test: smokeTest, expect } = require('../../../fixtures/smoke.fixture');
 const sessions = [];
 let cameraTestInfo;
 let failedTestInfo;
+let blockedTestInfo;
+let blockedPage;
+let blockedBodyReached = false;
 const test = smokeTest.extend({
   accountCredentials: [{ username: 'offline-fixture-user', password: 'offline-fixture-password' }, { option: true }],
   sessionFactory: async ({ browser }, use) => {
@@ -13,6 +16,7 @@ const test = smokeTest.extend({
         ? route.fulfill({ contentType: 'text/html', body: '<button>Devices</button><button>Cameras</button><button>Security</button>' })
         : route.abort());
       const page = await context.newPage();
+      await options.onPage?.(page);
       await page.goto('http://fixture.test/home');
       const session = {
         page, context, closed: 0,
@@ -42,11 +46,23 @@ test.afterAll(() => {
     const attachment = info.attachments.find(item => item.name === 'Smoke network responses');
     expect(attachment.contentType).toBe('application/json');
     const report = JSON.parse(attachment.body.toString());
-    expect(report.captured).toBe(1);
-    expect(report.responses[0].status).toBe(info === cameraTestInfo ? 200 : 503);
-    expect(report.responses[0].body.success).toBe(info === cameraTestInfo);
+    expect(report.captured).toBe(2);
+    expect(report.responses[0].phase).toBe('login-setup');
+    expect(report.responses[0].body.omitted).toContain('Login setup');
+    expect(report.responses[1].status).toBe(info === cameraTestInfo ? 200 : 503);
+    expect(report.responses[1].body.success).toBe(info === cameraTestInfo);
     expect(attachment.body.toString()).not.toMatch(/synthetic-secret|private-camera/);
   }
+  expect(blockedBodyReached).toBe(false);
+  expect(blockedPage.isClosed()).toBe(true);
+  expect(blockedTestInfo.error.message).toContain('Synthetic login page blocked');
+  const blockedAttachment = blockedTestInfo.attachments.find(item => item.name === 'Smoke network responses');
+  const blockedReport = JSON.parse(blockedAttachment.body.toString());
+  expect(blockedReport.captured).toBe(1);
+  expect(blockedReport.responses[0].status).toBe(403);
+  expect(blockedReport.responses[0].phase).toBe('login-setup');
+  expect(blockedReport.responses[0].securityChallengeDetected).toBe(true);
+  expect(blockedReport.responses[0].body.omitted).toContain('Login setup');
 });
 
 test('all smoke page objects use the same test-owned page', { tag: '@smoke' }, async ({ authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage }, testInfo) => {
@@ -98,4 +114,33 @@ test('public page fixture never starts an authenticated session', async ({ page 
   expect(sessions[2].closed).toBe(1);
   expect(page.url()).toBe('about:blank');
   expect(await page.context().cookies()).toEqual([]);
+});
+
+const blockedTest = test.extend({
+  sessionFactory: async ({ browser }, use, testInfo) => {
+    blockedTestInfo = testInfo;
+    await use(async options => {
+      const context = await browser.newContext({ serviceWorkers: 'block' });
+      await context.route('**/*', route => route.fulfill({
+        status: 403, contentType: 'text/html', headers: { 'cf-mitigated': 'challenge' },
+        body: '<h1>Performing security verification</h1>',
+      }));
+      blockedPage = await context.newPage();
+      try {
+        await options.onPage?.(blockedPage);
+        await blockedPage.goto('http://fixture.test/login');
+        throw new Error('Synthetic login page blocked');
+      } finally {
+        await context.close();
+      }
+    });
+  },
+});
+
+blockedTest.describe('setup failure evidence', () => {
+  blockedTest.fail();
+  blockedTest('blocked login still attaches smoke network responses', { tag: '@smoke' }, async ({ authenticatedPage }) => {
+    blockedBodyReached = true;
+    expect(authenticatedPage).toBeUndefined();
+  });
 });

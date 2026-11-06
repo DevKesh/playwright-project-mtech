@@ -116,7 +116,7 @@ test('collection is disjoint and preserves eight tagged smoke tests', () => {
   }
   assert.deepEqual(counts, {
     tc2: 9, monitoring: 2, 'alarmnet-login-security': 5,
-    'alarmnet-mobile-security': 5, 'alarmnet-forgot-login-security': 5, framework: 4,
+    'alarmnet-mobile-security': 5, 'alarmnet-forgot-login-security': 5, framework: 5,
   });
   const smoke = specs.filter(spec => spec.file.replaceAll('\\', '/').endsWith('tc2/smoke-suite.spec.js'));
   assert.equal(smoke.length, 8);

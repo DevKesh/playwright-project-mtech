@@ -26,7 +26,7 @@ function diagnosticBody(value, depth = 0) {
   return result;
 }
 
-function startNetworkEvidence(page, { maxResponses = MAX_RESPONSES, drainTimeout = 2000 } = {}) {
+function startNetworkEvidence(page, { maxResponses = MAX_RESPONSES, drainTimeout = 2000, isAuthenticated = () => true } = {}) {
   const responses = [];
   const pending = [];
   let dropped = 0;
@@ -43,16 +43,20 @@ function startNetworkEvidence(page, { maxResponses = MAX_RESPONSES, drainTimeout
       const url = new URL(response.url());
       if (!['http:', 'https:'].includes(url.protocol)) return;
       const sensitive = sensitiveEndpoint.test(url.pathname);
+      const authenticated = isAuthenticated();
+      const headers = response.headers();
       const pathname = sensitive ? '/[sensitive-endpoint]' : url.pathname.split('/').map(segment =>
         /^[a-z_-]{1,40}$/i.test(segment) ? segment : segment ? '[redacted]' : '').join('/');
       const record = {
         url: `${url.origin}${pathname}`,
         method: request.method(), resourceType, status: response.status(),
+        phase: authenticated ? 'test' : 'login-setup',
+        securityChallengeDetected: headers['cf-mitigated'] === 'challenge',
         body: { omitted: 'Only bounded JSON diagnostic fields are collected.' },
       };
       responses.push(record);
+      if (!authenticated) { record.body = { omitted: 'Login setup response bodies are not collected.' }; return; }
       if (sensitive) { record.body = { omitted: 'Authentication or session endpoint.' }; return; }
-      const headers = response.headers();
       const length = Number(headers['content-length']);
       if (!/\bjson\b/i.test(headers['content-type'] || '') ||
           !Number.isSafeInteger(length) || length < 1 || length > MAX_BODY_BYTES) return;
@@ -85,7 +89,7 @@ function startNetworkEvidence(page, { maxResponses = MAX_RESPONSES, drainTimeout
       finalized = true;
       await testInfo.attach('Smoke network responses', {
         body: JSON.stringify({
-          scope: 'Post-login document, XHR and fetch responses; no request bodies, headers or query strings.',
+          scope: 'Login setup and test document, XHR and fetch responses; no request bodies, raw headers or query strings. Setup response bodies are excluded.',
           bodyPolicy: 'Only diagnostic status/code/count fields from small JSON bodies with a declared size. Other fields and body formats are omitted.',
           captured: responses.length, dropped, responses,
         }, null, 2),

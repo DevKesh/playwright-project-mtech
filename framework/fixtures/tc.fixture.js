@@ -13,6 +13,7 @@ const { createLoginSession } = require('../utils/login-session');
 const { attachFailureArtifacts } = require('../utils/test-artifacts');
 const { getAccount } = require('../config/accounts');
 const { liveAccess } = require('./live-access');
+const { startNetworkEvidence } = require('../utils/network-evidence');
 const {
   attachLoadMetrics,
   assertOptionalLoadThreshold,
@@ -65,17 +66,29 @@ const test = base.test.extend({
         force: true, includeUrl: false, screenshotName: 'login-setup-failure',
       });
     }
-    const session = await sessionFactory(options);
+    let session;
+    let attachNetwork;
+    if (testInfo.tags?.includes('@smoke')) {
+      options.onPage = page => {
+        attachNetwork = startNetworkEvidence(page, { isAuthenticated: () => Boolean(session) });
+      };
+    }
     let useFailed = false;
     try {
+      session = await sessionFactory(options);
       await use(session);
     } catch (error) {
       useFailed = true;
       throw error;
     } finally {
-      if (sessionArtifacts) await attachFailureArtifacts(session.page, testInfo, { includeUrl: false });
+      if (session && sessionArtifacts) await attachFailureArtifacts(session.page, testInfo, { includeUrl: false });
       try {
-        await session.close();
+        await attachNetwork?.(testInfo);
+      } catch {
+        testInfo.annotations.push({ type: 'network-capture', description: 'Network evidence capture was incomplete; the original test result is unchanged.' });
+      }
+      try {
+        await session?.close();
       } catch (error) {
         if (!useFailed && testInfo.status === testInfo.expectedStatus) throw error;
         testInfo.annotations.push({ type: 'cleanup-warning', description: 'Authenticated session teardown failed after the original test failure.' });
