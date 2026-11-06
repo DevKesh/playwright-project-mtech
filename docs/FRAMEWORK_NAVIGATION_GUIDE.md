@@ -60,6 +60,21 @@ never authenticated fixtures or raw Playwright `test` that bypasses the live gua
 See [the authoring contract](../.github/copilot-instructions.md) for APIs, timeouts,
 and exact arm/disarm `try/finally`. Smoke stays single-worker, not fully parallel.
 
+## Smoke Network Evidence
+
+Every authenticated `@smoke` test adds **Smoke network responses** under the
+test's Allure attachments on success or failure. Expand the JSON attachment to
+inspect post-login document, XHR and fetch URLs, methods, HTTP statuses and safe
+JSON diagnostic fields. Login setup traffic, request bodies, headers, query strings,
+authentication responses and arbitrary personal/device data are not recorded.
+
+Capture is limited to 100 responses per test and a two-second teardown drain.
+JSON bodies must declare a size of at most 32 KiB; only status/code/count fields
+and supported nested diagnostic containers are retained. Omitted bodies/fields
+and dropped responses are noted in the attachment. Empty capture is reported as
+zero responses, not as proof that the network succeeded. Existing test assertions
+still determine the verdict; network evidence does not replay requests.
+
 ## Select an Account
 
 Privately provision one ignored `.env.qa` using the blank committed template.

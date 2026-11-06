@@ -4,6 +4,7 @@ const { TotalConnectHomePage } = require('../pages/tc2/TotalConnectHomePage');
 const { DevicesPage } = require('../pages/tc2/DevicesPage');
 const { CamerasPage } = require('../pages/tc2/CamerasPage');
 const { ActivityPage } = require('../pages/tc2/ActivityPage');
+const { startNetworkEvidence } = require('../utils/network-evidence');
 
 const test = base.test.extend({
   authenticatedPage: async ({ authenticatedPage }, use, testInfo) => {
@@ -12,7 +13,16 @@ const test = base.test.extend({
       const healing = createHealer();
       if (healing) patchPageWithHealing(authenticatedPage, healing);
     }
-    await use(authenticatedPage);
+    const attachNetwork = testInfo?.tags?.includes('@smoke') ? startNetworkEvidence(authenticatedPage) : null;
+    try {
+      await use(authenticatedPage);
+    } finally {
+      try {
+        await attachNetwork?.(testInfo);
+      } catch {
+        testInfo.annotations.push({ type: 'network-capture', description: 'Network evidence capture was incomplete; the original test result is unchanged.' });
+      }
+    }
   },
   loginPage: async ({ authenticatedPage }, use) => {
     await use(new LoginPage(authenticatedPage));

@@ -2,6 +2,7 @@ const { test: smokeTest, expect } = require('../../../fixtures/smoke.fixture');
 
 const sessions = [];
 let cameraTestInfo;
+let failedTestInfo;
 const test = smokeTest.extend({
   accountCredentials: [{ username: 'offline-fixture-user', password: 'offline-fixture-password' }, { option: true }],
   sessionFactory: async ({ browser }, use) => {
@@ -37,15 +38,29 @@ test.afterAll(() => {
   );
   expect(cameraTestInfo.attachments.some(attachment => attachment.contentType === 'image/png')).toBe(false);
   expect(cameraTestInfo.annotations.some(annotation => annotation.type === 'camera-capture')).toBe(false);
+  for (const info of [cameraTestInfo, failedTestInfo]) {
+    const attachment = info.attachments.find(item => item.name === 'Smoke network responses');
+    expect(attachment.contentType).toBe('application/json');
+    const report = JSON.parse(attachment.body.toString());
+    expect(report.captured).toBe(1);
+    expect(report.responses[0].status).toBe(info === cameraTestInfo ? 200 : 503);
+    expect(report.responses[0].body.success).toBe(info === cameraTestInfo);
+    expect(attachment.body.toString()).not.toMatch(/synthetic-secret|private-camera/);
+  }
 });
 
-test('all smoke page objects use the same test-owned page', async ({ authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage }, testInfo) => {
+test('all smoke page objects use the same test-owned page', { tag: '@smoke' }, async ({ authenticatedPage, loginPage, homePage, devicesPage, camerasPage, activityPage }, testInfo) => {
   cameraTestInfo = testInfo;
   for (const pageObject of [loginPage, homePage, devicesPage, camerasPage, activityPage]) {
     expect(pageObject.page).toBe(authenticatedPage);
   }
   expect(camerasPage.expectedCount).toBeNull();
   expect(camerasPage.knownCameras).toBeNull();
+  const body = JSON.stringify({ success: true, count: 11, token: 'synthetic-secret', cameraName: 'private-camera' });
+  await authenticatedPage.route('**/api/status?*', route => route.fulfill({
+    contentType: 'application/json', headers: { 'content-length': String(Buffer.byteLength(body)) }, body,
+  }));
+  await authenticatedPage.evaluate(async () => (await fetch('/api/status?token=synthetic-secret')).json());
   await authenticatedPage.evaluate(() => {
     const frame = document.createElement('iframe');
     frame.id = 'fenixPagetarget';
@@ -67,8 +82,14 @@ test('next smoke test gets a fresh context and no prior browser state', async ({
   expect(await authenticatedPage.context().cookies()).toEqual([]);
 });
 
-test('an assertion failure still tears down its session', async ({ authenticatedPage }) => {
+test('an assertion failure still tears down its session', { tag: '@smoke' }, async ({ authenticatedPage }, testInfo) => {
+  failedTestInfo = testInfo;
   test.fail();
+  const body = JSON.stringify({ success: false, code: 503, token: 'synthetic-secret' });
+  await authenticatedPage.route('**/api/status', route => route.fulfill({
+    status: 503, contentType: 'application/json', headers: { 'content-length': String(Buffer.byteLength(body)) }, body,
+  }));
+  await authenticatedPage.evaluate(async () => (await fetch('/api/status')).json());
   expect(authenticatedPage.url()).toContain('/deliberate-failure');
 });
 
