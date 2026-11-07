@@ -1,0 +1,85 @@
+{
+  "scope": "Login setup and test document, XHR and fetch responses; no request bodies, raw headers or query strings. Setup response bodies are excluded.",
+  "bodyPolicy": "Only diagnostic status/code/count fields from small JSON bodies with a declared size. Other fields and body formats are omitted.",
+  "captured": 7,
+  "dropped": 0,
+  "responses": [
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "document",
+      "status": 307,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "document",
+      "status": 403,
+      "phase": "login-setup",
+      "securityChallengeDetected": true,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/cdn-cgi/challenge-platform/h/b/fo/[redacted]/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/[redacted]/rch/ohpay/[redacted]/light/fbE/new/normal",
+      "method": "GET",
+      "resourceType": "document",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/[redacted]/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/[redacted]/[redacted]/[redacted]/[redacted]",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 401,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fo/[redacted]/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    }
+  ]
+}
