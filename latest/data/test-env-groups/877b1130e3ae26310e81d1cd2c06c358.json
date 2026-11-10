@@ -1,1 +1,1 @@
-{"id":"877b1130e3ae26310e81d1cd2c06c358","fullName":"smoke-suite.spec.js:18:3","name":"TC-002: Arm Home and Disarm partitions","status":"failed","testResultsByEnv":{"default":"2a5d4eac5026952ff12d81172424295e"}}
+{"id":"877b1130e3ae26310e81d1cd2c06c358","fullName":"smoke-suite.spec.js:18:3","name":"TC-002: Arm Home and Disarm partitions","status":"passed","testResultsByEnv":{"default":"3290eb3b5e35f089dfa047dbf8e890a3"}}

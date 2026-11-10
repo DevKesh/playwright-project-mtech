@@ -1,0 +1,888 @@
+{
+  "scope": "Login setup and test document, XHR and fetch responses; no request bodies, raw headers or query strings. Setup response bodies are excluded.",
+  "bodyPolicy": "Only diagnostic status/code/count fields from small JSON bodies with a declared size. Other fields and body formats are omitted.",
+  "captured": 80,
+  "dropped": 0,
+  "responses": [
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "document",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/Translations/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://consent.trustarc.com/analytics",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://consent.trustarc.com/analytics",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://consent.trustarc.com/cm/[redacted]/opt-out/domains",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://consent.trustarc.com/analytics",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://consent.trustarc.com/consent/log",
+      "method": "GET",
+      "resourceType": "fetch",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://api.amplitude.com/",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://api.amplitude.com/",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/home/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/home/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/landing/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/home/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/security/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/SignalR",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/home/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/landing/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/servicelevel/informations",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/interfaceSchema/resolution/[redacted]/logo",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/interfaceSchema/resolution/[redacted]/logo",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/QuickSilver/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/devices/[redacted]/Events",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]/GetImage",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/events/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[sensitive-endpoint]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/partitions/fullStatus",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/html/security/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/devices/[redacted]/events/unacknowledged",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/locations/[redacted]/devices/[redacted]/events/unacknowledged",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "login-setup",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Login setup response bodies are not collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "test",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Only bounded JSON diagnostic fields are collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/[redacted]",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "test",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Only bounded JSON diagnostic fields are collected."
+      }
+    },
+    {
+      "url": "https://qa2.totalconnect2.com/wwwroot/images/WeatherIcons/[redacted]",
+      "method": "GET",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "test",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Only bounded JSON diagnostic fields are collected."
+      }
+    },
+    {
+      "url": "https://rs.qa.alarmnet.com/[redacted]/api/[redacted]/ftue",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "test",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Only bounded JSON diagnostic fields are collected."
+      }
+    },
+    {
+      "url": "https://api.amplitude.com/",
+      "method": "POST",
+      "resourceType": "xhr",
+      "status": 200,
+      "phase": "test",
+      "securityChallengeDetected": false,
+      "body": {
+        "omitted": "Only bounded JSON diagnostic fields are collected."
+      }
+    }
+  ]
+}

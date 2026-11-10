@@ -1,1 +1,1 @@
-{"id":"e99173f5f406104f5f56ce36ba88a92b","fullName":"smoke-suite.spec.js:128:3","name":"TC-008: Verify camera feed sections load on Cameras page","status":"failed","testResultsByEnv":{"default":"c3febb7f6828fff88987ecad6c4a2f3b"}}
+{"id":"e99173f5f406104f5f56ce36ba88a92b","fullName":"smoke-suite.spec.js:128:3","name":"TC-008: Verify camera feed sections load on Cameras page","status":"passed","testResultsByEnv":{"default":"d398262327e12299b6c03fac70e8dd9f"}}
