@@ -1,1 +1,1 @@
-{"id":"27fa25581274976cf49a5652bd90ac95","fullName":"smoke-suite.spec.js:7:3","name":"TC-001: Verify home page is loaded after login","status":"failed","testResultsByEnv":{"default":"4395443d913bec4438803b96e0259c68"}}
+{"id":"27fa25581274976cf49a5652bd90ac95","fullName":"smoke-suite.spec.js:7:3","name":"TC-001: Verify home page is loaded after login","status":"passed","testResultsByEnv":{"default":"289341dfcb441456125d7dbc3034bb1d"}}
