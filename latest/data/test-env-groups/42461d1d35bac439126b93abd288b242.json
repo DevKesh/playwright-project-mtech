@@ -1,1 +1,1 @@
-{"id":"42461d1d35bac439126b93abd288b242","fullName":"smoke-suite.spec.js:57:3","name":"TC-003: Navigate to Devices page","status":"passed","testResultsByEnv":{"default":"0f4d12bad31754ce1ffeb1dd37a1c0f2"}}
+{"id":"42461d1d35bac439126b93abd288b242","fullName":"smoke-suite.spec.js:57:3","name":"TC-003: Navigate to Devices page","status":"failed","testResultsByEnv":{"default":"e3cee44e9ea38d194b5b97dec21b3c57"}}
