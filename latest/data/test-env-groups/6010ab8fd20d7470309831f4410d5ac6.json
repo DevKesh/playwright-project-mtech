@@ -1,1 +1,1 @@
-{"id":"6010ab8fd20d7470309831f4410d5ac6","fullName":"smoke-suite.spec.js:100:3","name":"TC-006: Verify all cameras are visible on Cameras page","status":"passed","testResultsByEnv":{"default":"d5e52ac8fb41f4eec08154ac1b60f534"}}
+{"id":"6010ab8fd20d7470309831f4410d5ac6","fullName":"smoke-suite.spec.js:100:3","name":"TC-006: Verify all cameras are visible on Cameras page","status":"failed","testResultsByEnv":{"default":"f47f3d25db371c9058c0988d268699d7"}}
